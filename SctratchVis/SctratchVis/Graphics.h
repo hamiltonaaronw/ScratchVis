@@ -21,7 +21,8 @@ enum DebugOutputType
 	CURRENT_SONG,
 	CURRENT_SHADER,
 	LIST_SHADERS,
-	LIST_SONGS
+	LIST_SONGS,
+	SPACE
 };
 
 enum SetupStage
@@ -29,7 +30,8 @@ enum SetupStage
 	WINDOW,
 	SONG,
 	SHADER,
-	MUSIC_DIR
+	MUSIC_DIR,
+	CLEAR_SCREEN
 };
 
 class Graphics

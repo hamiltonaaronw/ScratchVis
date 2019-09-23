@@ -159,8 +159,6 @@ void Audio::playSong()
 	res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
 	FMODErrorCheck(res);
 
-	std::cout << "Currently playing\t\t" << mSongs[mCurSong]->mSongName << std::endl;
-
 	mIsPlaying = true;
 }
 

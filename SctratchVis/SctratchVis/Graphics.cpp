@@ -13,9 +13,26 @@ void Graphics::init()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	mpAudio = new Audio();
+
 	this->userSetup(SetupStage::MUSIC_DIR);
+	mpAudio->loadSongs();
+	this->userSetup(SetupStage::SONG);
 
 	this->userSetup(SetupStage::WINDOW);
+
+	switch (mViewMode)
+	{
+	case VIEW_DEBUG:
+		mpWindow = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Don't do drugz", NULL, NULL);
+
+		break;
+
+	case VIEW_FULLSCREEN:
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
+		break;
+	}
 
 	if (mpWindow == NULL)
 	{
@@ -38,7 +55,7 @@ void Graphics::init()
 	this->addShader("DiscoTHICC", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL);
 	mNumShaders = mShaders.size();
 
-	mpAudio->loadSongs();
+	this->userSetup(SetupStage::CLEAR_SCREEN);
 }
 
 void Graphics::userSetup(SetupStage stage)
@@ -55,25 +72,16 @@ void Graphics::userSetup(SetupStage stage)
 		std::cin >> sel;
 
 		if (sel == 1)
-		{
-			GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 			this->setViewMode(ViewMode::VIEW_FULLSCREEN);
-			mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
-		}
 		else
 		{
 			if (sel != 2)
 				std::cout << "Invalid input: Defaulting to Debug mode" << std::endl;
-
 			this->setViewMode(ViewMode::VIEW_DEBUG);
-			mpWindow = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Don't do drugz", NULL, NULL);
 		}
 		break;
 
 	case SHADER:
-		std::cout << "Welcome to my visualizer, you're in for a good time" << std::endl;
-
 		std::cout << "Would you like to select a shader program(0 for yes, 1 for no): ";
 		std::cin >> sel;
 		if (sel == 0)
@@ -89,10 +97,12 @@ void Graphics::userSetup(SetupStage stage)
 		std::cin >> sel;
 		if (sel == 0)
 			debugOutput(DebugOutputType::LIST_SONGS, true);
-		else if (sel == 1)
-			debugOutput(DebugOutputType::CURRENT_SONG, false);
 		else
-			std::cout << "Invalid input: Defaulting to first song" << std::endl;
+		{
+			if (sel != 1)
+				std::cout << "Invalid input:";
+			std::cout << "Defaulting to first song" << std::endl;
+		}
 
 		break;
 
@@ -125,6 +135,10 @@ void Graphics::userSetup(SetupStage stage)
 		}
 		break;
 
+	case CLEAR_SCREEN:
+		system("CLS");
+		break;
+
 	default:
 
 		break;
@@ -137,12 +151,10 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 	{
 	case CURRENT_SONG:
 		std::cout << "Currently playing song:\t\t" << mpAudio->getCurrentSongName() << std::endl;
-		std::cout << "\n\n";
 		break;
 
 	case CURRENT_SHADER:
 		std::cout << "Current Shader Program:\t\t" << mShaders[mCurShader]->getProgramName() << std::endl;	
-		std::cout << "\n\n";
 		break;
 
 	case LIST_SHADERS:
@@ -159,8 +171,6 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 
 			selectShader(selShader);
 		}
-
-		std::cout << "\n\n";
 		break;
 
 	case LIST_SONGS:
@@ -176,7 +186,16 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 
 			mpAudio->selectSong(selSong);
 		}
+		break;
+
+
+	case SPACE:
 		std::cout << "\n\n";
+
+		break;
+
+	default:
+
 		break;
 	}
 }
@@ -196,6 +215,7 @@ void Graphics::toggleShader(int prevNext)
 
 	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
 	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+	this->debugOutput(DebugOutputType::SPACE, false);
 }
 
 void Graphics::selectShader(int i)
@@ -211,6 +231,9 @@ void Graphics::selectShader(int i)
 
 void Graphics::render()
 {
+	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
+	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+
 	glfwSetInputMode(mpWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	float vertices[] = {
@@ -355,6 +378,7 @@ void Graphics::processInput(GLFWwindow *window)
 			mpAudio->toggleSong(1);
 			glfwSetTime(0.0);
 			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+			this->debugOutput(DebugOutputType::SPACE, false);
 		}
 
 	// toggle song : previous song - LEFT ARROW
@@ -364,6 +388,7 @@ void Graphics::processInput(GLFWwindow *window)
 			mpAudio->toggleSong(mpAudio->getNumSongs() - 1);
 			glfwSetTime(0.0);
 			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+			this->debugOutput(DebugOutputType::SPACE, false);
 		}
 
 	// toggle shader programs : next shader program - UP ARROW
