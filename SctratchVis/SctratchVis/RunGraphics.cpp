@@ -9,7 +9,5 @@ int main()
 	pGraphics = NULL;
 	delete pGraphics;
 
-
-
 	return 0;
 }
