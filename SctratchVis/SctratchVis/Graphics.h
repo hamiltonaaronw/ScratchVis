@@ -39,7 +39,6 @@ private:
 
 	void processInput(GLFWwindow *window);
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-	void sendFloats();
 	void reloadShader();
 	void toggleShader(int prevNext);
 	void selectShader(int i);
@@ -52,7 +51,6 @@ private:
 
 	GLFWwindow *mpWindow;
 	Audio *mpAudio;
-	Shader *mpShader;
 
 	std::vector<Shader *> mShaders;
 	int mNumShaders, mCurShader;

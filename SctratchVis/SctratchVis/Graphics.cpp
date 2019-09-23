@@ -250,7 +250,7 @@ void Graphics::render()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	mpAudio->playSong(false);
+	mpAudio->playSong();
 
 	float lastFrame = (float)glfwGetTime(),
 		curFrame = 0.0,
@@ -337,7 +337,7 @@ void Graphics::hotReloadAudio(bool changeDir)
 		mpAudio->setMusicDir(d);
 	mpAudio->loadSongs();
 
-	mpAudio->playSong(false);
+	mpAudio->playSong();
 }
 
 void Graphics::processInput(GLFWwindow *window)
@@ -471,6 +471,8 @@ void Graphics::clean()
 
 	mpAudio = NULL;
 	delete mpAudio;
+
+	mShaders.clear();
 }
 
 Graphics::~Graphics()

@@ -3,15 +3,8 @@
 Audio::Audio()
 {
 	initAudio();
-	//loadSongs();
-	mCurSong = 0;
 }
 
-Audio::Audio(const char* path)
-{
-	initAudio();
-	loadSong(path);
-}
 
 void Audio::FMODErrorCheck(FMOD_RESULT res)
 {
@@ -30,10 +23,6 @@ void Audio::initAudio()
 
 	//initialize the system
 	res = FMOD_System_Init(mpSystem, 2, FMOD_INIT_NORMAL, 0);
-	FMODErrorCheck(res);
-
-	// check version
-	res = FMOD_System_GetVersion(mpSystem, &mVersion);
 	FMODErrorCheck(res);
 
 	// get number of sound cards
@@ -104,19 +93,6 @@ void Audio::toggleRand()
 	tmpSongs.clear();
 }
 
-
-void Audio::loadSong(const char* path)
-{
-	FMOD_RESULT res;
-
-	// create sound
-	res = FMOD_System_CreateSound(mpSystem, path, FMOD_DEFAULT, 0, &mpSong);
-	FMODErrorCheck(res);
-
-	// create stream
-	res = FMOD_System_CreateStream(mpSystem, path, FMOD_DEFAULT, 0, &mpStream);
-}
-
 void Audio::loadSongs()
 {
 	DIR *d;
@@ -170,17 +146,14 @@ void Audio::loadSongs()
 		perror("Couldn't open the directory");
 
 	mSongCount = mSongs.size();
+	mCurSong = 0;
 }
 
-void Audio::playSong(bool single)
+void Audio::playSong()
 {
 	FMOD_RESULT res;
 	
-	if (single)
-		res = FMOD_System_PlaySound(mpSystem, mpSong, mpCGroup, 0, &mpChannel);
-	else
-		res = FMOD_System_PlaySound(mpSystem, mSongs[mCurSong]->mSound, mpCGroup, 0, &mpChannel);
-
+	res = FMOD_System_PlaySound(mpSystem, mSongs[mCurSong]->mSound, mpCGroup, 0, &mpChannel);
 	FMODErrorCheck(res);
 
 	res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
@@ -291,29 +264,45 @@ void Audio::unloadAudio()
 	FMOD_RESULT res;
 	mIsPlaying = false;
 
+	// release DSP
+	if (mpDSP)
+	{
+		// remove DSP from channel
+		res = FMOD_Channel_RemoveDSP(mpChannel, mpDSP);
+		FMODErrorCheck(res);
+
+		// release DSP
+		res = FMOD_DSP_Release(mpDSP);
+		FMODErrorCheck(res);
+	}
+
+	// stop playing, release channel
 	if (mIsPlaying)
 	{
 		res = FMOD_Channel_Stop(mpChannel);
 		FMODErrorCheck(res);
+
 		mIsPlaying = false;
 	}
 
-	if (mpSong != NULL)
+	for (int i = 0; i < (int)mSongs.size(); ++i)
 	{
-		res = FMOD_Sound_Release(mpSong);
+		// release each song
+		res = FMOD_Sound_Release(mSongs[i]->mSound);
 		FMODErrorCheck(res);
 	}
-	else
-	{
-		for (int i = 0; i < (int)mSongs.size(); ++i)
-		{
-			res = FMOD_Sound_Release(mSongs[i]->mSound);
-			FMODErrorCheck(res);
-		}
 
-		mSongs.clear();
+	// clear songs
+	mSongs.clear();
+
+	// release channel group
+	if (mpCGroup)
+	{
+		res = FMOD_ChannelGroup_Release(mpCGroup);
+		FMODErrorCheck(res);
 	}
 
+	// finally, close the system
 	res = FMOD_System_Close(mpSystem);
 	FMODErrorCheck(res);
 }

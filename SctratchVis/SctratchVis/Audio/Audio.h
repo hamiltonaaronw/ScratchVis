@@ -36,15 +36,9 @@ private:
 	FMOD_SYSTEM					*mpSystem;
 	FMOD_CHANNELGROUP			*mpCGroup;
 	FMOD_CHANNEL				*mpChannel;
-	FMOD_SOUND					*mpSong;
 	std::vector<Song*>			mSongs;
-	FMOD_SPEAKERMODE			mSpeakerMode;
 	FMOD_DSP					*mpDSP;
-	FMOD_SOUND					*mpStream;
 
-	//static FMOD_RESULT F_CALLBACK callBack(FMOD_CHANNEL *pChannel, FMOD_CHANNELCONTROL_CALLBACK_TYPE type, unsigned int comanddata1, unsigned int commanddata2);
-
-	unsigned int mVersion;
 	int mNumDrivers;
 	int mSongCount;
 	char mDriverName;
@@ -56,8 +50,6 @@ private:
 	int mCurSong;
 	bool mIsPlaying;
 
-	std::vector<int> mRandQueue;
-
 	void genRandQueue();
 
 	bool mIsRandom;
@@ -65,12 +57,10 @@ private:
 	std::string mMusicDir;
 
 public:
-	Audio(const char* path);
 	Audio();
 	void initAudio();
-	void loadSong(const char* path);
 	void loadSongs();
-	void playSong(bool single);
+	void playSong();
 	void unloadAudio();
 	void update();
 	void toggleSong(int prevNext);
