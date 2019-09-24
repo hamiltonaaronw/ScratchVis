@@ -132,7 +132,7 @@ void Graphics::userSetup(SetupStage stage)
 				std::cout << "Invalid input. ";
 			std::cout << "Using default music directory\n";
 
-			mpAudio->setMusicDir("\Music");
+			mpAudio->setMusicDir("Music/");
 
 		}
 		break;
@@ -329,7 +329,7 @@ void Graphics::render()
 void Graphics::reloadShader()
 {
 	std::string name = mShaders[mCurShader]->getProgramName();
-	std::cout << "\n\nReloading Shader Program " << name << std::endl << std::endl;
+	std::cout << "Loading Shader Program " << name << std::endl << std::endl;
 
 	std::string vPath = mShaders[mCurShader]->getVertPath();
 	std::string fPath = mShaders[mCurShader]->getFragPath();

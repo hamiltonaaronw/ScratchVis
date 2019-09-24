@@ -1,4 +1,4 @@
-#version 450 core
+#version 410
 
 /*
 tunnel code derived from shadertoy user @WAHa_06x36

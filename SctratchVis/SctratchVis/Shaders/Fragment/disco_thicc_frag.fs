@@ -1,4 +1,4 @@
-#version 450 core
+#version 410
 
 /*
 derived from shadertoy user @flopine
