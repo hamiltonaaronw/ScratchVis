@@ -114,10 +114,28 @@ Shader::Shader(const char* name, unsigned int vID, unsigned int fID, unsigned in
 	glDeleteShader(mFragID);
 }
 
-// activate the shader
-void Shader::use()
+void Shader::checkCompileErrors(unsigned int shader, std::string type)
 {
-	glUseProgram(mID);
+	int success;
+	char infoLog[1024];
+	if (type != "PROGRAM")
+	{
+		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+		if (!success)
+		{
+			glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+			std::cout << "Shader Program: " << mShaderName << std::endl << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+		}
+	}
+	else
+	{
+		glGetProgramiv(shader, GL_LINK_STATUS, &success);
+		if (!success)
+		{
+			glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+			std::cout << "Shader Program: " << mShaderName << std::endl << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+		}
+	}
 }
 
 // utility uniform functions
@@ -186,28 +204,11 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const
 {
 	glUniformMatrix4fv(glGetUniformLocation(mID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 }
-void Shader::checkCompileErrors(unsigned int shader, std::string type)
+
+// activate the shader
+void Shader::use()
 {
-	int success;
-	char infoLog[1024];
-	if (type != "PROGRAM")
-	{
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "Shader Program: " << mShaderName << std::endl << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-		}
-	}
-	else
-	{
-		glGetProgramiv(shader, GL_LINK_STATUS, &success);
-		if (!success)
-		{
-			glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "Shader Program: " << mShaderName << std::endl << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-		}
-	}
+	glUseProgram(mID);
 }
 
 Shader::~Shader()

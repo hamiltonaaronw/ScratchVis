@@ -5,11 +5,28 @@ Audio::Audio()
 	initAudio();
 }
 
-
 void Audio::FMODErrorCheck(FMOD_RESULT res)
 {
 	if (res != FMOD_OK)
 		std::cout << "FMOD Error! " << FMOD_ErrorString(res) << std::endl;
+}
+
+void Audio::checkEndSong()
+{
+	FMOD_BOOL isPlaying;
+	if (FMOD_Channel_IsPlaying(mpChannel, &isPlaying) != FMOD_OK)
+	{
+		std::cout << "song ended" << std::endl;
+
+		mIsPlaying = false;
+		toggleSong(1);
+	}
+}
+
+void Audio::genRandQueue()
+{
+	srand((unsigned int)time(0));
+	std::random_shuffle(mSongs.begin(), mSongs.end());
 }
 
 void Audio::initAudio()
@@ -58,39 +75,6 @@ void Audio::initAudio()
 
 	mFreq = 0.0f;
 	mIsRandom = false;
-}
-
-void Audio::genRandQueue()
-{
-	srand((unsigned int)time(0));
-	std::random_shuffle(mSongs.begin(), mSongs.end());
-}
-
-void Audio::toggleRand()
-{
-	std::vector<Song *> tmpSongs = mSongs;
-	switch (mIsRandom)
-	{
-	case true:
-		for (int i = 0; i < mSongCount; i++)
-		{
-			for (int j = 0; j < mSongCount; j++)
-			{
-				if (tmpSongs[j]->mOrigIndex == i)
-					mSongs[i] = tmpSongs[j];
-			}
-		}
-
-		mIsRandom = false;
-		break;
-
-	case false:
-		genRandQueue();
-		mIsRandom = true;
-		break;
-	}
-
-	tmpSongs.clear();
 }
 
 void Audio::loadSongs()
@@ -159,7 +143,7 @@ void Audio::loadSongs()
 void Audio::playSong()
 {
 	FMOD_RESULT res;
-	
+
 	res = FMOD_System_PlaySound(mpSystem, mSongs[mCurSong]->mSound, mpCGroup, 0, &mpChannel);
 	FMODErrorCheck(res);
 
@@ -169,38 +153,58 @@ void Audio::playSong()
 	mIsPlaying = true;
 }
 
-void Audio::update()
+
+void Audio::selectSong(int i)
 {
-	if (!mIsPlaying)
-		return;
-
-	this->checkEndSong();
-
-	if (mCurSong == mSongCount)
-		genRandQueue();
-
-	FMOD_RESULT res;
-	float freq = 0;
-
-	res = FMOD_DSP_GetParameterFloat(mpDSP, FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
-	FMODErrorCheck(res);
-
-	void *specData;
-	res = FMOD_DSP_GetParameterData(mpDSP, (int)FMOD_DSP_FFT_SPECTRUMDATA, (void **)&specData, 0, 0, 0);
-	FMODErrorCheck(res);
-
-	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT *)specData;
-
-	if (fft)
+	if (!mSongs[i]->mSound)
 	{
-		for (int i = 0; i < fft->length; i++)
-			mSpectrum[i] = (float &)fft->spectrum[i];
+		std::cout << i << "\tInvalid input" << std::endl;
+		return;
 	}
 
-	freq /= 10000;
-	mFreq = freq;
+	FMOD_RESULT res;
 
-	FMOD_System_Update(mpSystem);
+	if (mIsPlaying)
+	{
+		res = FMOD_Channel_Stop(mpChannel);
+		FMODErrorCheck(res);
+		mIsPlaying = false;
+	}
+
+	res = FMOD_System_PlaySound(mpSystem, mSongs[i]->mSound, mpCGroup, 0, &mpChannel);
+	mCurSong = i;
+
+	res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
+	FMODErrorCheck(res);
+
+	mIsPlaying = true;
+}
+
+void Audio::toggleRand()
+{
+	std::vector<Song *> tmpSongs = mSongs;
+	switch (mIsRandom)
+	{
+	case true:
+		for (int i = 0; i < mSongCount; i++)
+		{
+			for (int j = 0; j < mSongCount; j++)
+			{
+				if (tmpSongs[j]->mOrigIndex == i)
+					mSongs[i] = tmpSongs[j];
+			}
+		}
+
+		mIsRandom = false;
+		break;
+
+	case false:
+		genRandQueue();
+		mIsRandom = true;
+		break;
+	}
+
+	tmpSongs.clear();
 }
 
 void Audio::toggleSong(int prevNext)
@@ -224,44 +228,6 @@ void Audio::toggleSong(int prevNext)
 	FMODErrorCheck(res);
 
 	mIsPlaying = true;
-}
-
-void Audio::selectSong(int i)
-{
-	if (!mSongs[i]->mSound)
-	{
-		std::cout << i <<  "\tInvalid input" << std::endl;
-		return;
-	}
-
-	FMOD_RESULT res;
-
-	if (mIsPlaying)
-	{
-		res = FMOD_Channel_Stop(mpChannel);
-		FMODErrorCheck(res);
-		mIsPlaying = false;
-	}
-
-	res = FMOD_System_PlaySound(mpSystem, mSongs[i]->mSound, mpCGroup, 0, &mpChannel);
-	mCurSong = i;
-
-	res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
-	FMODErrorCheck(res);
-
-	mIsPlaying = true;
-}
-
-void Audio::checkEndSong()
-{
-	FMOD_BOOL isPlaying;
-	if (FMOD_Channel_IsPlaying(mpChannel, &isPlaying) != FMOD_OK)
-	{
-		std::cout << "song ended" << std::endl;
-
-		mIsPlaying = false;
-		toggleSong(1);
-	}
 }
 
 void Audio::unloadAudio()
@@ -310,4 +276,38 @@ void Audio::unloadAudio()
 	// finally, close the system
 	res = FMOD_System_Close(mpSystem);
 	FMODErrorCheck(res);
+}
+
+void Audio::update()
+{
+	if (!mIsPlaying)
+		return;
+
+	this->checkEndSong();
+
+	if (mCurSong == mSongCount)
+		genRandQueue();
+
+	FMOD_RESULT res;
+	float freq = 0;
+
+	res = FMOD_DSP_GetParameterFloat(mpDSP, FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
+	FMODErrorCheck(res);
+
+	void *specData;
+	res = FMOD_DSP_GetParameterData(mpDSP, (int)FMOD_DSP_FFT_SPECTRUMDATA, (void **)&specData, 0, 0, 0);
+	FMODErrorCheck(res);
+
+	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT *)specData;
+
+	if (fft)
+	{
+		for (int i = 0; i < fft->length; i++)
+			mSpectrum[i] = (float &)fft->spectrum[i];
+	}
+
+	freq /= 10000;
+	mFreq = freq;
+
+	FMOD_System_Update(mpSystem);
 }

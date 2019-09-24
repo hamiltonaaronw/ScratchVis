@@ -34,6 +34,13 @@ enum SetupStage
 	CLEAR_SCREEN
 };
 
+enum ShaderProgram
+{
+	PSYCH,
+	VINTAGE,
+	DISCO,
+};
+
 class Graphics
 {
 private:
@@ -66,6 +73,11 @@ private:
 
 	void setViewMode(ViewMode m) { mViewMode = m; };
 	ViewMode getViewMode() { return mViewMode; };
+
+	void toggleTextRender();
+	bool mRenderText;
+	void setRenderText(bool b) { mRenderText = b; };
+	bool getRenderText() { return mRenderText; };
 
 	void addShader(const char* name, unsigned int vID, unsigned int fID, unsigned int gID, const char* vPath, const char* fPath, const char* gPath);
 
