@@ -62,7 +62,7 @@ public:
 	void loadSongs();
 	void playSong();
 	void unloadAudio();
-	void update();
+	bool update();
 	void toggleSong(int prevNext);
 	void selectSong(int i);
 

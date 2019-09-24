@@ -76,5 +76,8 @@
     <None Include="Shaders\Fragment\disco_thicc_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
+    <None Include="Shaders\Fragment\eye_frag.fs">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -278,10 +278,10 @@ void Audio::unloadAudio()
 	FMODErrorCheck(res);
 }
 
-void Audio::update()
+bool Audio::update()
 {
 	if (!mIsPlaying)
-		return;
+		return false;
 
 	this->checkEndSong();
 
@@ -310,4 +310,6 @@ void Audio::update()
 	mFreq = freq;
 
 	FMOD_System_Update(mpSystem);
+
+	return true;
 }
