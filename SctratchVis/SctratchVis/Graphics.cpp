@@ -50,12 +50,14 @@ void Graphics::init()
 		return;
 	}
 
-	this->addShader("Psychedelicious", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs", NULL);
-	this->addShader("Retro", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs", NULL);
-	this->addShader("DiscoTHICC", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL);
-	mNumShaders = mShaders.size();
 
 	this->userSetup(SetupStage::CLEAR_SCREEN);
+
+	this->addShader("Psychedelicious",	0,	0,	0,	"Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/tunnel_frag.fs",		NULL);
+	this->addShader("Retro",			0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL);
+	this->addShader("DiscoTHICC",		0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL);
+
+	mNumShaders = mShaders.size();
 }
 
 void Graphics::userSetup(SetupStage stage)
@@ -130,7 +132,7 @@ void Graphics::userSetup(SetupStage stage)
 				std::cout << "Invalid input. ";
 			std::cout << "Using default music directory\n";
 
-			mpAudio->setMusicDir("Music/");
+			mpAudio->setMusicDir("..\SctratchVis\Music");
 
 		}
 		break;

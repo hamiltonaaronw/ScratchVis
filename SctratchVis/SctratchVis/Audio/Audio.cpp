@@ -145,6 +145,13 @@ void Audio::loadSongs()
 	else
 		perror("Couldn't open the directory");
 
+	if (i == 0)
+	{
+		std::cout << "No .mp3 files found. Using default music directory\n";
+		this->setMusicDir("/Music");
+		this->loadSongs();
+	}
+
 	mSongCount = mSongs.size();
 	mCurSong = 0;
 }
