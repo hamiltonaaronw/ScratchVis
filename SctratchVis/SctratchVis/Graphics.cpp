@@ -132,7 +132,7 @@ void Graphics::userSetup(SetupStage stage)
 				std::cout << "Invalid input. ";
 			std::cout << "Using default music directory\n";
 
-			mpAudio->setMusicDir("..\SctratchVis\Music");
+			mpAudio->setMusicDir("\Music");
 
 		}
 		break;
