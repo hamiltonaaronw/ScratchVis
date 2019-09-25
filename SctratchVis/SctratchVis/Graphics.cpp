@@ -155,7 +155,8 @@ void Graphics::init()
 	this->addShader("Psychedelicious",	0,	0,	0,	"Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/tunnel_frag.fs",		NULL);
 	this->addShader("Retro",			0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL);
 	this->addShader("DiscoTHICC",		0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL);
-	this->addShader("Shader 4",			0,	0,	 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL);
+	this->addShader("Eye",				0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL);
+	this->addShader("Lightshow",		0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",	NULL);
 
 	mNumShaders = mShaders.size();
 }
@@ -362,7 +363,7 @@ void Graphics::render()
 		curFreq = 0.0,
 		dFreq = 0.0;
 
-	//glm::vec2 res(SCR_WIDTH, SCR_HEIGHT);
+	glm::vec2 res(SCR_WIDTH, SCR_HEIGHT);
 
 	// render loop
 	while (!glfwWindowShouldClose(mpWindow))
@@ -389,11 +390,7 @@ void Graphics::render()
 
 		mShaders[mCurShader]->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 
-		int screenW = 0,
-			screenH = 0;
-
-		glfwGetWindowSize(mpWindow, &screenW, &screenH);
-		mShaders[mCurShader]->setVec2("uRes", glm::vec2(screenW, screenH));
+		mShaders[mCurShader]->setVec2("uRes", res);
 
 		mShaders[mCurShader]->use();
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);

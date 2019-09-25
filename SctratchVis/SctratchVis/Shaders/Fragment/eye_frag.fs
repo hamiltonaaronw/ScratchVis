@@ -113,7 +113,8 @@ vec3 eye()
 	float bg = 1.0;
 
 	p -= 0.9;
-	p.x -= 0.5;
+	p.x -= 2.5;
+	p.y -= 0.75;
 	float r = sqrt(dot(p, p));
 	float a = atan(p.y, p.x);
 
@@ -124,10 +125,10 @@ vec3 eye()
 	//r *= anim;
 	r *= wiggle(p / uFreq, uTime / (uFreq * 50.0 * anim));// * (1000 + smoothstep(uFreq, uTime, uDeltaFreq));
 
-	//p *= 2.0;
-	//p += rz(p) * rz(-q) / uFreq;
+	p *= 2.0;
+	p += rz(p) * rz(-q) / uFreq;
 
-	if (r < 0.8)
+	if (r < 1.0)
 	{
 		col = vec3(0.0, 0.3, 0.4) * wiggle(q, uFreq);
 

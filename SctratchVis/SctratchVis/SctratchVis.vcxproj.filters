@@ -79,5 +79,8 @@
     <None Include="Shaders\Fragment\eye_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
+    <None Include="Shaders\Fragment\lightshow_frag.fs">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
   </ItemGroup>
 </Project>
