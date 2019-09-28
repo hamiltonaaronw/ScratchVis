@@ -39,6 +39,8 @@ enum ShaderProgram
 	PSYCH,
 	VINTAGE,
 	DISCO,
+	EYE,
+	LIGHTS
 };
 
 class Graphics
@@ -78,6 +80,7 @@ private:
 	bool mRenderText;
 	void setRenderText(bool b) { mRenderText = b; };
 	bool getRenderText() { return mRenderText; };
+	void togglePauseSong();
 
 	void addShader(const char* name, unsigned int vID, unsigned int fID, unsigned int gID, const char* vPath, const char* fPath, const char* gPath);
 

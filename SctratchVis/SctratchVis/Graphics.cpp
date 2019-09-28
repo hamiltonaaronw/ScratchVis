@@ -212,6 +212,11 @@ void Graphics::processInput(GLFWwindow *window)
 				this->reloadShader();
 	}
 
+	// pause/resume song - SPACE
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
+			this->togglePauseSong();
+
 
 	// Shift = No Input
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_TAB) != GLFW_PRESS)
@@ -374,21 +379,27 @@ void Graphics::render()
 		if (!mpAudio->update())
 			glfwSetTime(0.0);
 
-		curFreq = mpAudio->getFreq();
-		dFreq = curFreq - lastFreq;
-		mShaders[mCurShader]->setFloat("uFreq", curFreq);
-		mShaders[mCurShader]->setFloat("uDeltaFreq", dFreq);
-		mShaders[mCurShader]->setFloat("uLastFreq", lastFreq);
-		lastFreq = curFreq;
 
-		curFrame = (float)(glfwGetTime());
-		dTime = curFrame - lastFrame;
-		mShaders[mCurShader]->setFloat("uTime", curFrame);
-		mShaders[mCurShader]->setFloat("uDeltaTime", dTime);
-		mShaders[mCurShader]->setFloat("uLastFrame", lastFrame);
-		lastFrame = curFrame;
+		if (!mpAudio->getIsPaused())
+		{
+			curFreq = mpAudio->getFreq();
+			dFreq = curFreq - lastFreq;
+			mShaders[mCurShader]->setFloat("uFreq", curFreq);
+			mShaders[mCurShader]->setFloat("uDeltaFreq", dFreq);
+			mShaders[mCurShader]->setFloat("uLastFreq", lastFreq);
+			lastFreq = curFreq;
 
-		mShaders[mCurShader]->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+			curFrame = (float)(glfwGetTime());
+			dTime = curFrame - lastFrame;
+			mShaders[mCurShader]->setFloat("uTime", curFrame);
+			mShaders[mCurShader]->setFloat("uDeltaTime", dTime);
+			mShaders[mCurShader]->setFloat("uLastFrame", lastFrame);
+			lastFrame = curFrame;
+
+			mShaders[mCurShader]->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		}
+		else
+			glfwSetTime(curFrame);
 
 		mShaders[mCurShader]->setVec2("uRes", res);
 
@@ -413,6 +424,11 @@ void Graphics::selectShader(int i)
 	}
 
 	mCurShader = i;
+}
+
+void Graphics::togglePauseSong()
+{
+	mpAudio->togglePause();
 }
 
 void Graphics::toggleShader(int prevNext)

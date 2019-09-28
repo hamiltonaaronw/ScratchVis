@@ -53,6 +53,7 @@ private:
 	void genRandQueue();
 
 	bool mIsRandom;
+	bool mIsPaused;
 
 	std::string mMusicDir;
 
@@ -79,6 +80,10 @@ public:
 	void setIsRandom(bool b) { mIsRandom = b; };
 	bool getIsRandom() { return mIsRandom; };
 	void toggleRand();
+	void togglePause();
+
+	void setIsPaused(bool b) { mIsPaused = b; };
+	bool getIsPaused() { return mIsPaused; };
 
 	std::string getCurrentSongName() { return mSongs[mCurSong]->mSongName; };
 	std::string getSongName(int i) { return mSongs[i]->mSongName; };

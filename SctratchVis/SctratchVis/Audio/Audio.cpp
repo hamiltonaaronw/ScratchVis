@@ -32,6 +32,7 @@ void Audio::genRandQueue()
 void Audio::initAudio()
 {
 	mIsPlaying = false;
+	mIsPaused = false;
 	FMOD_RESULT res;
 
 	// create system
@@ -178,6 +179,16 @@ void Audio::selectSong(int i)
 	FMODErrorCheck(res);
 
 	mIsPlaying = true;
+}
+
+void Audio::togglePause()
+{
+	FMOD_RESULT res;
+
+	res = FMOD_Channel_SetPaused(mpChannel, !mIsPaused);
+	FMODErrorCheck(res);
+
+	this->setIsPaused(!mIsPaused);
 }
 
 void Audio::toggleRand()
