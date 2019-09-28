@@ -52,6 +52,7 @@ private:
 	void addShader(ShaderProgram p, Shader *s);
 	void clean();
 	void debugOutput(DebugOutputType type, bool isIO);
+	void drawText();
 	void hotReloadAudio(bool changeDir);
 	void init();
 	void processInput(GLFWwindow *window);
@@ -81,6 +82,12 @@ private:
 	unsigned int mVBO, mVAO, mEBO,
 				mSWidth, mSHeight;
 
+
+public:
+
+	// functions
+	void render();
+
 	// getters/setters
 	void setViewMode(ViewMode m) { mViewMode = m; };
 	ViewMode getViewMode() { return mViewMode; };
@@ -90,11 +97,6 @@ private:
 
 	void setRenderText(bool b) { mRenderText = b; };
 	bool getRenderText() { return mRenderText; };
-
-public:
-
-	// functions
-	void render();
 
 	// constructor/destructor
 	Graphics();

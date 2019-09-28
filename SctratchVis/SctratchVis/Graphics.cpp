@@ -80,6 +80,11 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 	}
 }
 
+void Graphics::drawText()
+{
+
+}
+
 void Graphics::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -110,6 +115,7 @@ void Graphics::init()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
 	mpAudio = new Audio();
 
@@ -445,20 +451,6 @@ void Graphics::toggleShader(int prevNext)
 
 void Graphics::toggleTextRender()
 {
-	/*
-		putting this on hold for now
-	*/
-	switch (this->getRenderText())
-	{
-	case true:
-
-		break;
-
-	case false:
-
-		break;
-	}
-
 	this->setRenderText(!this->getRenderText());
 }
 

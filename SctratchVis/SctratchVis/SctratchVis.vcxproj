@@ -207,12 +207,14 @@
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="RunGraphics.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Text.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\Audio.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Shaders\Shader.h" />
+    <ClInclude Include="Text.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment\disco_thicc_frag.fs" />
