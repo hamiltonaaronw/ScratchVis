@@ -6,9 +6,11 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <map>
 
 #include "Shaders/Shader.h"
 #include "Audio/Audio.h"
+
 
 enum ViewMode
 {
@@ -37,7 +39,7 @@ enum SetupStage
 enum ShaderProgram
 {
 	PSYCH,
-	VINTAGE,
+	RETRO,
 	DISCO,
 	EYE,
 	LIGHTS
@@ -63,18 +65,22 @@ private:
 	GLFWwindow *mpWindow;
 	Audio *mpAudio;
 
-	std::vector<Shader *> mShaders;
-	int mNumShaders, mCurShader;
+	std::map<ShaderProgram, Shader*> mShaders;
+	int mNumShaders;
 
 	const unsigned int SCR_WIDTH = 800;
 	const unsigned int SCR_HEIGHT = 600;
 
 	unsigned int mSWidth, mSHeight;
 
+	ShaderProgram mCurProg;
 	ViewMode mViewMode;
 
 	void setViewMode(ViewMode m) { mViewMode = m; };
 	ViewMode getViewMode() { return mViewMode; };
+
+	void setCurProg(ShaderProgram p) { mCurProg = p; };
+	ShaderProgram getCurProg() { return mCurProg; };
 
 	void toggleTextRender();
 	bool mRenderText;
@@ -82,7 +88,7 @@ private:
 	bool getRenderText() { return mRenderText; };
 	void togglePauseSong();
 
-	void addShader(const char* name, unsigned int vID, unsigned int fID, unsigned int gID, const char* vPath, const char* fPath, const char* gPath);
+	void addShader(ShaderProgram p, Shader *s);
 
 public:
 

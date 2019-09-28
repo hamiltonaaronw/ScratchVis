@@ -5,9 +5,9 @@ Graphics::Graphics()
 	init();
 }
 
-void Graphics::addShader(const char* name, unsigned int vID, unsigned int fID, unsigned int gID, const char* vPath, const char* fPath, const char* gPath)
+void Graphics::addShader(ShaderProgram p, Shader *s)
 {
-	mShaders.push_back(new Shader(name, vID, fID, gID, vPath, fPath, gPath));
+	mShaders.insert(std::pair<ShaderProgram, Shader*>(p, s));
 }
 
 void Graphics::clean()
@@ -34,14 +34,14 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 		break;
 
 	case CURRENT_SHADER:
-		std::cout << "Current Shader Program:\t\t" << mShaders[mCurShader]->getProgramName() << std::endl;
+		std::cout << "Current Shader Program:\t\t" << mShaders.find(mCurProg)->second->getProgramName() << std::endl;
 		break;
 
 	case LIST_SHADERS:
 		std::cout << "Shader programs: " << std::endl;
 		for (int i = 0; i < mNumShaders; i++)
 		{
-			std::cout << i << ".\t\t" << mShaders[i]->getProgramName() << std::endl;
+			std::cout << i << ".\t\t" <<mShaders.find(mCurProg)->second->getProgramName() << std::endl;
 		}
 		if (isIO)
 		{
@@ -149,14 +149,14 @@ void Graphics::init()
 		return;
 	}
 
-
 	this->userSetup(SetupStage::CLEAR_SCREEN);
 
-	this->addShader("Psychedelicious",	0,	0,	0,	"Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/tunnel_frag.fs",		NULL);
-	this->addShader("Retro",			0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL);
-	this->addShader("DiscoTHICC",		0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL);
-	this->addShader("Eye",				0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL);
-	this->addShader("Lightshow",		0,	0,	0,	"Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",	NULL);
+
+	this->addShader(ShaderProgram::PSYCH,	new Shader("Psychedelicious",	0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs",			NULL));
+	this->addShader(ShaderProgram::RETRO,	new Shader("Retro",				0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL));
+	this->addShader(ShaderProgram::DISCO,	new Shader("DiscoTHICC",		0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs",	NULL));
+	this->addShader(ShaderProgram::EYE,		new Shader("Eye",				0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL));
+	this->addShader(ShaderProgram::LIGHTS,	new Shader("Lightshow",			0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",		NULL));
 
 	mNumShaders = mShaders.size();
 }
@@ -293,24 +293,24 @@ void Graphics::processInput(GLFWwindow *window)
 
 void Graphics::reloadShader()
 {
-	std::string name = mShaders[mCurShader]->getProgramName();
+	std::string name = mShaders.find(mCurProg)->second->getProgramName();
 	std::cout << "Loading Shader Program " << name << std::endl << std::endl;
 
-	std::string vPath = mShaders[mCurShader]->getVertPath();
-	std::string fPath = mShaders[mCurShader]->getFragPath();
-	std::string gPath = mShaders[mCurShader]->getGeomPath();
-	unsigned int vID = mShaders[mCurShader]->getVertID();
-	unsigned int fID = mShaders[mCurShader]->getFragID();
-	unsigned int gID = mShaders[mCurShader]->getGeomID();
+	std::string vPath = mShaders.find(mCurProg)->second->getVertPath();
+	std::string fPath = mShaders.find(mCurProg)->second->getFragPath();
+	std::string gPath = mShaders.find(mCurProg)->second->getGeomPath();
+	unsigned int vID = mShaders.find(mCurProg)->second->getVertID();
+	unsigned int fID = mShaders.find(mCurProg)->second->getFragID();
+	unsigned int gID = mShaders.find(mCurProg)->second->getGeomID();
 
-	glDeleteProgram(mShaders[mCurShader]->getID());
-
-	mShaders[mCurShader] = NULL;
+	glDeleteProgram(mShaders.find(mCurProg)->second->getID());
+	mShaders.find(mCurProg)->second = NULL;
 
 	if (gPath.empty())
-		mShaders[mCurShader] = new Shader(name.c_str(), vID, fID, 0, vPath.c_str(), fPath.c_str(), NULL);
+		mShaders.find(mCurProg)->second = new Shader(name.c_str(), vID, fID, 0, vPath.c_str(), fPath.c_str(), NULL);
 	else
-		mShaders[mCurShader] = new Shader(name.c_str(), vID, fID, gID, vPath.c_str(), fPath.c_str(), gPath.c_str());
+		mShaders.find(mCurProg)->second = new Shader(name.c_str(), vID, fID, gID, vPath.c_str(), fPath.c_str(), gPath.c_str());
+
 }
 
 void Graphics::render()
@@ -384,26 +384,25 @@ void Graphics::render()
 		{
 			curFreq = mpAudio->getFreq();
 			dFreq = curFreq - lastFreq;
-			mShaders[mCurShader]->setFloat("uFreq", curFreq);
-			mShaders[mCurShader]->setFloat("uDeltaFreq", dFreq);
-			mShaders[mCurShader]->setFloat("uLastFreq", lastFreq);
+			mShaders.find(mCurProg)->second->setFloat("uFreq", curFreq);
+			mShaders.find(mCurProg)->second->setFloat("uDeltaFreq", dFreq);
+			mShaders.find(mCurProg)->second->setFloat("uLastFreq", lastFreq);
 			lastFreq = curFreq;
 
 			curFrame = (float)(glfwGetTime());
 			dTime = curFrame - lastFrame;
-			mShaders[mCurShader]->setFloat("uTime", curFrame);
-			mShaders[mCurShader]->setFloat("uDeltaTime", dTime);
-			mShaders[mCurShader]->setFloat("uLastFrame", lastFrame);
+			mShaders.find(mCurProg)->second->setFloat("uTime", curFrame);
+			mShaders.find(mCurProg)->second->setFloat("uDeltaTime", dTime);
+			mShaders.find(mCurProg)->second->setFloat("uLastFrame", lastFrame);
 			lastFrame = curFrame;
 
-			mShaders[mCurShader]->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+			mShaders.find(mCurProg)->second->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		}
 		else
 			glfwSetTime(curFrame);
 
-		mShaders[mCurShader]->setVec2("uRes", res);
-
-		mShaders[mCurShader]->use();
+		mShaders.find(mCurProg)->second->setVec2("uRes", res);
+		mShaders.find(mCurProg)->second->use();
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -423,7 +422,7 @@ void Graphics::selectShader(int i)
 		return;
 	}
 
-	mCurShader = i;
+	this->setCurProg((ShaderProgram)i);
 }
 
 void Graphics::togglePauseSong()
@@ -433,10 +432,10 @@ void Graphics::togglePauseSong()
 
 void Graphics::toggleShader(int prevNext)
 {
-	int curProg = (mCurShader + prevNext) % mNumShaders;
-	mCurShader = curProg;
+	int cProg = ((int)mCurProg + prevNext) % mNumShaders;
+	this->setCurProg((ShaderProgram)cProg);
 
-	mShaders[mCurShader]->use();
+	mShaders.find(mCurProg)->second->use();
 	this->reloadShader();
 
 	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
