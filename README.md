@@ -24,6 +24,10 @@ Music files must be in .mp3 format for now
 
 **Q** - Shuffle/unshuffle playlist
 
+**SPACE** - Pause/resume song
+
+**T** - Toggle text rendering in window (Currently doesn't work)
+
 **R** - Hot reload current shader program (Debug mode only)
 
 **SHIFT + S** - Output list of shader programs (Debug only)
