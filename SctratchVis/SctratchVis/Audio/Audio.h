@@ -31,56 +31,64 @@ struct Song
 class Audio
 {
 private:
+	// functions
 	void FMODErrorCheck(FMOD_RESULT res);
+	void genRandQueue();
 
-	FMOD_SYSTEM					*mpSystem;
+	// variables
+	bool mIsPaused;
+	bool mIsRandom;
+
 	FMOD_CHANNELGROUP			*mpCGroup;
 	FMOD_CHANNEL				*mpChannel;
-	std::vector<Song*>			mSongs;
 	FMOD_DSP					*mpDSP;
+	FMOD_SYSTEM					*mpSystem;
 
+	std::vector<Song*>			mSongs;
+
+	char mDriverName;
 	int mNumDrivers;
 	int mSongCount;
-	char mDriverName;
 
 	const int SPEC_SIZE = 256;
+	int mCurSong;
+
 	float mFreq;
 	float mSpectrum[256];
 
-	int mCurSong;
 	bool mIsPlaying;
-
-	void genRandQueue();
-
-	bool mIsRandom;
-	bool mIsPaused;
 
 	std::string mMusicDir;
 
 public:
+
+	// Constructor
 	Audio();
+
+	// functions
+	void checkEndSong();
 	void initAudio();
 	void loadSongs();
 	void playSong();
+	void selectSong(int i);
+	void togglePause();
+	void toggleRand();
+	void toggleSong(int prevNext);
 	void unloadAudio();
 	bool update();
-	void toggleSong(int prevNext);
-	void selectSong(int i);
 
+	// getters/setters
 	float getFreq() { return mFreq; };
 	float* getSpectrumData() { return mSpectrum; };
+
 	int getNumSongs() { return mSongCount; };
 	int getSpecSize() { return SPEC_SIZE; };
 
 	void setIsPlaying(bool b) { mIsPlaying = b; };
 	bool getIsPlaying() { return mIsPlaying; };
 
-	void checkEndSong();
-
 	void setIsRandom(bool b) { mIsRandom = b; };
 	bool getIsRandom() { return mIsRandom; };
-	void toggleRand();
-	void togglePause();
 
 	void setIsPaused(bool b) { mIsPaused = b; };
 	bool getIsPaused() { return mIsPaused; };

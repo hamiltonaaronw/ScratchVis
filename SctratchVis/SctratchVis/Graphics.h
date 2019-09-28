@@ -48,53 +48,55 @@ enum ShaderProgram
 class Graphics
 {
 private:
+	// functions
+	void addShader(ShaderProgram p, Shader *s);
 	void clean();
-
-	void processInput(GLFWwindow *window);
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-	void reloadShader();
-	void toggleShader(int prevNext);
-	void selectShader(int i);
-	void hotReloadAudio(bool changeDir);
-
-	void userSetup(SetupStage stage);
 	void debugOutput(DebugOutputType type, bool isIO);
+	void hotReloadAudio(bool changeDir);
+	void init();
+	void processInput(GLFWwindow *window);
+	void reloadShader();
+	void selectShader(int i);
+	void togglePauseSong();
+	void toggleShader(int prevNext);
+	void toggleTextRender();
+	void userSetup(SetupStage stage);
 
-	unsigned int mVBO, mVAO, mEBO;
+	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+	// variables
 	GLFWwindow *mpWindow;
 	Audio *mpAudio;
-
-	std::map<ShaderProgram, Shader*> mShaders;
-	int mNumShaders;
-
-	const unsigned int SCR_WIDTH = 800;
-	const unsigned int SCR_HEIGHT = 600;
-
-	unsigned int mSWidth, mSHeight;
-
+	
 	ShaderProgram mCurProg;
 	ViewMode mViewMode;
 
+	std::map<ShaderProgram, Shader*> mShaders;
+
+	bool mRenderText;
+
+	int mNumShaders;
+	const unsigned int SCR_WIDTH = 800;
+	const unsigned int SCR_HEIGHT = 600;
+	unsigned int mVBO, mVAO, mEBO,
+				mSWidth, mSHeight;
+
+	// getters/setters
 	void setViewMode(ViewMode m) { mViewMode = m; };
 	ViewMode getViewMode() { return mViewMode; };
 
 	void setCurProg(ShaderProgram p) { mCurProg = p; };
 	ShaderProgram getCurProg() { return mCurProg; };
 
-	void toggleTextRender();
-	bool mRenderText;
 	void setRenderText(bool b) { mRenderText = b; };
 	bool getRenderText() { return mRenderText; };
-	void togglePauseSong();
-
-	void addShader(ShaderProgram p, Shader *s);
 
 public:
 
-	void init();
+	// functions
 	void render();
 
+	// constructor/destructor
 	Graphics();
 	~Graphics();
 };

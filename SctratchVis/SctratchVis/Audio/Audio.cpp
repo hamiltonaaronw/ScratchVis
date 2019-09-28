@@ -133,7 +133,7 @@ void Audio::loadSongs()
 	if (i == 0)
 	{
 		std::cout << "No .mp3 files found. Using default music directory\n";
-		this->setMusicDir("/Music");
+		this->setMusicDir("Music/");
 		this->loadSongs();
 	}
 
