@@ -163,6 +163,7 @@ void Graphics::init()
 	this->addShader(ShaderProgram::DISCO,	new Shader("DiscoTHICC",		0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs",	NULL));
 	this->addShader(ShaderProgram::EYE,		new Shader("Eye",				0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL));
 	this->addShader(ShaderProgram::LIGHTS,	new Shader("Lightshow",			0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",		NULL));
+	this->addShader(ShaderProgram::MISC,	new Shader("Particles",			0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/particles_frag.fs",		NULL));
 
 	mNumShaders = mShaders.size();
 }

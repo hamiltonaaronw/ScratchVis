@@ -3,6 +3,8 @@
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
+in vec2 oTexCoord;
+
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
@@ -104,9 +106,9 @@ float wiggle(vec2 p, float r)
 	return sin(length(m * sinc(v))) ;
 }
 
-vec3 eye()
+vec3 eye(vec2 uv)
 {
-	vec2 q = gl_FragCoord.xy / uRes;
+	vec2 q = uv;//gl_FragCoord.xy / uRes;
 	vec2 p = -0.5 + q * 2.5;
 	p.x *= uRes.x / uRes.y;
 
@@ -166,7 +168,8 @@ vec3 eye()
 
 void main()
 {
-	vec4 ret = vec4(eye(), 1.0);
+	vec2 uv = gl_FragCoord.xy / uRes;
+	vec4 ret = vec4(eye(uv), 1.0);
 
 	retColor = ret;
 }

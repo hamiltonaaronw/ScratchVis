@@ -9,6 +9,8 @@ private:
 
 public:
 	// constructor/destructor
+	Text();
+	~Text();
 
 	// functions
 

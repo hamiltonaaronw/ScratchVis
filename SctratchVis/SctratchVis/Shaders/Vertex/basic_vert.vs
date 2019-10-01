@@ -10,7 +10,8 @@ out vec2 oTexCoord;
 
 void main()
 {
-	gl_Position = vec4(aPos, 1.0);
+	gl_Position = vec4(aTexCoord.xy - 0.5, 0.0, 0.5);
+
 	oColor = aColor;
 	oTexCoord = aTexCoord;
 }

@@ -11,6 +11,11 @@
 #include "Shaders/Shader.h"
 #include "Audio/Audio.h"
 
+enum AudioInputMode
+{
+	AUDIO_PRE_INPUT,	// pre-recorded signal processing
+	AUDIO_REAL_INPUT	// live audio input real-time signal processing
+};
 
 enum ViewMode
 {
@@ -42,45 +47,50 @@ enum ShaderProgram
 	RETRO,
 	DISCO,
 	EYE,
-	LIGHTS
+	LIGHTS,
+	MISC
 };
 
 class Graphics
 {
 private:
 	// functions
-	void addShader(ShaderProgram p, Shader *s);
-	void clean();
-	void debugOutput(DebugOutputType type, bool isIO);
-	void drawText();
-	void hotReloadAudio(bool changeDir);
-	void init();
-	void processInput(GLFWwindow *window);
-	void reloadShader();
-	void selectShader(int i);
-	void togglePauseSong();
-	void toggleShader(int prevNext);
-	void toggleTextRender();
-	void userSetup(SetupStage stage);
+	void addShader			(ShaderProgram p, Shader *s);
+	void clean				();
+	void debugOutput		(DebugOutputType type, bool isIO);
+	void drawText			();
+	void hotReloadAudio		(bool changeDir);
+	void init				();
+	void processInput		(GLFWwindow *window);
+	void reloadShader		();
+	void selectShader		(int i);
+	void togglePauseSong	();
+	void toggleShader		(int prevNext);
+	void toggleTextRender	();
+	void userSetup			(SetupStage stage);
 
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+	static void framebuffer_size_callback	(GLFWwindow* window, int width, int height);
 
 	// variables
-	GLFWwindow *mpWindow;
-	Audio *mpAudio;
+	GLFWwindow	*mpWindow;
+	Audio		*mpAudio;
 	
-	ShaderProgram mCurProg;
-	ViewMode mViewMode;
+	ShaderProgram	 mCurProg;
+	ViewMode		 mViewMode;
+	AudioInputMode	 mAudioInputMode;
 
 	std::map<ShaderProgram, Shader*> mShaders;
 
 	bool mRenderText;
 
-	int mNumShaders;
-	const unsigned int SCR_WIDTH = 800;
-	const unsigned int SCR_HEIGHT = 600;
-	unsigned int mVBO, mVAO, mEBO,
-				mSWidth, mSHeight;
+	int					mNumShaders;
+	const unsigned int	SCR_WIDTH = 800,
+						SCR_HEIGHT = 600;
+	unsigned int		mVBO,
+						mVAO, 
+						mEBO,
+						mSWidth, 
+						mSHeight;
 
 
 public:
