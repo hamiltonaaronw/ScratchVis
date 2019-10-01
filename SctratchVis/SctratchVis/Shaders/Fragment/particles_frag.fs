@@ -141,18 +141,21 @@ vec4 col(vec2 p)
 	float ft = smoothstep(uFreq * uTime, uLastFreq, uDeltaFreq);
 	//ft = sinc(ft);
 
-	vec2 r = uRes + p;
+	vec2 r = uRes +p;
 	r.y/= 1.25;
 	vec2 o = gl_FragCoord.xy - r + 1.5;
 	o = vec2(length(o) / r.y - ft / 2.0, (o.y, o.x)) / 2.0 / 2.0;
 
 
-	vec4 s = 0.2 * cos(1.6 * vec4(uTime, 0.1 / ft, ft - 2.0, 0.3 * ft) + uTime + o.y + sin(o.y) * sin(ft) * 2.0);
+	vec4 s = 0.2 * cos(1.6 * vec4(uTime / ft, 0.9 / ft, ft - 1.0, 0.7 * ft) + uTime + o.y + sin(o.y) * sin(ft) * 2.0);
 	vec4 e = cosc(s.zwxy);
 	vec4 f = ft / min(o.x - s, e - o.x);
 
-	vec4 ret = dot(clamp(f * r.y, 0.0, 1.0), 50.0 * (s - e) * ft) * (s - ft) - f;
+	vec4 ret = dot(clamp(f * r.y * ft, 0.0, 1.0), 50.0 * (s - e) * ft) * (s - ft) - f;
 	ret *= -smoooth(ret.xyz * uFreq);
+
+	//ret += uSpectrum[int(floor(mod(uTime, 256.0)))] / 4.0;
+	//ret /= uSpectrum[int(floor(mod(ft, 256)))];
 	return ret;
 }
 
@@ -160,7 +163,7 @@ void main()
 {
 	vec2 uv = gl_FragCoord.xy / uRes * oTexCoord;
 
-	vec4 ret = col(uv) / length(wave(uv));
+	vec4 ret = col(uv);
 
 	retColor = ret;
 }
