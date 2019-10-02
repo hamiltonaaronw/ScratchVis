@@ -91,7 +91,7 @@
     <None Include="Shaders\Fragment\lightshow_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\particles_frag.fs">
+    <None Include="Shaders\Fragment\eclipse_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

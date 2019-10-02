@@ -138,32 +138,54 @@ float smoooth(vec3 p)
 
 vec4 col(vec2 p)
 {
-	float ft = smoothstep(uFreq * uTime, uLastFreq, uDeltaFreq);
-	//ft = sinc(ft);
+	float ft = smoothstep(uFreq * uTime, uLastFreq, uDeltaFreq * uDeltaTime);
+	float lp = length(cos(p) / sinc(uFreq - uTime));
 
-	vec2 r = uRes +p;
-	r.y/= 1.25;
+	vec2 r = p;
+	r.y /= 1.25;
+	r.x *= 1.25;
 	vec2 o = gl_FragCoord.xy - r + 1.5;
 	o = vec2(length(o) / r.y - ft / 2.0, (o.y, o.x)) / 2.0 / 2.0;
 
+	int i = int(floor(ft * uFreq));
+	float fs = ft - uSpectrum[i];// * uTime;
+	fs = pow(fs * uFreq, ft);// * uDeltaFreq;
 
-	vec4 s = 0.2 * cos(1.6 * vec4(uTime / ft, 0.9 / ft, ft - 1.0, 0.7 * ft) + uTime + o.y + sin(o.y) * sin(ft) * 2.0);
-	vec4 e = cosc(s.zwxy);
-	vec4 f = ft / min(o.x - s, e - o.x);
+	vec4 c = vec4(sin(length(p) * uFreq),
+					fs * p.y, 
+					ft * p.x,
+					smoothstep(fs, ft, lp));
 
-	vec4 ret = dot(clamp(f * r.y * ft, 0.0, 1.0), 50.0 * (s - e) * ft) * (s - ft) - f;
-	ret *= -smoooth(ret.xyz * uFreq);
+	ft *= sinc(lp);
+	fs *= lp;
 
-	//ret += uSpectrum[int(floor(mod(uTime, 256.0)))] / 4.0;
-	//ret /= uSpectrum[int(floor(mod(ft, 256)))];
+	vec4 s = sin(0.15) * cos(1.6 * c + uTime + cos(o.y * uFreq / fs) + sin(o.y) * sin(ft) * 2.0);
+	vec4 e = cosc(s.zwxy * length(p) * max(uFreq, ft / fs));
+	//fs /= ft;
+	//ft /= fs - lp;
+	vec4 f = lp / min(o.x - s, e - o.x);
+
+	vec4 ret = dot(clamp(f * r.y / ft, 0.0, 1.0), 50.0 * (s - e) * ft) * (s - ft) - f;
+
+	ret /= -smoooth(ret.xyz);
+	ret *= cos(sinc(lp));
+
 	return ret;
 }
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes * oTexCoord;
+	vec2 uv = gl_FragCoord.xy / uRes / oTexCoord;
 
-	vec4 ret = col(uv);
+	vec2 r = uRes;
+
+	vec4 ret;
+	ret = -col(r);
+	ret += col(vec2(r.x / 2.0, r.y));// / mod(uTime, 4.0);
+	ret += col(vec2(r.x * 1.5, r.y));// / mod(uTime, 4.0);
+	ret -= col(vec2(r.x / 6.0, r.y));
+	ret -= col(vec2(r.x * 1.75, r.y));
+
 
 	retColor = ret;
 }
