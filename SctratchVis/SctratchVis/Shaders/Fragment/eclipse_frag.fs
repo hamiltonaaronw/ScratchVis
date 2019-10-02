@@ -149,14 +149,14 @@ vec4 col(vec2 p)
 	vec2 o = gl_FragCoord.xy - r + 1.5;
 	o = vec2(length(o) / r.y - ft / 2.0, (o.y, o.x)) / 2.0 / 2.0;
 
-	int i = int(floor(ft * uFreq));
-	float fs = ft - uSpectrum[i];// * uTime;
-	fs = pow(fs * uFreq, ft);// * uDeltaFreq;
+	int i = int(floor(mod(uTime * length(o), 0.256) * 100));
+	float fs = ft - uSpectrum[i];
+	fs = pow(fs * uFreq, ft);
 
-		ft *= sinc(dp * uFreq);
+	ft *= sinc(dp * uFreq);
 	fs *= lp;
 
-	vec4 c = vec4(sin(length(p) * uFreq),
+	vec4 c = vec4(sinc(length(p)) * min(uFreq, uLastFreq),
 					ft * o.y, 
 					fs * o.x,
 					smoothstep(fs, ft, sinc(dot(p,o))));
