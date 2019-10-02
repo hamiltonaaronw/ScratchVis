@@ -138,8 +138,10 @@ float smoooth(vec3 p)
 
 vec4 col(vec2 p)
 {
+	float time =  uTime / 6.0;
 	float ft = smoothstep(uFreq * uTime, uLastFreq, uDeltaFreq * uDeltaTime);
 	float lp = length(cos(p) / sinc(uFreq - uTime));
+	float dp = dot(p, p);
 
 	vec2 r = p;
 	r.y /= 1.25;
@@ -151,18 +153,19 @@ vec4 col(vec2 p)
 	float fs = ft - uSpectrum[i];// * uTime;
 	fs = pow(fs * uFreq, ft);// * uDeltaFreq;
 
-	vec4 c = vec4(sin(length(p) * uFreq),
-					fs * p.y, 
-					ft * p.x,
-					smoothstep(fs, ft, lp));
-
-	ft *= sinc(lp);
+		ft *= sinc(dp * uFreq);
 	fs *= lp;
+
+	vec4 c = vec4(sin(length(p) * uFreq),
+					ft * o.y, 
+					fs * o.x,
+					smoothstep(fs, ft, sinc(dot(p,o))));
+
+
 
 	vec4 s = sin(0.15) * cos(1.6 * c + uTime + cos(o.y * uFreq / fs) + sin(o.y) * sin(ft) * 2.0);
 	vec4 e = cosc(s.zwxy * length(p) * max(uFreq, ft / fs));
-	//fs /= ft;
-	//ft /= fs - lp;
+
 	vec4 f = lp / min(o.x - s, e - o.x);
 
 	vec4 ret = dot(clamp(f * r.y / ft, 0.0, 1.0), 50.0 * (s - e) * ft) * (s - ft) - f;
@@ -180,11 +183,11 @@ void main()
 	vec2 r = uRes;
 
 	vec4 ret;
-	ret = -col(r);
-	ret += col(vec2(r.x / 2.0, r.y));// / mod(uTime, 4.0);
-	ret += col(vec2(r.x * 1.5, r.y));// / mod(uTime, 4.0);
-	ret -= col(vec2(r.x / 6.0, r.y));
-	ret -= col(vec2(r.x * 1.75, r.y));
+	ret = col(r);
+	ret *= col(vec2(r.x / 2.0, r.y));// / mod(uTime, 4.0);
+	ret *= col(vec2(r.x * 1.5, r.y));// / mod(uTime, 4.0);
+	ret /= col(vec2(r.x / 6.0, r.y));
+	ret /= col(vec2(r.x * 1.75, r.y));
 
 
 	retColor = ret;
