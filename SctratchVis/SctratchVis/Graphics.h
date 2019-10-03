@@ -10,6 +10,7 @@
 
 #include "Shaders/Shader.h"
 #include "Audio/Audio.h"
+#include "Text.h"
 
 enum AudioInputMode
 {
@@ -74,6 +75,7 @@ private:
 	// variables
 	GLFWwindow	*mpWindow;
 	Audio		*mpAudio;
+	Text		*mpText;
 	
 	ShaderProgram	 mCurProg;
 	ViewMode		 mViewMode;
