@@ -166,15 +166,17 @@ void Graphics::init()
 
 	this->userSetup(SetupStage::CLEAR_SCREEN);
 
+	/*
+	this->addShader(ShaderProgram::PSYCH,	new Shader("Psychedelicious", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs", NULL));
+	this->addShader(ShaderProgram::RETRO,	new Shader("Retro", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs", NULL));
+	this->addShader(ShaderProgram::DISCO,	new Shader("DiscoTHICC", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL));
+	this->addShader(ShaderProgram::EYE,		new Shader("Eye", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs", NULL));
+	this->addShader(ShaderProgram::LIGHTS,	new Shader("Lightshow", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs", NULL));
+	this->addShader(ShaderProgram::ECLIPSE, new Shader("Eclipse", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eclipse_frag.fs", NULL));
+	*/
 
-	this->addShader(ShaderProgram::PSYCH,	new Shader("Psychedelicious",	0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs",			NULL));
-	this->addShader(ShaderProgram::RETRO,	new Shader("Retro",				0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL));
-	this->addShader(ShaderProgram::DISCO,	new Shader("DiscoTHICC",		0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs",	NULL));
-	this->addShader(ShaderProgram::EYE,		new Shader("Eye",				0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL));
-	this->addShader(ShaderProgram::LIGHTS,	new Shader("Lightshow",			0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",		NULL));
-	this->addShader(ShaderProgram::MISC,	new Shader("Eclipse",			0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eclipse_frag.fs",		NULL));
-
-	mNumShaders = mShaders.size();
+	mpShaderMan = new ShaderManager();
+	mNumShaders = mpShaderMan->getNumShaders();
 }
 
 void Graphics::processInput(GLFWwindow *window)
@@ -208,12 +210,14 @@ void Graphics::processInput(GLFWwindow *window)
 	// toggle shader programs : next shader program - UP ARROW
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
-			this->toggleShader(1);
+			mpShaderMan->toggleShader(1);
+			//this->toggleShader(1);
 
 	// toggle shader programs : previous shader program - DOWN ARROW
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
-			this->toggleShader(mNumShaders - 1);
+			mpShaderMan->toggleShader(mpShaderMan->getNumShaders() - 1);
+			//this->toggleShader(mNumShaders - 1);
 
 	// shuffle songs - Q
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -400,25 +404,34 @@ void Graphics::render()
 		{
 			curFreq = mpAudio->getFreq();
 			dFreq = curFreq - lastFreq;
-			mShaders.find(mCurProg)->second->setFloat("uFreq", curFreq);
-			mShaders.find(mCurProg)->second->setFloat("uDeltaFreq", dFreq);
-			mShaders.find(mCurProg)->second->setFloat("uLastFreq", lastFreq);
+			//mShaders.find(mCurProg)->second->setFloat("uFreq", curFreq);
+			//mShaders.find(mCurProg)->second->setFloat("uDeltaFreq", dFreq);
+			//mShaders.find(mCurProg)->second->setFloat("uLastFreq", lastFreq);
+			mpShaderMan->getCurrentShader()->setFloat("uFreq", curFreq);
+			mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", dFreq);
+			mpShaderMan->getCurrentShader()->setFloat("uLastFreq", lastFreq);
 			lastFreq = curFreq;
 
 			curFrame = (float)(glfwGetTime());
 			dTime = curFrame - lastFrame;
-			mShaders.find(mCurProg)->second->setFloat("uTime", curFrame);
-			mShaders.find(mCurProg)->second->setFloat("uDeltaTime", dTime);
-			mShaders.find(mCurProg)->second->setFloat("uLastFrame", lastFrame);
+			//mShaders.find(mCurProg)->second->setFloat("uTime", curFrame);
+			//mShaders.find(mCurProg)->second->setFloat("uDeltaTime", dTime);
+			//mShaders.find(mCurProg)->second->setFloat("uLastFrame", lastFrame);
+			mpShaderMan->getCurrentShader()->setFloat("uTime", curFrame);
+			mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", dTime);
+			mpShaderMan->getCurrentShader()->setFloat("uLastFrame", lastFrame);
 			lastFrame = curFrame;
 
-			mShaders.find(mCurProg)->second->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+			//mShaders.find(mCurProg)->second->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+			mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		}
 		else
 			glfwSetTime(curFrame);
 
-		mShaders.find(mCurProg)->second->setVec2("uRes", res);
-		mShaders.find(mCurProg)->second->use();
+		//mShaders.find(mCurProg)->second->setVec2("uRes", res);
+		mpShaderMan->getCurrentShader()->setVec2("uRes", res);
+		mpShaderMan->use();
+		//mShaders.find(mCurProg)->second->use();
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

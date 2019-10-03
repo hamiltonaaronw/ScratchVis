@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 
+#include "ShaderManager.h"
 #include "Shaders/Shader.h"
 #include "Audio/Audio.h"
 #include "Text.h"
@@ -42,16 +43,6 @@ enum SetupStage
 	CLEAR_SCREEN
 };
 
-enum ShaderProgram
-{
-	PSYCH,
-	RETRO,
-	DISCO,
-	EYE,
-	LIGHTS,
-	MISC
-};
-
 class Graphics
 {
 private:
@@ -73,9 +64,10 @@ private:
 	static void framebuffer_size_callback	(GLFWwindow* window, int width, int height);
 
 	// variables
-	GLFWwindow	*mpWindow;
-	Audio		*mpAudio;
-	Text		*mpText;
+	GLFWwindow		*mpWindow;
+	Audio			*mpAudio;
+	Text			*mpText;
+	ShaderManager	*mpShaderMan;
 	
 	ShaderProgram	 mCurProg;
 	ViewMode		 mViewMode;

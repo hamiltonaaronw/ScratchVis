@@ -31,11 +31,14 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{335bee13-1bbe-44de-84a4-c8514ecb160f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Headers">
+      <UniqueIdentifier>{eee164ec-7cf8-4eb4-926f-d287d410fd90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Source">
+      <UniqueIdentifier>{900a422c-e347-4a50-8a04-507b9090f85c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Shaders</Filter>
-    </ClCompile>
     <ClCompile Include="Audio\Audio.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
@@ -51,13 +54,16 @@
     <ClCompile Include="Text.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Shaders\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderManager.cpp">
+      <Filter>Shaders\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\Audio.h">
       <Filter>Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders\Shader.h">
-      <Filter>Shaders</Filter>
     </ClInclude>
     <ClInclude Include="dirent.h">
       <Filter>Header Files</Filter>
@@ -67,6 +73,12 @@
     </ClInclude>
     <ClInclude Include="Text.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\Shader.h">
+      <Filter>Shaders\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderManager.h">
+      <Filter>Shaders\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
