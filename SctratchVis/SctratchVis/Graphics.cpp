@@ -37,14 +37,15 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 		break;
 
 	case CURRENT_SHADER:
-		std::cout << "Current Shader Program:\t\t" << mShaders.find(mCurProg)->second->getProgramName() << std::endl;
+		
+		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName(); << std::endl;
 		break;
 
 	case LIST_SHADERS:
 		std::cout << "Shader programs: " << std::endl;
 		for (int i = 0; i < mNumShaders; i++)
 		{
-			std::cout << i << ".\t\t" <<mShaders.find(mCurProg)->second->getProgramName() << std::endl;
+			//std::cout << i << ".\t\t" << mpShaderMan->get << std::endl;
 		}
 		if (isIO)
 		{
@@ -122,10 +123,11 @@ void Graphics::init()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
+	/*
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	*/
 	mpAudio = new Audio();
 
 	this->userSetup(SetupStage::MUSIC_DIR);
@@ -335,6 +337,7 @@ void Graphics::reloadShader()
 
 void Graphics::render()
 {
+	mpShaderMan->toggleShader(0);
 	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
 	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
 
@@ -451,7 +454,7 @@ void Graphics::selectShader(int i)
 		return;
 	}
 
-	this->setCurProg((ShaderProgram)i);
+	mpShaderMan->setCurProg((ShaderProgram)i);
 }
 
 void Graphics::togglePauseSong()

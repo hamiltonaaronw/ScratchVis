@@ -25,7 +25,7 @@ struct ShaderInfo
 	const char*			mGeomPath;
 
 	ShaderInfo(const char* n, unsigned int vi, unsigned int fi, unsigned int gi, const char* vp, const char* fp, const char* gp)
-		: mName(),
+		: mName(n),
 		mVID(vi), mFID(fi), mGID(gi),
 		mVertPath(vp), mFragPath(fp), mGeomPath(gp)
 	{}
