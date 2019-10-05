@@ -5,11 +5,6 @@ Graphics::Graphics()
 	init();
 }
 
-void Graphics::addShader(ShaderProgram p, Shader *s)
-{
-	mShaders.insert(std::pair<ShaderProgram, Shader*>(p, s));
-}
-
 void Graphics::clean()
 {
 	glDeleteVertexArrays(1, &mVAO);
@@ -25,7 +20,8 @@ void Graphics::clean()
 	mpText = NULL;
 	delete mpText;
 
-	mShaders.clear();
+	mpShaderMan = NULL;
+	delete mpShaderMan;
 }
 
 void Graphics::debugOutput(DebugOutputType type, bool isIO)
@@ -38,7 +34,7 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 
 	case CURRENT_SHADER:
 		
-		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName(); << std::endl;
+		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName() << std::endl;
 		break;
 
 	case LIST_SHADERS:
@@ -46,6 +42,7 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 		for (int i = 0; i < mNumShaders; i++)
 		{
 			//std::cout << i << ".\t\t" << mpShaderMan->get << std::endl;
+			std::cout << i << ".\t\t" << mpShaderMan->getShaderName((ShaderProgram)i) << std::endl;
 		}
 		if (isIO)
 		{
@@ -213,13 +210,11 @@ void Graphics::processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
 			mpShaderMan->toggleShader(1);
-			//this->toggleShader(1);
 
 	// toggle shader programs : previous shader program - DOWN ARROW
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
 			mpShaderMan->toggleShader(mpShaderMan->getNumShaders() - 1);
-			//this->toggleShader(mNumShaders - 1);
 
 	// shuffle songs - Q
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -231,7 +226,7 @@ void Graphics::processInput(GLFWwindow *window)
 		// reload shader - R
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 			if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
-				this->reloadShader();
+				mpShaderMan->reloadShader();
 	}
 
 	// pause/resume song - SPACE
@@ -313,28 +308,6 @@ void Graphics::processInput(GLFWwindow *window)
 	}
 }
 
-void Graphics::reloadShader()
-{
-	std::string name = mShaders.find(mCurProg)->second->getProgramName();
-	std::cout << "Loading Shader Program " << name << std::endl << std::endl;
-
-	std::string vPath = mShaders.find(mCurProg)->second->getVertPath();
-	std::string fPath = mShaders.find(mCurProg)->second->getFragPath();
-	std::string gPath = mShaders.find(mCurProg)->second->getGeomPath();
-	unsigned int vID = mShaders.find(mCurProg)->second->getVertID();
-	unsigned int fID = mShaders.find(mCurProg)->second->getFragID();
-	unsigned int gID = mShaders.find(mCurProg)->second->getGeomID();
-
-	glDeleteProgram(mShaders.find(mCurProg)->second->getID());
-	mShaders.find(mCurProg)->second = NULL;
-
-	if (gPath.empty())
-		mShaders.find(mCurProg)->second = new Shader(name.c_str(), vID, fID, 0, vPath.c_str(), fPath.c_str(), NULL);
-	else
-		mShaders.find(mCurProg)->second = new Shader(name.c_str(), vID, fID, gID, vPath.c_str(), fPath.c_str(), gPath.c_str());
-
-}
-
 void Graphics::render()
 {
 	mpShaderMan->toggleShader(0);
@@ -407,9 +380,6 @@ void Graphics::render()
 		{
 			curFreq = mpAudio->getFreq();
 			dFreq = curFreq - lastFreq;
-			//mShaders.find(mCurProg)->second->setFloat("uFreq", curFreq);
-			//mShaders.find(mCurProg)->second->setFloat("uDeltaFreq", dFreq);
-			//mShaders.find(mCurProg)->second->setFloat("uLastFreq", lastFreq);
 			mpShaderMan->getCurrentShader()->setFloat("uFreq", curFreq);
 			mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", dFreq);
 			mpShaderMan->getCurrentShader()->setFloat("uLastFreq", lastFreq);
@@ -417,24 +387,18 @@ void Graphics::render()
 
 			curFrame = (float)(glfwGetTime());
 			dTime = curFrame - lastFrame;
-			//mShaders.find(mCurProg)->second->setFloat("uTime", curFrame);
-			//mShaders.find(mCurProg)->second->setFloat("uDeltaTime", dTime);
-			//mShaders.find(mCurProg)->second->setFloat("uLastFrame", lastFrame);
 			mpShaderMan->getCurrentShader()->setFloat("uTime", curFrame);
 			mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", dTime);
 			mpShaderMan->getCurrentShader()->setFloat("uLastFrame", lastFrame);
 			lastFrame = curFrame;
 
-			//mShaders.find(mCurProg)->second->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 			mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		}
 		else
 			glfwSetTime(curFrame);
 
-		//mShaders.find(mCurProg)->second->setVec2("uRes", res);
 		mpShaderMan->getCurrentShader()->setVec2("uRes", res);
 		mpShaderMan->use();
-		//mShaders.find(mCurProg)->second->use();
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -460,19 +424,6 @@ void Graphics::selectShader(int i)
 void Graphics::togglePauseSong()
 {
 	mpAudio->togglePause();
-}
-
-void Graphics::toggleShader(int prevNext)
-{
-	int cProg = ((int)mCurProg + prevNext) % mNumShaders;
-	this->setCurProg((ShaderProgram)cProg);
-
-	mShaders.find(mCurProg)->second->use();
-	this->reloadShader();
-
-	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
-	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-	this->debugOutput(DebugOutputType::SPACE, false);
 }
 
 void Graphics::toggleTextRender()

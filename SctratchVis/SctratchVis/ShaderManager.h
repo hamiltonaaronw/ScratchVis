@@ -37,7 +37,7 @@ private:
 	// functions
 	void clean();
 	void init();
-	void unloadShader(ShaderProgram p);
+	void unloadCurShader();
 
 	// variables
 	std::map<ShaderProgram, ShaderInfo*> mShaders;
@@ -60,6 +60,9 @@ public:
 
 	void setNumShaders(int s)	{ mNumShaders = s; ; }
 	int getNumShaders()			{ return mNumShaders; };
+
+	std::string getCurShaderName() { return mpCurShader->getProgramName(); };
+	std::string getShaderName(ShaderProgram p) { return mShaders.find(p)->second->mName; };
 
 	// functions
 	void addShader(ShaderProgram p, ShaderInfo *s);

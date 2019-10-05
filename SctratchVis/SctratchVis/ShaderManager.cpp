@@ -50,10 +50,12 @@ void ShaderManager::toggleShader(int prevNext)
 	if (mpCurShader)
 		glDeleteProgram(mpCurShader->getID());
 
+	this->unloadCurShader();
+
 	mpCurShader = new Shader(pTmp->mName, pTmp->mVID, pTmp->mFID, pTmp->mGID, pTmp->mVertPath, pTmp->mFragPath, pTmp->mGeomPath);
 }
 
-void ShaderManager::unloadShader(ShaderProgram p)
+void ShaderManager::unloadCurShader()
 {
 	mpCurShader = NULL;
 	delete mpCurShader;
@@ -61,7 +63,7 @@ void ShaderManager::unloadShader(ShaderProgram p)
 
 void ShaderManager::use()
 {
-	if (mpCurShader == NULL)
+	if (!mpCurShader)
 		toggleShader(0);
 
 	mpCurShader->use();

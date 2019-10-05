@@ -47,17 +47,14 @@ class Graphics
 {
 private:
 	// functions
-	void addShader			(ShaderProgram p, Shader *s);
 	void clean				();
 	void debugOutput		(DebugOutputType type, bool isIO);
 	void drawText			();
 	void hotReloadAudio		(bool changeDir);
 	void init				();
 	void processInput		(GLFWwindow *window);
-	void reloadShader		();
 	void selectShader		(int i);
 	void togglePauseSong	();
-	void toggleShader		(int prevNext);
 	void toggleTextRender	();
 	void userSetup			(SetupStage stage);
 
@@ -72,8 +69,6 @@ private:
 	ShaderProgram	 mCurProg;
 	ViewMode		 mViewMode;
 	AudioInputMode	 mAudioInputMode;
-
-	std::map<ShaderProgram, Shader*> mShaders;
 
 	bool mRenderText;
 
