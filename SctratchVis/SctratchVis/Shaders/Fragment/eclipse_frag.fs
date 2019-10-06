@@ -176,6 +176,24 @@ vec4 col(vec2 p)
 	return ret;
 }
 
+vec3 col2()
+{
+	vec2 pos = ((gl_FragCoord.xy - uRes * 0.5) / min(uRes.x, uRes.y));
+
+	float len = length(pos);
+	float dir = atan(pos.y / pos.x);
+
+	float r = mod(uTime, 10.0) / 10.0 + sin(dir * (2.0 + mod(uTime, 10.0)) + uTime * 0.1) * 0.12;
+
+	float d = abs(len - r);
+
+	float alpha = d < 0.01 ? 1.0 : 0.0;
+
+	vec3 c = vec3(pos.xy / len, 0.8);
+
+	return vec3(c * alpha);
+}
+
 void main()
 {
 	vec2 uv = gl_FragCoord.xy / uRes / oTexCoord;
@@ -190,5 +208,5 @@ void main()
 	ret /= col(vec2(r.x * 1.75, r.y));
 
 
-	retColor = ret;
+	retColor = ret;;
 }

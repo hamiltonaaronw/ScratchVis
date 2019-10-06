@@ -11,7 +11,9 @@ enum ShaderProgram
 	DISCO,
 	EYE,
 	LIGHTS,
-	ECLIPSE
+	ECLIPSE,
+	FRACTID,
+	MISC
 };
 
 struct ShaderInfo
