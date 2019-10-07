@@ -44,21 +44,27 @@ vec3 col(vec2 p)
 	float f = min(uFreq, uLastFreq) + abs(uDeltaFreq / 2.0);
 	float ft = smoothstep(uTime, uFreq, f);
 	float tf = uTime / f;
-	ft *= sinc(cosc(tf));
-	f += smoothstep(max(ft, tf), min(tf, ft), f / 100.0) * sinc(uFreq);
+	ft *= sinc(cosc(tf * length(oTexCoord)));
+	f += smoothstep(max(ft, tf), min(tf, ft), 1.0 / f);
+
+	//c = vec3(f, ft, tf) * uFreq;
+
 	for (float j = 0.0; j < 3.0; j++)
 	{
 		for (float i = 1.0; i < 12.0; i++)
 		{
-			p.x += 0.115 / (i + j) * sin(i * 15.87654321 * p.y + uTime +
-						cos((f / (7.0 * i * sin(f))) * i + j * f));
-			p.y += 0.13 / (i + j) * cos(i * 5.0 * p.x + uTime + 
-						sinc((f / (5.3456 * i + cos(f)) / 2.0) * i + j + f));
+			//p *= rot(ft);
+			p.x += 0.115 / (i + j) * sin((f / sinc(ft)) * 15.87654321 * p.y + uTime +
+						cos((f / (7.0 * i * sinc(f))) * i + j * f));
+			p.y += 0.13 / (i + j) * cos((f * cosc(tf)) * 5.0 * p.x + uTime + 
+						sinc((f / (5.3456 * i + cosc(f)) / 2.0) * i + j + f));
+
+			//p *= sinc(cosc(f)) / cosc(sinc(ft));
 		}
 
 
-		p *= length(p * f) / (dot(p, p) / sinc(ft * uFreq)) / f;;
-		c[int(j)] = abs(sinc(p.y / p.x) * f - (ft * 0.125));// + f;// - ft;
+		p *= length(p * f * oTexCoord) / (dot(p, oTexCoord) / sinc(ft * uFreq)) / f;;
+		c[int(j)] += abs(sinc(p.y / p.x) * f - (ft * 0.125));// + f;// - ft;
 	}
 
 	c *= (f * 1.05);
