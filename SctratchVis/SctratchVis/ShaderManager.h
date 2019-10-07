@@ -13,6 +13,7 @@ enum ShaderProgram
 	LIGHTS,
 	ECLIPSE,
 	FRACTID,
+	SMOKE,
 	MISC
 };
 
