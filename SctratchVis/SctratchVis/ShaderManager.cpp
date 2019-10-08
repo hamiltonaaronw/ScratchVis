@@ -31,6 +31,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::FRACTID,		new ShaderInfo("Fractid",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/fractid_frag.fs",		NULL));
 	this->addShader(ShaderProgram::SMOKE,		new ShaderInfo("Smoke",				0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/smoke_frag.fs",		NULL));
 	this->addShader(ShaderProgram::FLOWER,		new ShaderInfo("Flowers",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/flowers_frag.fs",		NULL));
+	this->addShader(ShaderProgram::LIGHTNING,	new ShaderInfo("Lightning",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightning_frag.fs",	NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

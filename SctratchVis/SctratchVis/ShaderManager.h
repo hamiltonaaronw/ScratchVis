@@ -15,6 +15,7 @@ enum ShaderProgram
 	FRACTID,
 	SMOKE,
 	FLOWER,
+	LIGHTNING,
 	MISC
 };
 
