@@ -419,6 +419,10 @@ void Graphics::selectShader(int i)
 	}
 
 	mpShaderMan->setCurProg((ShaderProgram)i);
+
+	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
+	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+	this->debugOutput(DebugOutputType::SPACE, false);
 }
 
 void Graphics::togglePauseSong()

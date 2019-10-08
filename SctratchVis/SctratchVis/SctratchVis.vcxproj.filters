@@ -112,5 +112,8 @@
     <None Include="Shaders\Fragment\smoke_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
+    <None Include="Shaders\Fragment\flowers_frag.fs">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
   </ItemGroup>
 </Project>

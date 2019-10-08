@@ -222,6 +222,7 @@
     <None Include="Shaders\Fragment\disco_thicc_frag.fs" />
     <None Include="Shaders\Fragment\eclipse_frag.fs" />
     <None Include="Shaders\Fragment\eye_frag.fs" />
+    <None Include="Shaders\Fragment\flowers_frag.fs" />
     <None Include="Shaders\Fragment\fractid_frag.fs" />
     <None Include="Shaders\Fragment\lightshow_frag.fs" />
     <None Include="Shaders\Fragment\smoke_frag.fs" />

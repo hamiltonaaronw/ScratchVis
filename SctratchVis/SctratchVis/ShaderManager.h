@@ -14,6 +14,7 @@ enum ShaderProgram
 	ECLIPSE,
 	FRACTID,
 	SMOKE,
+	FLOWER,
 	MISC
 };
 
