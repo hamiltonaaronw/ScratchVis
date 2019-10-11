@@ -91,9 +91,9 @@ vec3 col(vec2 p)
 		t /= 10.0;
 
 		fc += t * vec3(
-						(uFreq * i * lp) * ft * 100.0, 
-						sinc((i / ft)) / lp / f,
-						f / (i / uFreq) / lp
+						((uFreq * i * lp) * ft) + sin(fc.y * 10.0) * 10.0,
+						(sinc((i / ft)) / lp / f),
+						(f / (i / uFreq) / lp)
 					   );
 
 		fc *= sin(uTime * uFreq * sin(sp));
@@ -105,13 +105,14 @@ vec3 col(vec2 p)
 
 vec3 cols(vec2 p)
 {
-	vec3 ret = vec3(0.0);
-	for (int i = 0; i < TAU; i++)
+	vec3 ret = col(p);
+
+	for (float i = 1; i < TAU; i++)
 	{
-		if ((uFreq * 15) >= (float(i) + mod(uTime, PI * 0.75)))
+		if ((uFreq * (TAU * 3.0)) >= (i + mod(uTime, TAU - abs(floor(uFreq + (PI + (PI / 2)))))))
 		{
-			p = (gl_FragCoord.xy / uRes.xy) * 2.0 - (0.5 + float(i));
-			ret += col(p) ;
+			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.5 + i);
+			ret += col(p);// * ((i + 1) / 2.0);
 		}
 	}
 
