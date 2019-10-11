@@ -10,8 +10,11 @@ uniform float uLastFreq;
 uniform float uDeltaFreq;
 
 uniform float uTime;
+uniform float uDeltaTime;
 
 uniform vec2 uRes;
+
+uniform float[256] uSpectrum;
 
 out vec4 retColor;
 
@@ -78,20 +81,22 @@ vec3 col(vec2 p)
 	float lp = length(p) / 100.0;
 	float dp = dot(p, p);
 
-	vec3 fc = vec3(sinc(ft) * 0.01);// * 0.01);
+	vec3 fc = vec3(sinc(ft) * 0.01);
 	for (float i = 1.0; i <= c; ++i)
 	{
-		float t = abs(i * uFreq / ((p.x + fbm(p + ts - sin(f * i * uFreq))) * (i * f)));//100.0 * f)));
+		float sp = uSpectrum[int(mod(floor(i * 10.56) + p.x, 256.0))] / 10.0;
+		float t = abs(i * uFreq / ((p.x + fbm(p + ts - sin(f * i * uFreq + sin(p.x / uTime * sp)))) * (i * f)));
 
 		t *= pow(sin(lp), 2.0) * (uFreq / lp * sin(f));
-				t /= 10.0;
+		t /= 10.0;
 
 		fc += t * vec3(
 						(uFreq * i * lp) * ft * 100.0, 
 						sinc((i / ft)) / lp / f,
 						f / (i / uFreq) / lp
 					   );
-		fc *= sin(uTime * uFreq);
+
+		fc *= sin(uTime * uFreq * sin(sp));
 	}
 
 	vec3 ret = fc * f * 10.0;
@@ -103,8 +108,11 @@ vec3 cols(vec2 p)
 	vec3 ret = vec3(0.0);
 	for (int i = 0; i < TAU; i++)
 	{
-		p = (gl_FragCoord.xy / uRes.xy) * 2.0 - (0.5 + float(i));
-		ret += col(p);
+		if ((uFreq * 15) >= (float(i) + mod(uTime, PI * 0.75)))
+		{
+			p = (gl_FragCoord.xy / uRes.xy) * 2.0 - (0.5 + float(i));
+			ret += col(p) ;
+		}
 	}
 
 	return ret * 0.5;

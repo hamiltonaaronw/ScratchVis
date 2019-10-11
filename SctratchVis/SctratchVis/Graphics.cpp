@@ -165,15 +165,6 @@ void Graphics::init()
 
 	this->userSetup(SetupStage::CLEAR_SCREEN);
 
-	/*
-	this->addShader(ShaderProgram::PSYCH,	new Shader("Psychedelicious", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs", NULL));
-	this->addShader(ShaderProgram::RETRO,	new Shader("Retro", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs", NULL));
-	this->addShader(ShaderProgram::DISCO,	new Shader("DiscoTHICC", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs", NULL));
-	this->addShader(ShaderProgram::EYE,		new Shader("Eye", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs", NULL));
-	this->addShader(ShaderProgram::LIGHTS,	new Shader("Lightshow", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs", NULL));
-	this->addShader(ShaderProgram::ECLIPSE, new Shader("Eclipse", 0, 0, 0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eclipse_frag.fs", NULL));
-	*/
-
 	mpShaderMan = new ShaderManager();
 	mNumShaders = mpShaderMan->getNumShaders();
 }
@@ -396,6 +387,7 @@ void Graphics::render()
 		}
 		else
 			glfwSetTime(curFrame);
+
 
 		mpShaderMan->getCurrentShader()->setVec2("uRes", res);
 		mpShaderMan->use();

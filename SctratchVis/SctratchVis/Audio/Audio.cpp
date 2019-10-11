@@ -238,6 +238,9 @@ void Audio::toggleSong(int prevNext)
 	res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
 	FMODErrorCheck(res);
 
+	res = FMOD_Channel_SetPaused(mpChannel, mIsPaused);
+	FMODErrorCheck(res);
+
 	mIsPlaying = true;
 }
 
