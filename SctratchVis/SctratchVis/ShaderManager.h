@@ -34,6 +34,18 @@ struct ShaderInfo
 		mVID(vi), mFID(fi), mGID(gi),
 		mVertPath(vp), mFragPath(fp), mGeomPath(gp)
 	{}
+
+	~ShaderInfo()
+	{
+		if (mName)
+			delete[] mName;
+		if (mVertPath)
+			delete[] mVertPath;
+		if (mFragPath)
+			delete[] mFragPath;
+		if (mGeomPath)
+			delete[] mGeomPath;
+	}
 };
 
 class ShaderManager

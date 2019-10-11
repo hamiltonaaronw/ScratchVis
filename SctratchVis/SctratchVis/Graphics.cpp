@@ -7,10 +7,10 @@ Graphics::Graphics()
 
 void Graphics::clean()
 {
+	glfwTerminate();
+
 	glDeleteVertexArrays(1, &mVAO);
 	glDeleteBuffers(1, &mVBO);
-
-	glfwTerminate();
 
 	mpAudio->unloadAudio();
 
