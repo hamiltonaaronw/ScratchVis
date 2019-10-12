@@ -88,10 +88,10 @@ vec3 col(vec2 p, float mult)
 		float t = abs(i * uFreq / ((p.x + fbm(p + ts - sin(f * i * uFreq + sin(p.x / uTime * sp)))) * (i * f)));
 
 		t *= pow(sin(lp), 2.0) * (uFreq / lp * sin(f));
-		t /= 10.0;
+		t /= 5.0;
 
 		fc += t * vec3(
-						((uFreq * i * lp) * ft) + sinc(mult + p.x),// + sin(fc.y * mult),
+						((uFreq * i * lp) * ft) + sinc(p.x),
 						(sinc((i / ft)) / lp / f) ,
 						(f / (i / uFreq) / lp)
 					   );
@@ -117,12 +117,11 @@ vec3 cols(vec2 p)
 
 		float avg = sum / 32.0;
 
-		if (cos(avg * mod(uTime, uDeltaFreq)) >= uFreq * i)
+		if (cos(avg * mod(uTime, uDeltaFreq)) >= mod(uTime, i + 1.0) *( uFreq * i))
 		{
 			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.5 + i);
-			float it = i + 1;
-			float m = avg + (i *( p.x / 2.0));
-			//m *= mod(uTime, m);
+			float m = avg + i;
+
 			ret += col(p, m);
 		}
 	}
