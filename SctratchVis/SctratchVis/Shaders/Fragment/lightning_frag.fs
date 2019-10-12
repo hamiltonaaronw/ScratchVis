@@ -61,7 +61,7 @@ float fbm(vec2 p)
 	return ret;
 }
 
-vec3 col(vec2 p)
+vec3 col(vec2 p, float mult)
 {
 	float c = 20.0;
 
@@ -91,32 +91,43 @@ vec3 col(vec2 p)
 		t /= 10.0;
 
 		fc += t * vec3(
-						((uFreq * i * lp) * ft) + sin(fc.y * 10.0) * 10.0,
-						(sinc((i / ft)) / lp / f),
+						((uFreq * i * lp) * ft) + sinc(mult + p.x),// + sin(fc.y * mult),
+						(sinc((i / ft)) / lp / f) ,
 						(f / (i / uFreq) / lp)
 					   );
 
 		fc *= sin(uTime * uFreq * sin(sp));
 	}
 
-	vec3 ret = fc * f * 10.0;
+	vec3 ret = fc * f * 15.0;
 	return ret;
 }
 
 vec3 cols(vec2 p)
 {
-	vec3 ret = col(p);
+	vec3 ret = vec3(0);
 
-	for (float i = 1; i < TAU; i++)
+	for (float i = 0; i < 8; i++)
 	{
-		if ((uFreq * (TAU * 3.0)) >= (i + mod(uTime, TAU - abs(floor(uFreq + (PI + (PI / 2)))))))
+		int j = (256 /  8) * int(i);
+		float sum = 0.0;
+		for (int k = j; k < j + 31; k++)	
+			if (k < 256)
+				sum += uSpectrum[k];
+
+		float avg = sum / 32.0;
+
+		if (cos(avg * mod(uTime, uDeltaFreq)) >= uFreq * i)
 		{
 			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.5 + i);
-			ret += col(p);// * ((i + 1) / 2.0);
+			float it = i + 1;
+			float m = avg + (i *( p.x / 2.0));
+			//m *= mod(uTime, m);
+			ret += col(p, m);
 		}
 	}
 
-	return ret * 0.5;
+	return ret;
 }
 
 void main()
