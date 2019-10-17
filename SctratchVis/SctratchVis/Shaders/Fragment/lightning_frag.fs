@@ -116,8 +116,10 @@ vec3 cols(vec2 p)
 				sum += uSpectrum[k];
 
 		float avg = sum / 32.0;
-
-		if (cos(avg * mod(uTime, uDeltaFreq)) >= mod(uTime, i + 1.0) *( uFreq * i))
+		float b = abs(abs(sin(avg) - cos(avg)) - abs(sin(uFreq) - cos(uFreq)));
+		b *= (i + 1.0);
+		float con = sin(uTime * i) * (uFreq * j);
+		if (b >= con)
 		{
 			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.5 + i);
 			float m = avg + i;
