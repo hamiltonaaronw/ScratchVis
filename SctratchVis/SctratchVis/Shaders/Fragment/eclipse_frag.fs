@@ -196,7 +196,7 @@ vec3 col2()
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes / oTexCoord;
+	vec2 uv = gl_FragCoord.xy / uRes * 2.0 - 2.0;
 
 	vec2 r = uRes;
 

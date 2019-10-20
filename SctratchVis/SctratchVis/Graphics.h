@@ -73,9 +73,9 @@ private:
 	bool mRenderText;
 
 	int					mNumShaders;
-	const unsigned int	SCR_WIDTH = 800,
-						SCR_HEIGHT = 600;
-	unsigned int		mVBO,
+	unsigned int		msWidth,
+						msHeight,
+						mVBO,
 						mVAO, 
 						mEBO,
 						mSWidth, 

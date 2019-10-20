@@ -119,6 +119,7 @@ void Graphics::init()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
 	/*
 	glEnable(GL_CULL_FACE);
@@ -136,7 +137,9 @@ void Graphics::init()
 	switch (mViewMode)
 	{
 	case VIEW_DEBUG:
-		mpWindow = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Don't do drugz", NULL, NULL);
+		msWidth = 800;
+		msHeight = 600;
+		mpWindow = glfwCreateWindow(msWidth, msHeight, "Don't do drugz", NULL, NULL);
 
 		break;
 
@@ -355,8 +358,6 @@ void Graphics::render()
 		curFreq = 0.0,
 		dFreq = 0.0;
 
-	glm::vec2 res(SCR_WIDTH, SCR_HEIGHT);
-
 	// render loop
 	while (!glfwWindowShouldClose(mpWindow))
 	{
@@ -388,8 +389,16 @@ void Graphics::render()
 		else
 			glfwSetTime(curFrame);
 
+		int w, h;
+		glfwGetFramebufferSize(mpWindow, &w, &h);
+		float xs, ys;
+		glfwGetWindowContentScale(mpWindow, &xs, &ys);
+		float x = (float)w * xs;
+		x /= 1.5;
+		float y = (float)h * ys;
+		y = 1.5;
 
-		mpShaderMan->getCurrentShader()->setVec2("uRes", res);
+		mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)w / 2.0, (float)h / 2.0));
 		mpShaderMan->use();
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);

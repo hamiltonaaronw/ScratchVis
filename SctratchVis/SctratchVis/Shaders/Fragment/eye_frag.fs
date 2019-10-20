@@ -109,14 +109,15 @@ float wiggle(vec2 p, float r)
 vec3 eye(vec2 uv)
 {
 	vec2 q = uv;//gl_FragCoord.xy / uRes;
-	vec2 p = -0.5 + q * 2.5;
-	p.x *= uRes.x / uRes.y;
+	//vec2 p = -0.5 + q * 2.5;
+	vec2 p = q;
+	//p.x *= uRes.x / uRes.y;
 
 	float bg = 1.0;
 
-	p -= 0.9;
-	p.x -= 2.5;
-	p.y -= 0.75;
+	//p -= 0.9;
+	//p.x -= 2.5;
+	//p.y -= 0.75;
 	float r = sqrt(dot(p, p));
 	float a = atan(p.y, p.x);
 
@@ -168,7 +169,9 @@ vec3 eye(vec2 uv)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes;
+	vec2 uv = gl_FragCoord.xy / uRes.xy * 2.0 - 2.0;
+
+
 	vec4 ret = vec4(eye(uv), 1.0);
 
 	retColor = ret;

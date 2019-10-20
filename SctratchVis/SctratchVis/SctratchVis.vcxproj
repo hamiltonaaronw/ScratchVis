@@ -226,6 +226,7 @@
     <None Include="Shaders\Fragment\fractid_frag.fs" />
     <None Include="Shaders\Fragment\lightning_frag.fs" />
     <None Include="Shaders\Fragment\lightshow_frag.fs" />
+    <None Include="Shaders\Fragment\miscshader_frag.fs" />
     <None Include="Shaders\Fragment\smoke_frag.fs" />
     <None Include="Shaders\Fragment\tunnel_frag.fs" />
     <None Include="Shaders\Fragment\vintage_frag.fs" />

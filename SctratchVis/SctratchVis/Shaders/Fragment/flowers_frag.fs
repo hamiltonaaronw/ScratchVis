@@ -79,7 +79,7 @@ void main()
 {	
 	vec4 ret;
 
-	vec2 uv = gl_FragCoord.xy - uRes + oTexCoord;
+	vec2 uv = gl_FragCoord.xy - uRes;
 
 	ret = vec4(col(uv), 1.0);
 

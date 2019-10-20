@@ -130,13 +130,10 @@ vec3 ren(vec2 p)
 
 void main()
 {
-	vec2 p = gl_FragCoord.xy / uRes.xy * 2.0 - 1.0;
-	p.x *= uRes.x / uRes.y * 0.9;
-	p.x -= 1.75;
-	p.y -= 0.75;
+	vec2 p = gl_FragCoord.xy / uRes.xy * 2.0 - 2.0;
+
 
 	float a = smoothstep(uFreq, uLastFreq, uDeltaTime);
 
 	retColor = vec4(ren(p * 0.25) * a,mod(a, 1.0));
-	//retColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

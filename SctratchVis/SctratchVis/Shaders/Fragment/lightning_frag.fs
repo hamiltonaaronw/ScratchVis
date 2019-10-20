@@ -121,7 +121,7 @@ vec3 cols(vec2 p)
 		float con = sin(uTime * i) * (uFreq * j);
 		if (b >= con)
 		{
-			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.5 + i);
+			p = (gl_FragCoord.xy / uRes.xy) * PI - (0.25 + i);
 			float m = avg + i;
 
 			ret += col(p, m);
@@ -136,7 +136,7 @@ void main()
 	vec4 ret;
 	vec2 uv;
 
-	uv = (gl_FragCoord.xy / uRes.xy) * 2.0 - 0.5;// - 1.0;
+	uv = (gl_FragCoord.xy / uRes.xy) * 2.0 - 0.25;// - 1.0;
 	ret = vec4(cols(uv), 1.0);
 
 	retColor = ret;

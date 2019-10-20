@@ -175,16 +175,19 @@ void vr(out vec4 ret, in vec2 fCoord, in vec3 pos, in vec3 dir)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes * oTexCoord;
+	vec2 uv = gl_FragCoord.xy / uRes * 1.5 * oTexCoord;
 	vec2 coords = cosc(mod(uTime, max(uFreq, 3.0))) *
 		//mod(cosc(uTime), 3.0) *// - mod(uTime, sinc(uFreq) + cosc(uFreq))) * 
-		(gl_FragCoord.xy -  uRes) / 
+		(gl_FragCoord.xy - uRes) / 
 		(mod(uTime, max(uv.y, uRes.x) *
 		max(uv.x, uRes.y)) - 
 		(pow(uFreq, uDeltaTime)));
 
+
 	coords += uFreq / (TAU + uDeltaTime * uFreq);
 	coords *= PI;
+	//coords -= uv / PI;
+	//coords.x -= (uv.x / 0.5);
 
 	vec3 rayDir = normalize(vec3(coords, 1.0 + 0.0 * sqrt(coords.x * coords.x + coords.y * coords.y))) * uFreq;
 	vec3 rayPos = vec3(0.0, -1.0, uTime * 1.0);

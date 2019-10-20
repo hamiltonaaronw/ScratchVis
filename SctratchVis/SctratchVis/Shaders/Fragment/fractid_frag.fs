@@ -93,7 +93,7 @@ vec4 col(vec2 p)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy + uRes * sinc(uFreq);
+	vec2 uv = gl_FragCoord.xy + uRes * sinc(uFreq / uTime);
 
 	vec4 ret;
 
