@@ -2,7 +2,7 @@
 
 Graphics::Graphics()
 {
-	init();
+	initAll();
 }
 
 void Graphics::clean()
@@ -93,6 +93,8 @@ void Graphics::framebuffer_size_callback(GLFWwindow* window, int width, int heig
 
 void Graphics::hotReloadAudio(bool changeDir)
 {
+	int iJunk = 0;
+	std::string sJunk = "";
 	std::string d = mpAudio->getMusicDir();
 	mpAudio->unloadAudio();
 	mpAudio = NULL;
@@ -100,7 +102,7 @@ void Graphics::hotReloadAudio(bool changeDir)
 
 	mpAudio = new Audio();
 	if (changeDir)
-		userSetup(SetupStage::MUSIC_DIR);
+		userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
 	else
 		mpAudio->setMusicDir(d);
 	mpAudio->loadSongs();
@@ -110,6 +112,8 @@ void Graphics::hotReloadAudio(bool changeDir)
 
 void Graphics::init()
 {
+	int iJunk = 0;
+	std::string sJunk = "";
 	this->setRenderText(false);
 
 	mpText = new Text();
@@ -121,25 +125,21 @@ void Graphics::init()
 	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
-	/*
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	*/
 	mpAudio = new Audio();
 
-	this->userSetup(SetupStage::MUSIC_DIR);
+	this->userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
 	mpAudio->loadSongs();
-	this->userSetup(SetupStage::SONG);
 
-	this->userSetup(SetupStage::WINDOW);
+	this->userSetup(SetupStage::SONG, iJunk, sJunk);
+
+	this->userSetup(SetupStage::WINDOW, iJunk, sJunk);
 
 	switch (mViewMode)
 	{
 	case VIEW_DEBUG:
 		msWidth = 800;
 		msHeight = 600;
-		mpWindow = glfwCreateWindow(msWidth, msHeight, "Don't do drugz", NULL, NULL);
+		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
 
 		break;
 
@@ -166,10 +166,122 @@ void Graphics::init()
 		return;
 	}
 
-	this->userSetup(SetupStage::CLEAR_SCREEN);
+	this->userSetup(SetupStage::CLEAR_SCREEN, iJunk, sJunk);
 
 	mpShaderMan = new ShaderManager();
 	mNumShaders = mpShaderMan->getNumShaders();
+}
+
+void Graphics::initAll()
+{
+	int n = 0;
+	std::string songDir = "";
+	this->userSetup(SetupStage::MUSIC_DIR, n, songDir);
+	//this->userSetup(SetupStage::SONG, n, songDir);
+	this->userSetup(SetupStage::WINDOW, n, songDir);
+
+	std::thread tAudio(initAudioWrapper,		this, songDir);
+//	std::thread tGraphics(initGraphicsWrapper,	this);
+	std::thread tShaders(initShadersWrapper,	this);
+
+	tAudio.join();
+	tShaders.join();
+//	tGraphics.join();
+
+	this->initGraphics();
+
+	this->userSetup(SetupStage::CLEAR_SCREEN, n, songDir);
+
+	if (!mAudioInit || !mShadersInit)
+	{
+		std::cout << "Something went wrong with initializing ";
+		if (!mAudioInit)
+		{
+			std::cout << "AUDIO ";
+			if (!mShadersInit)
+				std::cout << " and SHADERS\n";
+		}
+		else
+			if (!mShadersInit)
+				std::cout << " SHADERS\n";
+
+		std::cout << "Closing the program\n";
+
+		std::exit(0);
+	}
+}
+
+void Graphics::initAudio(std::string s)
+{
+	mpAudio = new Audio();
+	mpAudio->setMusicDir(s);
+	mpAudio->loadSongs();
+
+	if (mpAudio)
+		this->mAudioInit = true;
+}
+
+void Graphics::initGraphics()
+{
+	this->mGraphicsInit = false;
+	this->setRenderText(false);
+
+	mpText = new Text();
+
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
+
+	switch (mViewMode)
+	{
+	case VIEW_DEBUG:
+		msWidth = 800;
+		msHeight = 600;
+		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
+
+		break;
+
+	case VIEW_FULLSCREEN:
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
+		break;
+	}
+
+	if (mpWindow == NULL)
+	{
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return;
+	}
+	glfwMakeContextCurrent(mpWindow);
+	glfwSetFramebufferSizeCallback(mpWindow, Graphics::framebuffer_size_callback);
+
+	// glad: load all OpenGL function pointers
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return;
+	}
+
+
+	this->mGraphicsInit = true;
+}
+
+void Graphics::initShaders()
+{
+	this->mShadersInit = false;
+
+	mpShaderMan = new ShaderManager();
+
+	if (!mpShaderMan)
+		return;
+	mNumShaders = mpShaderMan->getNumShaders();
+
+	this->mShadersInit = true;
 }
 
 void Graphics::processInput(GLFWwindow *window)
@@ -203,12 +315,22 @@ void Graphics::processInput(GLFWwindow *window)
 	// toggle shader programs : next shader program - UP ARROW
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
+		{
 			mpShaderMan->toggleShader(1);
+			this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
+			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+			this->debugOutput(DebugOutputType::SPACE, false);
+		}
 
 	// toggle shader programs : previous shader program - DOWN ARROW
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
+		{
 			mpShaderMan->toggleShader(mpShaderMan->getNumShaders() - 1);
+			this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
+			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+			this->debugOutput(DebugOutputType::SPACE, false);
+		}
 
 	// shuffle songs - Q
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -436,7 +558,7 @@ void Graphics::toggleTextRender()
 	this->setRenderText(!this->getRenderText());
 }
 
-void Graphics::userSetup(SetupStage stage)
+void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 {
 	int sel;
 
@@ -500,7 +622,8 @@ void Graphics::userSetup(SetupStage stage)
 			if (dir.back() != '\\')
 				dir += '\\';
 
-			mpAudio->setMusicDir(dir);
+			s = dir;
+			//mpAudio->setMusicDir(dir);
 		}
 		else
 		{
@@ -508,8 +631,8 @@ void Graphics::userSetup(SetupStage stage)
 				std::cout << "Invalid input. ";
 			std::cout << "Using default music directory\n";
 
-			mpAudio->setMusicDir("Music/");
-
+			s = "Music/";
+			//mpAudio->setMusicDir("Music/");
 		}
 		break;
 

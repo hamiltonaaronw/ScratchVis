@@ -25,8 +25,10 @@ void Audio::checkEndSong()
 
 void Audio::genRandQueue()
 {
+	std::random_device rd;
+	std::mt19937 g(rd());
 	srand((unsigned int)time(0));
-	std::random_shuffle(mSongs.begin(), mSongs.end());
+	std::shuffle(mSongs.begin(), mSongs.end(), g);
 }
 
 void Audio::initAudio()

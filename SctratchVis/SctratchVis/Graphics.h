@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <thread>
 
 #include "ShaderManager.h"
 #include "Shaders/Shader.h"
@@ -52,25 +53,36 @@ private:
 	void drawText			();
 	void hotReloadAudio		(bool changeDir);
 	void init				();
+	void initAll			();
+	void initAudio			(std::string s);
+	void initGraphics		();
+	void initShaders		();
 	void processInput		(GLFWwindow *window);
 	void selectShader		(int i);
 	void togglePauseSong	();
 	void toggleTextRender	();
-	void userSetup			(SetupStage stage);
+	void userSetup			(SetupStage stage, int &n, std::string &s);
+
+	static void initAudioWrapper		(Graphics *g, std::string s)	{ if (!g) return; g->initAudio(s); };
+	static void initGraphicsWrapper		(Graphics *g)					{ if (!g) return; g->initGraphics(); };
+	static void initShadersWrapper		(Graphics *g)					{ if (!g) return; g->initShaders(); };
 
 	static void framebuffer_size_callback	(GLFWwindow* window, int width, int height);
 
 	// variables
-	GLFWwindow		*mpWindow;
-	Audio			*mpAudio;
-	Text			*mpText;
-	ShaderManager	*mpShaderMan;
+	GLFWwindow			*mpWindow;
+	Audio				*mpAudio;
+	Text				*mpText;
+	ShaderManager		*mpShaderMan;
 	
-	ShaderProgram	 mCurProg;
-	ViewMode		 mViewMode;
-	AudioInputMode	 mAudioInputMode;
+	ShaderProgram		mCurProg;
+	ViewMode			mViewMode;
+	AudioInputMode		mAudioInputMode;
 
-	bool mRenderText;
+	bool				mRenderText,
+						mAudioInit,
+						mGraphicsInit,
+						mShadersInit;
 
 	int					mNumShaders;
 	unsigned int		msWidth,
