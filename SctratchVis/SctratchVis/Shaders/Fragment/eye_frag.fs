@@ -89,7 +89,7 @@ vec2 rz(vec2 z)
 			/ pow(i, z.x);
 	}
 
-	return sum;//* mod(uTime, uFreq);// * sinc(uFreq) * cosc(mod(uTime, 15.0f) * mod(uTime, 3.0f));
+	return sum;
 }
 
 float wiggle(vec2 p, float r)
@@ -169,8 +169,7 @@ vec3 eye(vec2 uv)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes.xy * 2.0 - 2.0;
-
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 
 	vec4 ret = vec4(eye(uv), 1.0);
 

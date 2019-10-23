@@ -22,17 +22,18 @@ void ShaderManager::clean()
 
 void ShaderManager::init()
 {
-	this->addShader(ShaderProgram::PSYCH,		new ShaderInfo("Psychedelicious",	0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/tunnel_frag.fs",		NULL));
-	this->addShader(ShaderProgram::RETRO,		new ShaderInfo("Retro",				0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/vintage_frag.fs",		NULL));
-	this->addShader(ShaderProgram::DISCO,		new ShaderInfo("DiscoTHICC",		0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/disco_thicc_frag.fs",	NULL));
-	this->addShader(ShaderProgram::EYE,			new ShaderInfo("Eye",				0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eye_frag.fs",			NULL));
-	this->addShader(ShaderProgram::LIGHTS,		new ShaderInfo("Lightshow",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightshow_frag.fs",	NULL));
-	this->addShader(ShaderProgram::ECLIPSE,		new ShaderInfo("Eclipse",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/eclipse_frag.fs",		NULL));
-	this->addShader(ShaderProgram::FRACTID,		new ShaderInfo("Fractid",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/fractid_frag.fs",		NULL));
-	this->addShader(ShaderProgram::SMOKE,		new ShaderInfo("Smoke",				0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/smoke_frag.fs",		NULL));
-	this->addShader(ShaderProgram::FLOWER,		new ShaderInfo("Flowers",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/flowers_frag.fs",		NULL));
-	this->addShader(ShaderProgram::LIGHTNING,	new ShaderInfo("Lightning",			0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/lightning_frag.fs",	NULL));
-	this->addShader(ShaderProgram::MISC,		new ShaderInfo("Misc",				0,	0,	0, "Shaders/Vertex/basic_vert.vs", "Shaders/Fragment/miscshader_frag.fs",	NULL));
+	this->addShader(ShaderProgram::PSYCH,				new ShaderInfo("Psychedelicious",	0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/tunnel_frag.fs",			NULL));
+	this->addShader(ShaderProgram::RETRO,				new ShaderInfo("Retro",				0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/vintage_frag.fs",			NULL));
+	this->addShader(ShaderProgram::DISCO,				new ShaderInfo("DiscoTHICC",		0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/disco_thicc_frag.fs",		NULL));
+	this->addShader(ShaderProgram::EYE,					new ShaderInfo("Eye",				0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/eye_frag.fs",				NULL));
+	this->addShader(ShaderProgram::LIGHTS,				new ShaderInfo("Lightshow",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/lightshow_frag.fs",		NULL));
+	this->addShader(ShaderProgram::ECLIPSE,				new ShaderInfo("Eclipse",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/eclipse_frag.fs",			NULL));
+	this->addShader(ShaderProgram::FRACTID,				new ShaderInfo("Fractid",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/fractid_frag.fs",			NULL));
+	this->addShader(ShaderProgram::SMOKE,				new ShaderInfo("Smoke",				0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/smoke_frag.fs",			NULL));
+	this->addShader(ShaderProgram::FLOWER,				new ShaderInfo("Flowers",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/flowers_frag.fs",			NULL));
+	this->addShader(ShaderProgram::LIGHTNING,			new ShaderInfo("Lightning",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/lightning_frag.fs",		NULL));
+	this->addShader(ShaderProgram::PINNEAL,				new ShaderInfo("Pinneal",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/pinneal_frag.fs",			NULL));
+	this->addShader(ShaderProgram::SPACE_STATION,		new ShaderInfo("Space Station",		0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/space_frag.fs",			NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

@@ -118,7 +118,10 @@
     <None Include="Shaders\Fragment\lightning_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\miscshader_frag.fs">
+    <None Include="Shaders\Fragment\pinneal_frag.fs">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\space_frag.fs">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

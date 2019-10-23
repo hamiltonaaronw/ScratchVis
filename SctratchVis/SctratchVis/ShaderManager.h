@@ -16,6 +16,8 @@ enum ShaderProgram
 	SMOKE,
 	FLOWER,
 	LIGHTNING,
+	PINNEAL,
+	SPACE_STATION,
 	MISC
 };
 
