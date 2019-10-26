@@ -18,6 +18,7 @@ enum ShaderProgram
 	LIGHTNING,
 	PINNEAL,
 	SPACE_STATION,
+	TAPESTRY,
 	MISC
 };
 

@@ -457,7 +457,7 @@ void Graphics::render()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// position attribute
+	// position attribute1
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -489,7 +489,6 @@ void Graphics::render()
 		if (!mpAudio->update())
 			glfwSetTime(0.0);
 
-
 		if (!mpAudio->getIsPaused())
 		{
 			curFreq = mpAudio->getFreq();
@@ -513,12 +512,6 @@ void Graphics::render()
 
 		int w, h;
 		glfwGetFramebufferSize(mpWindow, &w, &h);
-		float xs, ys;
-		glfwGetWindowContentScale(mpWindow, &xs, &ys);
-		float x = (float)w * xs;
-		x /= 1.5;
-		float y = (float)h * ys;
-		y = 1.5;
 
 		mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)w / 2.0, (float)h / 2.0));
 		mpShaderMan->use();
