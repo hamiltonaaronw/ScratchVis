@@ -37,6 +37,15 @@
     <Filter Include="Shaders\Source">
       <UniqueIdentifier>{900a422c-e347-4a50-8a04-507b9090f85c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Event">
+      <UniqueIdentifier>{6bfeb970-5902-44fa-9a32-a03fc3103ca9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Event\Source">
+      <UniqueIdentifier>{5edb4010-8c7a-4570-a94a-6974c4675bc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Event\Header">
+      <UniqueIdentifier>{bf309383-2d7b-422c-874e-fa43c0977cf1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio\Audio.cpp">
@@ -60,6 +69,15 @@
     <ClCompile Include="ShaderManager.cpp">
       <Filter>Shaders\Source</Filter>
     </ClCompile>
+    <ClCompile Include="EventManager.cpp">
+      <Filter>Event\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>Event\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="CircularQueue.cpp">
+      <Filter>Event\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\Audio.h">
@@ -79,6 +97,15 @@
     </ClInclude>
     <ClInclude Include="ShaderManager.h">
       <Filter>Shaders\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Event\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="EventManager.h">
+      <Filter>Event\Header</Filter>
+    </ClInclude>
+    <ClInclude Include="CircularQueue.h">
+      <Filter>Event\Header</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

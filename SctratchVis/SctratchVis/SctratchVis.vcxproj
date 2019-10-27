@@ -207,6 +207,9 @@
   <ItemGroup>
     <ClCompile Include="..\SDKs\OpenGL Stuff\Include\src\glad.c" />
     <ClCompile Include="Audio\Audio.cpp" />
+    <ClCompile Include="CircularQueue.cpp" />
+    <ClCompile Include="Event.cpp" />
+    <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="RunGraphics.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -215,7 +218,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\Audio.h" />
+    <ClInclude Include="CircularQueue.h" />
     <ClInclude Include="dirent.h" />
+    <ClInclude Include="Event.h" />
+    <ClInclude Include="EventManager.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Shaders\Shader.h" />

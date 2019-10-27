@@ -491,21 +491,21 @@ void Graphics::render()
 
 		if (!mpAudio->getIsPaused())
 		{
+			// send frequency uniforms to the shader
 			curFreq = mpAudio->getFreq();
 			dFreq = curFreq - lastFreq;
+			mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 			mpShaderMan->getCurrentShader()->setFloat("uFreq", curFreq);
 			mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", dFreq);
 			mpShaderMan->getCurrentShader()->setFloat("uLastFreq", lastFreq);
 			lastFreq = curFreq;
-
+			
+			// send time uniforms to the shader
 			curFrame = (float)(glfwGetTime());
 			dTime = curFrame - lastFrame;
 			mpShaderMan->getCurrentShader()->setFloat("uTime", curFrame);
 			mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", dTime);
 			mpShaderMan->getCurrentShader()->setFloat("uLastFrame", lastFrame);
-			lastFrame = curFrame;
-
-			mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		}
 		else
 			glfwSetTime(curFrame);
