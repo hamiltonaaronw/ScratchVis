@@ -2,12 +2,12 @@
 
 int main()
 {
-	Graphics *pGraphics = new Graphics();
+	gpGraphics = new Graphics();
 
-	pGraphics->render();
+	gpGraphics->render();
 
-	pGraphics = NULL;
-	delete pGraphics;
-
+	gpGraphics = NULL;
+	delete gpGraphics;
 	return 0;
 }
+

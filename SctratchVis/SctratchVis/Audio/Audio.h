@@ -65,6 +65,7 @@ public:
 
 	// Constructor
 	Audio();
+	~Audio();
 
 	// functions
 	void checkEndSong();

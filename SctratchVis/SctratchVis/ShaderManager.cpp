@@ -47,7 +47,9 @@ void ShaderManager::reloadShader()
 
 void ShaderManager::toggleShader(int prevNext)
 {
-	int cProg = ((int)mCurProg + prevNext) % mShaders.size();
+	int i = 0 + (int)mCurProg + prevNext;
+
+	int cProg = (i < 0) ? mShaders.size() - 1 : i % mShaders.size();
 	this->setCurProg((ShaderProgram)cProg);
 
 	ShaderInfo *pTmp = mShaders.find(mCurProg)->second;

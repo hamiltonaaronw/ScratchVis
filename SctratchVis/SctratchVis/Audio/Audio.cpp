@@ -223,7 +223,8 @@ void Audio::toggleRand()
 void Audio::toggleSong(int prevNext)
 {
 	FMOD_RESULT res;
-	int songToPlay = (mCurSong + prevNext) % mSongCount;
+	int i = (mCurSong + prevNext);
+	int songToPlay = (i < 0) ? mSongCount - 1 : i % mSongCount;
 
 	if (mIsPlaying)
 	{
@@ -328,4 +329,9 @@ bool Audio::update()
 	FMOD_System_Update(mpSystem);
 
 	return true;
+}
+
+Audio::~Audio()
+{
+	this->unloadAudio();
 }

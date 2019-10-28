@@ -11,8 +11,18 @@ private:
 	unsigned int mNumEntries;
 
 public:
-	explicit CircularQueue::CircularQueue(unsigned int size)
+	/*
+	CircularQueue::CircularQueue(unsigned int size)
 		:mCapacity(size),
+		mFront(0),
+		mBack(0),
+		mNumEntries(0)
+	{
+		mArray = new T[size];
+	}
+	*/
+	explicit CircularQueue(unsigned int size)
+		: mCapacity(size),
 		mFront(0),
 		mBack(0),
 		mNumEntries(0)

@@ -1,8 +1,6 @@
 #include <iostream>
-#include <map>
 #include "Event.h"
 #include "CircularQueue.h"
-
 
 class EventManager
 {
@@ -15,7 +13,7 @@ public:
 	explicit EventManager(unsigned int size = 64);
 	~EventManager();
 
-	void addEvent(Event *pEvent);
+	void addEvent(Event *pEvent, int delay);
 	void processEvents();
 
 };

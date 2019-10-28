@@ -1,4 +1,7 @@
 #include "Graphics.h"
+#include "EventManager.h"
+
+Graphics* gpGraphics = NULL;
 
 Graphics::Graphics()
 {
@@ -12,16 +15,34 @@ void Graphics::clean()
 	glDeleteVertexArrays(1, &mVAO);
 	glDeleteBuffers(1, &mVBO);
 
-	mpAudio->unloadAudio();
+	if (mpAudio)
+	{
+		mpAudio = NULL;
+		delete mpAudio;
+	}
 
-	mpAudio = NULL;
-	delete mpAudio;
+	if (mpText)
+	{
+		mpText = NULL;
+		delete mpText;
+	}
 
-	mpText = NULL;
-	delete mpText;
+	if (mpShaderMan)
+	{
+		mpShaderMan = NULL;
+		delete mpShaderMan;
+	}
 
-	mpShaderMan = NULL;
-	delete mpShaderMan;
+	if (mpEventMan)
+	{
+		mpEventMan = NULL;
+		delete mpEventMan;
+	}
+}
+
+void Graphics::close()
+{
+	glfwSetWindowShouldClose(mpWindow, true);
 }
 
 void Graphics::debugOutput(DebugOutputType type, bool isIO)
@@ -219,6 +240,8 @@ void Graphics::initAudio(std::string s)
 
 	if (mpAudio)
 		this->mAudioInit = true;
+
+	mpEventMan = new EventManager();
 }
 
 void Graphics::initGraphics()
@@ -290,65 +313,45 @@ void Graphics::processInput(GLFWwindow *window)
 
 	// exit - ESCAPE
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+		mpEventMan->addEvent(new InputEvent(ESC), 0);
 
 	// toggle song : next song - RIGHT ARROW
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_RELEASE)
-		{
-			mpAudio->toggleSong(1);
-			glfwSetTime(0.0);
-			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-			this->debugOutput(DebugOutputType::SPACE, false);
-		}
+			mpEventMan->addEvent(new InputEvent(RIGHT), 0);
 
 	// toggle song : previous song - LEFT ARROW
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_RELEASE)
-		{
-			mpAudio->toggleSong(mpAudio->getNumSongs() - 1);
-			glfwSetTime(0.0);
-			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-			this->debugOutput(DebugOutputType::SPACE, false);
-		}
+			mpEventMan->addEvent(new InputEvent(LEFT), 0);
 
 	// toggle shader programs : next shader program - UP ARROW
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE)
-		{
-			mpShaderMan->toggleShader(1);
-			this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
-			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-			this->debugOutput(DebugOutputType::SPACE, false);
-		}
+			mpEventMan->addEvent(new InputEvent(UP), 0);
 
 	// toggle shader programs : previous shader program - DOWN ARROW
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE)
-		{
-			mpShaderMan->toggleShader(mpShaderMan->getNumShaders() - 1);
-			this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
-			this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-			this->debugOutput(DebugOutputType::SPACE, false);
-		}
+			mpEventMan->addEvent(new InputEvent(DOWN), 0);
 
 	// shuffle songs - Q
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_RELEASE)
-			mpAudio->toggleRand();
+			mpEventMan->addEvent(new InputEvent(Q), 0);
 
 	if (mViewMode == ViewMode::VIEW_DEBUG)
 	{
 		// reload shader - R
 		if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 			if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
-				mpShaderMan->reloadShader();
+				mpEventMan->addEvent(new InputEvent(R), 0);
 	}
 
 	// pause/resume song - SPACE
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE)
-			this->togglePauseSong();
+			mpEventMan->addEvent(new InputEvent(SPACE_KEY), 0);
 
 
 	// Shift = No Input
@@ -359,28 +362,28 @@ void Graphics::processInput(GLFWwindow *window)
 			// list shaders : dont change shader - SHIFT + S
 			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::LIST_SHADERS, false);
+					mpEventMan->addEvent(new InputEvent(SHIFT_S), 0);
 
 			// list songs : dont change song - SHIFT + A
 			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::LIST_SONGS, false);
+					mpEventMan->addEvent(new InputEvent(SHIFT_A), 0);
 
 			// current shader : dont change shader - SHIFT + Z
 			if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::CURRENT_SHADER, false);
+					mpEventMan->addEvent(new InputEvent(SHIFT_Z), 0);
 
 			// current song : dont change song - SHIFT + X
 			if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_X) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::CURRENT_SONG, false);
+					mpEventMan->addEvent(new InputEvent(SHIFT_X), 0);
 		}
 
 		// hot reload audio : dont change directory - SHIFT + B
 		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 			if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
-				hotReloadAudio(false);
+				mpEventMan->addEvent(new InputEvent(SHIFT_B), 0);
 	}
 
 	// debug with input
@@ -391,27 +394,27 @@ void Graphics::processInput(GLFWwindow *window)
 			// list shaders : change shader - TAB + S
 			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::LIST_SHADERS, true);
+					mpEventMan->addEvent(new InputEvent(TAB_S), 0);
 
 			// list songs : change song - TAB + A
 			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::LIST_SONGS, true);
+					mpEventMan->addEvent(new InputEvent(TAB_A), 0);
 
 			// current shader : change shader - TAB + Z
 			if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::CURRENT_SHADER, true);
+					mpEventMan->addEvent(new InputEvent(TAB_Z), 0);
 
 			// current song : change song - TAB + X
 			if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_X) == GLFW_RELEASE)
-					debugOutput(DebugOutputType::CURRENT_SONG, true);
+					mpEventMan->addEvent(new InputEvent(TAB_X), 0);
 
 			// hot reload audio : change directory - TAB + B
 			if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 				if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
-					hotReloadAudio(true);
+					mpEventMan->addEvent(new InputEvent(TAB_B), 0);
 		}
 	}
 
@@ -471,7 +474,7 @@ void Graphics::render()
 
 	mpAudio->playSong();
 
-	float lastFrame = (float)glfwGetTime(),
+	float lastFrame = this->getCurTime(),
 		curFrame = 0.0,
 		dTime = 0.0;
 
@@ -487,7 +490,7 @@ void Graphics::render()
 		processInput(mpWindow);
 
 		if (!mpAudio->update())
-			glfwSetTime(0.0);
+			this->setTime(0.0);
 
 		if (!mpAudio->getIsPaused())
 		{
@@ -501,7 +504,7 @@ void Graphics::render()
 			lastFreq = curFreq;
 			
 			// send time uniforms to the shader
-			curFrame = (float)(glfwGetTime());
+			curFrame = this->getCurTime();
 			dTime = curFrame - lastFrame;
 			mpShaderMan->getCurrentShader()->setFloat("uTime", curFrame);
 			mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", dTime);
@@ -523,6 +526,8 @@ void Graphics::render()
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(mpWindow);
 		glfwPollEvents();
+
+		mpEventMan->processEvents();
 	}
 }
 
@@ -544,6 +549,21 @@ void Graphics::selectShader(int i)
 void Graphics::togglePauseSong()
 {
 	mpAudio->togglePause();
+}
+
+void Graphics::toggleShader(int prevNext)
+{
+	mpShaderMan->toggleShader(prevNext);
+	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
+	this->debugOutput(DebugOutputType::SPACE, false);
+}
+
+void Graphics::toggleSong(int prevNext)
+{
+	mpAudio->toggleSong(prevNext);
+	glfwSetTime(0.0);
+	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+	this->debugOutput(DebugOutputType::SPACE, false);
 }
 
 void Graphics::toggleTextRender()

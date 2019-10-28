@@ -1,5 +1,4 @@
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
+#pragma once
 
 #include <include/glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -8,11 +7,17 @@
 #include <string>
 #include <map>
 #include <thread>
+//#include "EventManager.h"
 
 #include "ShaderManager.h"
-#include "Shaders/Shader.h"
+//#include "Shaders/Shader.h"
 #include "Audio/Audio.h"
 #include "Text.h"
+
+class Audio;
+class EventManager;
+class ShaderManager;
+class Text;
 
 enum AudioInputMode
 {
@@ -49,7 +54,6 @@ class Graphics
 private:
 	// functions
 	void clean				();
-	void debugOutput		(DebugOutputType type, bool isIO);
 	void drawText			();
 	void hotReloadAudio		(bool changeDir);
 	void init				();
@@ -60,6 +64,8 @@ private:
 	void processInput		(GLFWwindow *window);
 	void selectShader		(int i);
 	void togglePauseSong	();
+	void toggleShader		(int prevNext);
+	void toggleSong			(int prevNext);
 	void toggleTextRender	();
 	void userSetup			(SetupStage stage, int &n, std::string &s);
 
@@ -74,6 +80,7 @@ private:
 	Audio				*mpAudio;
 	Text				*mpText;
 	ShaderManager		*mpShaderMan;
+	EventManager		*mpEventMan;
 	
 	ShaderProgram		mCurProg;
 	ViewMode			mViewMode;
@@ -97,21 +104,38 @@ private:
 public:
 
 	// functions
+	void close();
 	void render();
 
 	// getters/setters
-	void setViewMode(ViewMode m) { mViewMode = m; };
-	ViewMode getViewMode() { return mViewMode; };
+	void setViewMode(ViewMode m)		{ mViewMode = m; };
+	ViewMode getViewMode()				{ return mViewMode; };
 
-	void setCurProg(ShaderProgram p) { mCurProg = p; };
-	ShaderProgram getCurProg() { return mCurProg; };
+	void setCurProg(ShaderProgram p)	{ mCurProg = p; };
+	ShaderProgram getCurProg()			{ return mCurProg; };
 
-	void setRenderText(bool b) { mRenderText = b; };
-	bool getRenderText() { return mRenderText; };
+	void setRenderText(bool b)			{ mRenderText = b; };
+	bool getRenderText()				{ return mRenderText; };
+
+	float getCurTime()					{ return (float)glfwGetTime(); };
+	void setTime(float t)				{ glfwSetTime(t); };
+
+	Audio* getAudioDev() { return mpAudio; };
+
+	void debugOutput(DebugOutputType type, bool isIO);
+
+	// public wrapper functions
+	void debug_Wrapper(DebugOutputType t, bool in)		{this->debugOutput(t, in);		};
+	void reloadAudio_Wrapper(bool cDir)					{this->hotReloadAudio(cDir);	};
+	void reloadShader_Wrapper()							{mpShaderMan->reloadShader();	};
+	void togglePauseSong_Wrapper()						{this->togglePauseSong();		};
+	void toggleRand_Wrapper()							{mpAudio->toggleRand();			};
+	void toggleShader_Wrapper(int i)					{this->toggleShader(i);			};
+	void toggleSong_Wrapper(int i)						{this->toggleSong(i);			};
 
 	// constructor/destructor
 	Graphics();
 	~Graphics();
 };
 
-#endif
+extern Graphics* gpGraphics;
