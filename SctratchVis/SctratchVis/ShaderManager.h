@@ -19,6 +19,7 @@ enum ShaderProgram
 	PINNEAL,
 	SPACE_STATION,
 	TAPESTRY,
+	THREADING,
 	MISC
 };
 
