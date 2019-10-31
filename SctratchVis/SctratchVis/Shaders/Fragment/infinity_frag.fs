@@ -18,34 +18,50 @@ uniform float[256] uSpectrum;
 
 out vec4 retColor;
 
+float sinc(float x)
+{
+	return sin(x) / x;
+}
+
+float cosc(float x)
+{
+	return cos(x) / x;
+}
+
+float tanc(float x)
+{
+	return tan(x) / x;
+}
+
 vec3 col(vec2 p)
 {
 	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
 	//float ft = smoothstep(sin(uTime), sin(f),  uFreq);
 	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 	float fstep = smoothstep(sin(uFreq / f), uFreq + uLastFreq, uTime);
+	float tf = smoothstep(sin(f), 2.0, uTime);
 
-	float r = length(p) * pow(2.0, fstep);// * 0.1);
+	float r = length(p) * pow(2.0, sin(uTime) - uFreq) * sin(f);// + sin(atan(oTexCoord.x, uTime));// * 0.1);
 	float theta = atan(p.x, p.y);
 
 	float s = sin(pow(r, 2.0)) * fs;
 	float g = cos(theta) / sin(theta);
 
-	float v = 0.1 / abs(s - g) * f;
-	vec3 ret = v / vec3(0.4, 0.2 + sin(uTime) / f, 0.5 + cos(uTime));
+	vec3 c = vec3(
+		atan(f, sinc(length(p))), 
+		pow(f, sinc(uTime) / fs),
+		sin(fs + sin(sinc(uLastFreq) / tanc(uDeltaTime)))
+		);
+
+	float v = 0.1 / abs(s - sinc(g)) * f;
+	//float v = 0.1 / abs(s - g) * f;
+	vec3 ret = v / c;
 
 	g = sin(theta) / cos(theta);
-	v = 0.1 / abs(s - g) * f;
-	ret += v / vec3(0.6, 0.8 + sin(uTime) / f, 0.5 + cos(uTime));
-
-	//ret *= fs;
-	//ret += sin(fstep);
-
-	//ret += ret;
-
-	ret *= sin(uTime) + f;
-
-	return ret;
+	v = 0.1 / abs(s - sinc(g)) * f;
+	//v = 0.1 / abs(s - g) * f;
+	ret += v / c;
+	return ret;// - cos(length(oTexCoord));
 }
 
 void main()

@@ -35,7 +35,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::PINNEAL,				new ShaderInfo("Pinneal",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/pinneal_frag.fs",			NULL));
 	this->addShader(ShaderProgram::SPACE_STATION,		new ShaderInfo("Space Station",		0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/space_frag.fs",			NULL));
 	this->addShader(ShaderProgram::TAPESTRY,			new ShaderInfo("Tapestry",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/tapestry_frag.fs",		NULL));
-	this->addShader(ShaderProgram::THREADING,			new ShaderInfo("Threading",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/threading_frag.fs",		NULL));
+	this->addShader(ShaderProgram::INFINITY_,			new ShaderInfo("Infinity",			0,	0,	0, "Shaders/Vertex/basic_vert.vs",	"Shaders/Fragment/infinity_frag.fs",		NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

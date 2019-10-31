@@ -233,6 +233,7 @@
     <None Include="Shaders\Fragment\eye_frag.fs" />
     <None Include="Shaders\Fragment\flowers_frag.fs" />
     <None Include="Shaders\Fragment\fractid_frag.fs" />
+    <None Include="Shaders\Fragment\infinity_frag.fs" />
     <None Include="Shaders\Fragment\lightning_frag.fs" />
     <None Include="Shaders\Fragment\lightshow_frag.fs" />
     <None Include="Shaders\Fragment\pinneal_frag.fs" />
