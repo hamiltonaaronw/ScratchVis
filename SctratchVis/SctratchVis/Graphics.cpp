@@ -5,6 +5,9 @@ Graphics* gpGraphics = NULL;
 
 Graphics::Graphics()
 {
+	//initAudio();
+	//initGraphics();
+	//init();
 	initAll();
 }
 
@@ -49,20 +52,19 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 {
 	switch (type)
 	{
-	case CURRENT_SONG:
+	case DebugOutputType::CURRENT_SONG:
 		std::cout << "Currently playing song:\t\t" << mpAudio->getCurrentSongName() << std::endl;
 		break;
 
-	case CURRENT_SHADER:
+	case DebugOutputType::CURRENT_SHADER:
 		
 		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName() << std::endl;
 		break;
 
-	case LIST_SHADERS:
+	case DebugOutputType::LIST_SHADERS:
 		std::cout << "Shader programs: " << std::endl;
 		for (int i = 0; i < mNumShaders; i++)
 		{
-			//std::cout << i << ".\t\t" << mpShaderMan->get << std::endl;
 			std::cout << i << ".\t\t" << mpShaderMan->getShaderName((ShaderProgram)i) << std::endl;
 		}
 		if (isIO)
@@ -75,7 +77,7 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 		}
 		break;
 
-	case LIST_SONGS:
+	case DebugOutputType::LIST_SONGS:
 		for (int i = 0; i < mpAudio->getNumSongs(); i++)
 		{
 			std::cout << i << ".\t\t" << mpAudio->getSongName(i) << std::endl;
@@ -91,7 +93,7 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 		break;
 
 
-	case SPACE:
+	case DebugOutputType::SPACE:
 		std::cout << "\n\n";
 
 		break;
@@ -147,24 +149,25 @@ void Graphics::init()
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 
 	mpAudio = new Audio();
+	mpEventMan = new EventManager();
 
 	this->userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
 	mpAudio->loadSongs();
 
-	this->userSetup(SetupStage::SONG, iJunk, sJunk);
+//	this->userSetup(SetupStage::SONG, iJunk, sJunk);
 
 	this->userSetup(SetupStage::WINDOW, iJunk, sJunk);
 
 	switch (mViewMode)
 	{
-	case VIEW_DEBUG:
+	case ViewMode::VIEW_DEBUG:
 		msWidth = 800;
 		msHeight = 600;
 		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
 
 		break;
 
-	case VIEW_FULLSCREEN:
+	case ViewMode::VIEW_FULLSCREEN:
 		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
@@ -201,13 +204,13 @@ void Graphics::initAll()
 	//this->userSetup(SetupStage::SONG, n, songDir);
 	this->userSetup(SetupStage::WINDOW, n, songDir);
 
-	std::thread tAudio(initAudioWrapper,		this, songDir);
-//	std::thread tGraphics(initGraphicsWrapper,	this);
-	std::thread tShaders(initShadersWrapper,	this);
+	std::thread tAudio(initAudioWrapper, this, songDir);
+	//	std::thread tGraphics(initGraphicsWrapper,	this);
+	std::thread tShaders(initShadersWrapper, this);
 
 	tAudio.join();
 	tShaders.join();
-//	tGraphics.join();
+	//	tGraphics.join();
 
 	this->initGraphics();
 
@@ -260,14 +263,14 @@ void Graphics::initGraphics()
 
 	switch (mViewMode)
 	{
-	case VIEW_DEBUG:
+	case ViewMode::VIEW_DEBUG:
 		msWidth = 800;
 		msHeight = 600;
 		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
 
 		break;
 
-	case VIEW_FULLSCREEN:
+	case ViewMode::VIEW_FULLSCREEN:
 		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 		mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
@@ -577,7 +580,7 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 
 	switch (stage)
 	{
-	case WINDOW:
+	case SetupStage::WINDOW:
 		std::cout << "Select a mode to run by number" << std::endl;
 		std::cout << "1. Fullscreen" << std::endl;
 		std::cout << "2. Debug" << std::endl;
@@ -594,7 +597,7 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 		}
 		break;
 
-	case SHADER:
+	case SetupStage::SHADER:
 		std::cout << "Would you like to select a shader program(0 for yes, 1 for no): ";
 		std::cin >> sel;
 		if (sel == 0)
@@ -605,7 +608,7 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 			std::cout << "Invalid input: Defaulting to first shader program" << std::endl;
 		break;
 
-	case SONG:
+	case SetupStage::SONG:
 		std::cout << "Would you like to select a song(0 for yes, 1 for no): ";
 		std::cin >> sel;
 		if (sel == 0)
@@ -619,7 +622,7 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 
 		break;
 
-	case MUSIC_DIR: 
+	case SetupStage::MUSIC_DIR: 
 		std::cout << "Would you like to\n" << "1) Specify Music Directory\n" <<
 			"2) Use Default Music Directory\n" <<
 			"Selection: ";
@@ -649,7 +652,7 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 		}
 		break;
 
-	case CLEAR_SCREEN:
+	case SetupStage::CLEAR_SCREEN:
 		system("CLS");
 		break;
 

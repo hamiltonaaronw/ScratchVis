@@ -221,7 +221,7 @@ result = channel_dsp_head_output_connection-&gt;setMixMatrix(&amp;matrix[0][0], 
 <p>A second workaround is to stop the reverb pulling data from its inputs. This can be done by using the <a class="apilink" href="core-api-dspconnection.html#fmod_dspconnection_type" title="List of connection types between 2 DSP nodes.">FMOD_DSPCONNECTION_TYPE</a> 'type' parameter for <a class="apilink" href="core-api-dsp.html#dsp_addinput" title="Adds a DSP unit as an input to this object.">DSP::addInput</a>. If <a class="apilink" href="core-api-dspconnection.html#fmod_dspconnection_type_send" title="">FMOD_DSPCONNECTION_TYPE_SEND</a> is used instead of <a class="apilink" href="core-api-dspconnection.html#fmod_dspconnection_type_standard" title="">FMOD_DSPCONNECTION_TYPE_STANDARD</a>, the inputs are not executed, and all the reverb would do is process whatever is mixed to it from a previous traversal to the inputs.</p>
 <p>The delay will then work, but the downside to this method is that if the reverb is first, the signal from the channels will be sent after the reverb has processed. This means it will have to wait until the next mix before it can process that data, therefore 1 mix block of latency is introduced to the reverb.</p></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

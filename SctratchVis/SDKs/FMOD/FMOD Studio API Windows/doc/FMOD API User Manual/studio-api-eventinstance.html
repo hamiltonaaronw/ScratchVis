@@ -95,6 +95,7 @@
 <p><strong>General:</strong></p>
 <ul>
 <li><a class="apilink" href="studio-api-eventinstance.html#studio_eventinstance_getdescription" title="Retrieves the event description.">Studio::EventInstance::getDescription</a> Retrieves the event description.</li>
+<li><a class="apilink" href="studio-api-eventinstance.html#studio_eventinstance_getcpuusage" title="Retrieves the event CPU usage data.">Studio::EventInstance::getCPUUsage</a> Retrieves the event CPU usage data.</li>
 <li><a class="apilink" href="studio-api-eventinstance.html#studio_eventinstance_release" title="Marks the event instance for release.">Studio::EventInstance::release</a> Marks the event instance for release.</li>
 <li><a class="apilink" href="studio-api-eventinstance.html#studio_eventinstance_isvalid" title="Checks that the EventInstance reference is valid.">Studio::EventInstance::isValid</a> Checks that the EventInstance reference is valid.</li>
 </ul>
@@ -178,6 +179,62 @@
 <dd>Core channel group corresponding to the master track. (<a class="apilink" href="core-api-channelgroup.html" title="">ChannelGroup</a>)</dd>
 </dl>
 <p>Until the event instance has been fully created this function will return <a class="apilink" href="core-api-common.html#fmod_err_studio_not_loaded" title="">FMOD_ERR_STUDIO_NOT_LOADED</a>.</p>
+<h2 api="function" id="studio_eventinstance_getcpuusage"><a href="#studio_eventinstance_getcpuusage">Studio::EventInstance::getCPUUsage</a></h2>
+<p>Retrieves the event CPU usage data.</p>
+<p>
+<div class="language-selector">
+<div class="language-tab" data-language="language-c">C</div>
+<div class="language-tab" data-language="language-cpp">C++</div>
+<div class="language-tab" data-language="language-csharp">C#</div>
+<div class="language-tab" data-language="language-javascript">JS</div>
+</div>
+</p>
+<div class="highlight language-cpp"><pre><span></span><span class="n">FMOD_RESULT</span> <span class="n">Studio</span><span class="o">::</span><span class="n">EventInstance</span><span class="o">::</span><span class="n">getCPUUsage</span><span class="p">(</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">exclusive</span><span class="p">,</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">inclusive</span>
+<span class="p">);</span>
+</pre></div>
+
+
+<div class="highlight language-c"><pre><span></span><span class="n">FMOD_RESULT</span> <span class="nf">FMOD_Studio_EventInstance_GetCPUUsage</span><span class="p">(</span>
+  <span class="n">FMOD_STUDIO_EVENTINSTANCE</span> <span class="o">*</span><span class="n">eventinstance</span><span class="p">,</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">exclusive</span><span class="p">,</span>
+  <span class="kt">unsigned</span> <span class="kt">int</span> <span class="o">*</span><span class="n">inclusive</span>
+<span class="p">);</span>
+</pre></div>
+
+
+<div class="highlight language-csharp"><pre><span></span><span class="n">RESULT</span> <span class="n">Studio</span><span class="p">.</span><span class="n">EventInstance</span><span class="p">.</span><span class="n">getCPUUsage</span><span class="p">(</span>
+  <span class="k">out</span> <span class="kt">uint</span> <span class="n">exclusive</span><span class="p">,</span>
+  <span class="k">out</span> <span class="kt">uint</span> <span class="n">inclusive</span>
+<span class="p">);</span>
+</pre></div>
+
+
+<div class="highlight language-javascript"><pre><span></span><span class="nx">Studio</span><span class="p">.</span><span class="nx">EventInstance</span><span class="p">.</span><span class="nx">getCPUUsage</span><span class="p">(</span>
+  <span class="nx">exclusive</span><span class="p">,</span>
+  <span class="nx">inclusive</span>
+<span class="p">);</span>
+</pre></div>
+
+
+<dl>
+<dt>exclusive <span><a class="token" href="glossary.html#documentation-conventions" title="Output">Out</a><a class="token" href="glossary.html#documentation-conventions" title="Optional">Opt</a></span></dt>
+<dd>
+<p>CPU time spent processing just this unit during the last update.</p>
+<ul>
+<li><span class="label">Units:</span> Microseconds</li>
+</ul>
+</dd>
+<dt>inclusive <span><a class="token" href="glossary.html#documentation-conventions" title="Output">Out</a><a class="token" href="glossary.html#documentation-conventions" title="Optional">Opt</a></span></dt>
+<dd>
+<p>CPU time spent processing this unit and all of its input during the last update.</p>
+<ul>
+<li><span class="label">Units:</span> Microseconds</li>
+</ul>
+</dd>
+</dl>
+<p><a class="apilink" href="core-api-system.html#fmod_init_profile_enable" title="">FMOD_INIT_PROFILE_ENABLE</a> with <a class="apilink" href="core-api-system.html#system_init" title="Open the connection to the output and prepare FMOD for playback.">System::init</a> is required to call this function.</p>
 <h2 api="function" id="studio_eventinstance_getdescription"><a href="#studio_eventinstance_getdescription">Studio::EventInstance::getDescription</a></h2>
 <p>Retrieves the event description.</p>
 <p>
@@ -2041,7 +2098,7 @@ For example to create a mask for listener index 0 and 2 the calculation would be
 <p>This data is passed to the event callback function when type is <a class="apilink" href="studio-api-eventinstance.html#fmod_studio_event_callback_timeline_marker" title="">FMOD_STUDIO_EVENT_CALLBACK_TIMELINE_MARKER</a>.</p>
 <p><strong>See Also:</strong> <a class="apilink" href="studio-api-eventdescription.html#studio_eventdescription_setcallback" title="Sets the user callback.">Studio::EventDescription::setCallback</a>, <a class="apilink" href="studio-api-eventinstance.html#studio_eventinstance_setcallback" title="Sets the user callback.">Studio::EventInstance::setCallback</a></p></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

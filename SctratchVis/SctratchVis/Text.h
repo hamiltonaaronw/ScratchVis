@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+//#include <ft2build.h>
+//#include FT_FREETYPE_H
 
 #include <iostream>
 
@@ -23,8 +23,8 @@ private:
 	void init();
 
 	// variables
-	FT_Face mFace;
-	FT_Library mFT;
+//	FT_Face mFace;
+//	FT_Library mFT;
 
 //	std::map<GLchar, Character> mCharacters;
 

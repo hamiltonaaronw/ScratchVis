@@ -175,7 +175,7 @@ If the system runs in another thread, it can detect the queue insert, and proces
 <li>100 = high priority. Currently the highest priority read issued by FMOD is when an audio stream loops. It must internally flush the stream buffer after a seek to loop start, and do so before the stream 'decode buffer' (the PCM double-buffer that the stream decoder decodes into) loops around and starts stuttering (this is a different buffer to the previously mentioned stream buffer. That one contains compressed file data. The decode buffer contains decompressed PCM data). The decode buffer is usually small so it is important to get the read done fast, but the user can also increase these buffers with <a class="apilink" href="core-api-system.html#fmod_createsoundexinfo_decodebuffersize" title="">FMOD_CREATESOUNDEXINFO::decodebuffersize</a>. <a class="apilink" href="core-api-system.html#fmod_advancedsettings_defaultdecodebuffersize" title="">FMOD_ADVANCEDSETTINGS::defaultDecodeBufferSize</a> can also be used to set all future decode buffer sizes for all streams without having to set it every time, and is going to be used for the Event System because decode buffer size is not something you can set for events individually. </li>
 </ul></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

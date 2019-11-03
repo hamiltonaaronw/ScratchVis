@@ -33,7 +33,7 @@
     <Arch Condition="'$(Platform)'=='Win32'">x86</Arch>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{95EE6B3D-32EF-4168-8919-366FC00F5B5F}</ProjectGuid>
+    <ProjectGuid>{FDE23999-E13D-42EB-B7E3-2D25EDDB9B78}</ProjectGuid>
     <RootNamespace>example</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>

@@ -26,7 +26,28 @@
 <div class="toc">
 <ul></ul>
 </div>
-<p><strong>6/9/19 2.00.04 - Studio API minor release (build 104705)</strong></p>
+<p><strong>9/10/19 2.00.05 - Studio API minor release (build 105402)</strong></p>
+<p>Features:</p>
+<ul>
+<li>Studio API   - Add event and bus instance CPU profiling to the FMOD Studio API.</li>
+<li>Core API     - Stadia - Added voice output port <a class="apilink" href="#fmod_stadia_port_type_voice" title="">FMOD_STADIA_PORT_TYPE_VOICE</a>.</li>
+</ul>
+<p>Fixes:</p>
+<ul>
+<li>Studio API   - Fixed crash caused by creating an instance of an event containing a nested event which has not been loaded.</li>
+<li>Studio API   - Fixed pitch changes on a bus propagating across sidechain connections.</li>
+<li>Studio API   - Fixed application of transition fade curves to parameter triggered instruments on multi track events.</li>
+<li>Core API     - Fixed mixer falling silent due to very small but not denormal positions being passed into the API.</li>
+<li>Core API     - Fixed crash when processing loops of FMOD_DSPCONNECTION_TYPE_SEND or <a class="apilink" href="core-api-dspconnection.html#fmod_dspconnection_type_send_sidechain" title="">FMOD_DSPCONNECTION_TYPE_SEND_SIDECHAIN</a>.</li>
+<li>Unity        - Removed high frequency of UnityEditor.SetDirty calls.</li>
+<li>Unity        - Fixed issues with using relative paths in linked project/bank directory.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>Switch       - Now built with SDK 8.3.0.</li>
+<li>Xbox One     - Now built with July 2018 QFE9 XDK.</li>
+</ul>
+<p><strong>06/09/19 2.00.04 - Studio API minor release (build 104705)</strong></p>
 <p>Features:</p>
 <ul>
 <li>Official support for Stadia as a separate platform is now complete, anyone using the Linux version should migrate across.</li>
@@ -3132,7 +3153,7 @@
 <li>First Developer Preview release</li>
 </ul></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

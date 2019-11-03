@@ -4,7 +4,7 @@
 
 #include <map>
 
-enum ShaderProgram
+enum class ShaderProgram
 {
 	PSYCH,
 	RETRO,

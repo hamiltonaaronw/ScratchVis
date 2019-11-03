@@ -23,7 +23,7 @@
     <Suffix Condition="'$(Platform)'=='x64'">$(Suffix)64</Suffix>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{CDA11B97-C87D-4D08-8CE2-83A5A231174B}</ProjectGuid>
+    <ProjectGuid>{8125EEEB-8EBE-4D32-8543-53AC3901AB81}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">

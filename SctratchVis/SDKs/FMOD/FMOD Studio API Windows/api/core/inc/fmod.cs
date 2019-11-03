@@ -19,7 +19,7 @@ namespace FMOD
     */
     public class VERSION
     {
-        public const int    number = 0x00020004;
+        public const int    number = 0x00020005;
 #if (UNITY_IPHONE || UNITY_TVOS || UNITY_SWITCH || UNITY_WEBGL) && !UNITY_EDITOR
         public const string dll    = "__Internal";
 #elif (UNITY_PS4) && DEVELOPMENT_BUILD
@@ -29,7 +29,7 @@ namespace FMOD
 #elif (UNITY_PSP2) && !UNITY_EDITOR
         public const string dll    = "libfmodstudio";
 /* Linux defines moved before the Windows define, otherwise Linux Editor tries to use Win lib when selected as build target.*/
-#elif (UNITY_EDITOR_LINUX) || ((UNITY_STANDALONE_LINUX || UNITY_ANDROID || UNITY_XBOXONE) && DEVELOPMENT_BUILD)
+#elif (UNITY_EDITOR_LINUX) || ((UNITY_STANDALONE_LINUX || UNITY_ANDROID || UNITY_XBOXONE || UNITY_STADIA) && DEVELOPMENT_BUILD)
         public const string dll    = "fmodL";
 #elif (UNITY_EDITOR_OSX || UNITY_EDITOR_WIN) || ((UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN) && DEVELOPMENT_BUILD)
         public const string dll    = "fmodstudioL";

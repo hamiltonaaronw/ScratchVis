@@ -52,7 +52,7 @@
 <p>Another command situation is for the game to have its own worker thread that invokes Studio using <a class="apilink" href="studio-api-system.html#fmod_studio_init_synchronous_update" title="">FMOD_STUDIO_INIT_SYNCHRONOUS_UPDATE</a>. This is very similar to the first diagram, except that execution is in a worker rather than the game thread. It is up to the game thread how it wishes to synchronize with the rest of the game. It could be triggered per game frame, or with a fixed period.</p>
 <p>In this mode, it is up to the developer to ensure that commands are not split across system updates. For example, consider the case where the game thread issues commands for the worker thread, and the worker thread wakes up periodically to execute those commands. In that case, the worker thread may wake up and execute some commands but not others, causing subtle issues with the sound playback. Instead, the commands to the worker thread should be batched up to avoid slicing commands. Or even better, just use the inbuilt asynchronous mode to do the command batching instead.</p></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

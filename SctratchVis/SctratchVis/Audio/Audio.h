@@ -1,7 +1,8 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
 
 #include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod.h>
+#include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod.hpp>
+#include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod_common.h>
 #include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod_errors.h>
 #include <iostream>
 #include <stdio.h>
@@ -10,19 +11,20 @@
 #include <filesystem>
 #include <random>
 
-#include <include/glm/glm/glm.hpp>
+//#include <include/glm/glm/glm.hpp>
 #include <sys/types.h>
 #include <Windows.h>
 #include <vector>
+#include <time.h>
 #include "../dirent.h"
 
 struct Song
 {
-	FMOD_SOUND *mSound;
+	FMOD::Sound *mSound;
 	std::string mSongName;
 	int mOrigIndex;
 
-	Song(std::string s, FMOD_SOUND *m, int i)
+	Song(std::string s, FMOD::Sound *m, int i)
 		:mSongName(s), 
 		mSound(m),
 		mOrigIndex(i)
@@ -33,17 +35,17 @@ class Audio
 {
 private:
 	// functions
-	void FMODErrorCheck(FMOD_RESULT res);
+	void FMODErrorCheck(FMOD_RESULT res, std::string call);
 	void genRandQueue();
 
 	// variables
 	bool mIsPaused;
 	bool mIsRandom;
 
-	FMOD_CHANNELGROUP			*mpCGroup;
-	FMOD_CHANNEL				*mpChannel;
-	FMOD_DSP					*mpDSP;
-	FMOD_SYSTEM					*mpSystem;
+	FMOD::ChannelGroup			*mpCGroup;
+	FMOD::Channel				*mpChannel;
+	FMOD::DSP					*mpDSP;
+	FMOD::System				*mpSystem;
 
 	std::vector<Song*>			mSongs;
 
@@ -102,4 +104,3 @@ public:
 	std::string getMusicDir() { return mMusicDir; };
 };
 
-#endif

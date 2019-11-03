@@ -187,7 +187,7 @@ It is also highly recommended that you initialize the FMOD Java component, this 
 <li>The <a href="https://developer.qualcomm.com/software/snapdragon-profiler">Snapdragon Profiler</a> created by Qualcomm has a bug when displaying system trace information. The trace will indicate that the "AudioTrack" thread executes for several milliseconds when in fact it does not. The "AudioTrack" thread is created by the OpenSL output plugin and is responsible for calling into FMOD to fetch audio. FMOD services this request efficiently with lock free data structures and returns in microseconds to avoid any audio glitches. To verify the behavior of this thread use the <a href="https://developer.android.com/studio/profile/systrace">Android System Trace</a> viewer instead of the Snapdragon Profiler.</li>
 </ul>
 <h2 id="application-lifecycle-management"><a href="#application-lifecycle-management">Application Lifecycle Management</a></h2>
-<p>FMOD will happily continue to operate when your device is in the background, for media playback applications this may be desirable. For the vast majority of use cases though, you want FMOD to be quiet and use no CPU. You can achieve this goal by using <a class="apilink" href="core-api-system.html#system_mixersuspend" title="Suspend mixer thread and relinquish usage of audio hardware while maintaining internal state.">System::mixerSuspend</a> and <a class="apilink" href="core-api-system.html#system_mixerresume" title="Resume mixer thread and reacquire access to audio hardware.">System::mixerResume</a>, often it is convenient to implement these in the activity onStart and onStop overrides.</p>
+<p>FMOD will happily continue to operate when your device is in the background, for media playback applications this may be desirable. For the vast majority of use cases though, you want FMOD to be quiet and use no CPU. You can achieve this goal by using <a class="apilink" href="core-api-system.html#system_mixersuspend" title="Suspend mixer thread and relinquish usage of audio hardware while maintaining internal state.">System::mixerSuspend</a> and <a class="apilink" href="core-api-system.html#system_mixerresume" title="Resume mixer thread and reacquire access to audio hardware.">System::mixerResume</a>, often it is convenient to implement these in the activity onStart and onStop overrides. To avoid issues when shutting down ensure you resume the mixer before releasing, it is recommended you perform this in the onDestroy override.</p>
 <p><strong>Example Java code</strong></p>
 <div class="highlight language-java"><pre><span></span><span class="nd">@Override</span>
 <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onStart</span><span class="o">()</span>
@@ -203,8 +203,16 @@ It is also highly recommended that you initialize the FMOD Java component, this 
     <span class="kd">super</span><span class="o">.</span><span class="na">onStop</span><span class="o">();</span>
 <span class="o">}</span>
 
+<span class="nd">@Override</span>
+<span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onDestroy</span><span class="o">()</span>
+<span class="o">{</span>
+    <span class="n">setStateDestroy</span><span class="o">();</span>
+    <span class="kd">super</span><span class="o">.</span><span class="na">onDestroy</span><span class="o">();</span>
+<span class="o">}</span>
+
 <span class="kd">private</span> <span class="kd">native</span> <span class="kt">void</span> <span class="nf">setStateStart</span><span class="o">();</span>
 <span class="kd">private</span> <span class="kd">native</span> <span class="kt">void</span> <span class="nf">setStateStop</span><span class="o">();</span>
+<span class="kd">private</span> <span class="kd">native</span> <span class="kt">void</span> <span class="nf">setStateDestroy</span><span class="o">();</span>
 </pre></div>
 
 
@@ -217,6 +225,11 @@ It is also highly recommended that you initialize the FMOD Java component, this 
 <span class="kt">void</span> <span class="nf">Java_org_fmod_example_MainActivity_setStateStop</span><span class="o">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="o">)</span>
 <span class="o">{</span>
     <span class="n">gSystem</span><span class="o">-&gt;</span><span class="n">mixerSuspend</span><span class="o">();</span>
+<span class="o">}</span>
+
+<span class="kt">void</span> <span class="nf">Java_org_fmod_example_MainActivity_setStateDestroy</span><span class="o">(</span><span class="n">JNIEnv</span> <span class="o">*</span><span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">thiz</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">gSystem</span><span class="o">-&gt;</span><span class="n">mixerResume</span><span class="o">();</span>
 <span class="o">}</span>
 </pre></div>
 
@@ -268,7 +281,7 @@ It is also highly recommended that you initialize the FMOD Java component, this 
 <li><strong>Update at 60 FPS:</strong> 2.6% (+/- 2.9%)</li>
 </ul></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

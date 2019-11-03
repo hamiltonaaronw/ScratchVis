@@ -27,7 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8A2FD620-58E4-4BB3-9250-6F066E6AA914}</ProjectGuid>
+    <ProjectGuid>{B1271452-B5C7-4308-A51F-8F01EB9FFE6E}</ProjectGuid>
     <RootNamespace>example</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>

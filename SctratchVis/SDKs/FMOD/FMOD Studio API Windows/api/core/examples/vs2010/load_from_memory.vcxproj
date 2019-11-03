@@ -24,7 +24,7 @@
     <Suffix Condition="'$(Configuration)'=='Debug'">L</Suffix>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{90F536AD-2B02-40E1-99AF-68A2966506D4}</ProjectGuid>
+    <ProjectGuid>{2A6554D3-01D7-4C51-BA4C-C52A557F8214}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">

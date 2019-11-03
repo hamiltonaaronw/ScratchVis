@@ -134,7 +134,7 @@ This allocation is typically incurred at <a class="apilink" href="core-api-syste
 <p>Immediately a sound handle is returned to the user. The status of the sound being loaded can then be checked with <a class="apilink" href="core-api-sound.html#sound_getopenstate" title="Retrieves the state.">Sound::getOpenState</a>. If a function is called on a sound that is still loading (besides getOpenState), it will typically return <a class="apilink" href="core-api-common.html#fmod_err_notready" title="">FMOD_ERR_NOTREADY</a>. Wait until the sound is ready to play it. The state would be <a class="apilink" href="core-api-sound.html#fmod_openstate_ready" title="">FMOD_OPENSTATE_READY</a>.</p>
 <p>To avoid a stall on a streaming sound when trying to free/release it, check that the state is <a class="apilink" href="core-api-sound.html#fmod_openstate_ready" title="">FMOD_OPENSTATE_READY</a> before calling <a class="apilink" href="core-api-sound.html#sound_release" title="Frees a sound object.">Sound::release</a>.</p></div>
 
-<p class="manual-footer">FMOD API User Manual 2.00.04 (2019-09-05). &copy; 2019 Firelight Technologies Pty Ltd.</p>
+<p class="manual-footer">FMOD API User Manual 2.00.05 (2019-10-08). &copy; 2019 Firelight Technologies Pty Ltd.</p>
 </body>
 </html>
 

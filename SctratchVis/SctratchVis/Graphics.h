@@ -19,19 +19,19 @@ class EventManager;
 class ShaderManager;
 class Text;
 
-enum AudioInputMode
+enum class AudioInputMode
 {
 	AUDIO_PRE_INPUT,	// pre-recorded signal processing
 	AUDIO_REAL_INPUT	// live audio input real-time signal processing
 };
 
-enum ViewMode
+enum class ViewMode
 {
 	VIEW_DEBUG,
 	VIEW_FULLSCREEN
 };
 
-enum DebugOutputType
+enum class DebugOutputType
 {
 	CURRENT_SONG,
 	CURRENT_SHADER,
@@ -40,7 +40,7 @@ enum DebugOutputType
 	SPACE
 };
 
-enum SetupStage
+enum class SetupStage
 {
 	WINDOW,
 	SONG,
