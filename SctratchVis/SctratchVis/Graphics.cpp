@@ -492,8 +492,22 @@ void Graphics::render()
 		// input
 		processInput(mpWindow);
 
+		// change this to create 2 threads: 
+		// 1 thread to set time back to 0
+		// 1 thread to start a new song
 		if (!mpAudio->update())
-			this->setTime(0.0);
+		{
+			std::thread tthread([this] {
+					this->setTime(0.0);
+				});
+
+			std::thread sthread([this] {
+				mpAudio->toggleSong(1);
+				});
+
+			tthread.join();
+			sthread.join();
+		}
 
 		if (!mpAudio->getIsPaused())
 		{

@@ -3,6 +3,7 @@
 #include "Shaders/Shader.h"
 
 #include <map>
+#include <fstream>
 
 enum class ShaderProgram
 {
@@ -20,6 +21,7 @@ enum class ShaderProgram
 	SPACE_STATION,
 	TAPESTRY,
 	INFINITY_,
+	PILLARS,
 	MISC
 };
 

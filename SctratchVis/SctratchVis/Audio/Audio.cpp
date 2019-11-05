@@ -14,12 +14,13 @@ void Audio::FMODErrorCheck(FMOD_RESULT res, std::string call)
 void Audio::checkEndSong()
 {
 	//if (FMOD_Channel_IsPlaying(mpChannel, &isPlaying) != FMOD_OK)
-	if (mpChannel->isPlaying(&mIsPlaying) != FMOD_OK)
+	mpChannel->isPlaying(&mIsPlaying);
+	if (!mIsPlaying)
 	{
 		std::cout << "song ended" << std::endl;
 
 		mIsPlaying = false;
-		toggleSong(1);
+	//	toggleSong(1);
 	}
 }
 
@@ -334,7 +335,7 @@ bool Audio::update()
 
 	this->checkEndSong();
 
-	if (mCurSong == mSongCount)
+	if (mIsRandom && mCurSong == mSongCount)
 		genRandQueue();
 
 	FMOD_RESULT res;

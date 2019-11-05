@@ -228,20 +228,21 @@
     <ClInclude Include="Text.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Fragment\disco_thicc_frag.fs" />
-    <None Include="Shaders\Fragment\eclipse_frag.fs" />
-    <None Include="Shaders\Fragment\eye_frag.fs" />
-    <None Include="Shaders\Fragment\flowers_frag.fs" />
-    <None Include="Shaders\Fragment\fractid_frag.fs" />
-    <None Include="Shaders\Fragment\infinity_frag.fs" />
-    <None Include="Shaders\Fragment\lightning_frag.fs" />
-    <None Include="Shaders\Fragment\lightshow_frag.fs" />
-    <None Include="Shaders\Fragment\pinneal_frag.fs" />
-    <None Include="Shaders\Fragment\smoke_frag.fs" />
-    <None Include="Shaders\Fragment\space_frag.fs" />
-    <None Include="Shaders\Fragment\tapestry_frag.fs" />
-    <None Include="Shaders\Fragment\tunnel_frag.fs" />
-    <None Include="Shaders\Fragment\vintage_frag.fs" />
+    <None Include="Shaders\Fragment\disco.frag" />
+    <None Include="Shaders\Fragment\eclipse.frag" />
+    <None Include="Shaders\Fragment\eye.frag" />
+    <None Include="Shaders\Fragment\flowers.frag" />
+    <None Include="Shaders\Fragment\fractid.frag" />
+    <None Include="Shaders\Fragment\infinity.frag" />
+    <None Include="Shaders\Fragment\lightning.frag" />
+    <None Include="Shaders\Fragment\lightshow.frag" />
+    <None Include="Shaders\Fragment\pillars.frag" />
+    <None Include="Shaders\Fragment\pinneal.frag" />
+    <None Include="Shaders\Fragment\smoke.frag" />
+    <None Include="Shaders\Fragment\space.frag" />
+    <None Include="Shaders\Fragment\tapestry.frag" />
+    <None Include="Shaders\Fragment\tunnel.frag" />
+    <None Include="Shaders\Fragment\vintage.frag" />
     <None Include="Shaders\Geometry\shader.gs" />
     <None Include="Shaders\Vertex\basic_vert.vs" />
   </ItemGroup>
