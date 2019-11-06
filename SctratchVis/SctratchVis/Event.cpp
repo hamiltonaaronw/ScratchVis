@@ -14,7 +14,7 @@ Event::~Event()
 
 // Input Events
 InputEvent::InputEvent(InputKey type)
-	:Event(INPUT_EVENT),
+	:Event(EventMessage::INPUT_EVENT),
 	mType(type)
 {}
 
@@ -22,78 +22,78 @@ void InputEvent::process()
 {
 	switch (mType)
 	{
-	case ESC:
+	case InputKey::ESC:
 		gpGraphics->close();
 		break;
 
-	case SPACE_KEY:
+	case InputKey::SPACE_KEY:
 		gpGraphics->togglePauseSong_Wrapper();
 		break;
 
-	case RIGHT:
+	case InputKey::RIGHT:
 		gpGraphics->toggleSong_Wrapper(1);
 		break;
 
-	case LEFT:
+	case InputKey::LEFT:
 		gpGraphics->toggleSong_Wrapper(-1);
 		break;
 
-	case UP:
+	case InputKey::UP:
 		gpGraphics->toggleShader_Wrapper(1);
 		break;
 
-	case DOWN:
+	case InputKey::DOWN:
 		gpGraphics->toggleShader_Wrapper(-1);
 		break;
 
-	case Q:
+	case InputKey::Q:
 		gpGraphics->toggleRand_Wrapper();
 		break;
 
-	case R:
+	case InputKey::R:
 		gpGraphics->reloadShader_Wrapper();
 		break;
 
-	case T:
+	case InputKey::T:
 		break;
 
-	case SHIFT_S:
+	case InputKey::SHIFT_S:
 		gpGraphics->debug_Wrapper(DebugOutputType::LIST_SHADERS, false);
 		break;
 
-	case SHIFT_A:
+	case InputKey::SHIFT_A:
 		gpGraphics->debug_Wrapper(DebugOutputType::LIST_SONGS, false);
 		break;
 
-	case SHIFT_Z:
+	case InputKey::SHIFT_Z:
 		gpGraphics->debug_Wrapper(DebugOutputType::CURRENT_SHADER, false);
 		break;
 
-	case SHIFT_X:
+	case InputKey::SHIFT_X:
 		gpGraphics->debug_Wrapper(DebugOutputType::CURRENT_SONG, false);
 		break;
 
-	case SHIFT_B:
+	case InputKey::SHIFT_B:
 		gpGraphics->reloadAudio_Wrapper(false);
 		break;
 
-	case TAB_S:
+	case InputKey::TAB_S:
 		gpGraphics->debug_Wrapper(DebugOutputType::LIST_SHADERS, true);
 		break;
 
-	case TAB_A:
+	case InputKey::TAB_A:
 		gpGraphics->debug_Wrapper(DebugOutputType::LIST_SONGS, true);
 		break;
 
-	case TAB_Z:
+	case InputKey::TAB_Z:
 		gpGraphics->debug_Wrapper(DebugOutputType::CURRENT_SHADER, true);
 		break;
 
-	case TAB_X:
+	case InputKey::TAB_X:
 		gpGraphics->debug_Wrapper(DebugOutputType::CURRENT_SONG, true);
 		break;
 
-	case TAB_B:
+	case InputKey::TAB_B:
 		gpGraphics->reloadAudio_Wrapper(true);
 		break;
 
@@ -103,4 +103,25 @@ void InputEvent::process()
 }
 
 InputEvent::~InputEvent()
+{}
+
+SongEndEvent::SongEndEvent()
+	: Event(EventMessage::SONG_END_EVENT)
+{}
+
+void SongEndEvent::process()
+{
+	std::thread tthread([] {
+		gpGraphics->setTime(0.0);
+		});
+
+	std::thread sthread([] {
+		gpGraphics->toggleSong_Wrapper(1);
+		});
+
+	tthread.join();
+	sthread.join();
+}
+
+SongEndEvent::~SongEndEvent()
 {}

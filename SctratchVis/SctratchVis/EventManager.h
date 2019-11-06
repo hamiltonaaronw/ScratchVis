@@ -15,5 +15,4 @@ public:
 
 	void addEvent(Event *pEvent, int delay);
 	void processEvents();
-
 };

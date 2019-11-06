@@ -2,10 +2,11 @@
 
 #include "Graphics.h"
 
-enum EventMessage
+enum class EventMessage
 {
 	INVALID = -1,
 	INPUT_EVENT,
+	SONG_END_EVENT,
 	DEFAULT
 };
 
@@ -30,7 +31,7 @@ protected:
 	float mScheduledTime;
 };
 
-enum InputKey
+enum class InputKey
 {
 	INVALID_KEY = -1,
 	ESC,		SPACE_KEY,
@@ -48,5 +49,16 @@ private:
 public:
 	InputEvent(InputKey type);
 	~InputEvent();
+	void process();
+};
+
+class SongEndEvent : public Event
+{
+private:
+
+public:
+	SongEndEvent();
+	~SongEndEvent();
+
 	void process();
 };

@@ -11,29 +11,14 @@ private:
 	unsigned int mNumEntries;
 
 public:
-	/*
-	CircularQueue::CircularQueue(unsigned int size)
-		:mCapacity(size),
-		mFront(0),
-		mBack(0),
-		mNumEntries(0)
-	{
-		mArray = new T[size];
-	}
-	*/
 	explicit CircularQueue(unsigned int size)
 		: mCapacity(size),
 		mFront(0),
 		mBack(0),
 		mNumEntries(0)
-	{
-		mArray = new T[size];
-	}
+	{	mArray = new T[size];	}
 
-	~CircularQueue()
-	{
-		delete[] mArray;
-	}
+	~CircularQueue() { delete[] mArray; };
 
 	bool popFront(T& item)
 	{
@@ -71,4 +56,6 @@ public:
 		mBack = 0;
 		mNumEntries = 0;
 	}
+
+	int getNumEntries() { return mNumEntries; };
 };

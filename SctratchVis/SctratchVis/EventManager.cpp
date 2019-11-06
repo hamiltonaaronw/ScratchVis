@@ -20,15 +20,16 @@ void EventManager::clean()
 {
 	Event* pEvent;
 	while (mEvents->popFront(pEvent))
-	{
 		delete pEvent;
-	}
 
 	delete mEvents;
 }
 
 void EventManager::processEvents()
 {
+	if (mEvents->getNumEntries() == 0)
+		return;
+
 	Event* pEvent;
 
 	while (mEvents->popFront(pEvent))
@@ -40,9 +41,7 @@ void EventManager::processEvents()
 			delete pEvent;
 		}
 		else
-		{
 			mEvents->pushBack(pEvent);
-		}
 	}
 }
 
