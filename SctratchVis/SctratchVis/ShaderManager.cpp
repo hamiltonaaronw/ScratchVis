@@ -64,6 +64,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::TAPESTRY,			new ShaderInfo("Tapestry",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/tapestry.frag",		NULL));
 	this->addShader(ShaderProgram::INFINITY_,			new ShaderInfo("Infinity",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/infinity.frag",		NULL));
 	this->addShader(ShaderProgram::PILLARS,				new ShaderInfo("Pillars",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/pillars.frag",		NULL));
+	this->addShader(ShaderProgram::TRIANGLES,			new ShaderInfo("Triangles",			0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/triangles.frag",		NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

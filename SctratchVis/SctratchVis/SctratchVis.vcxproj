@@ -241,6 +241,7 @@
     <None Include="Shaders\Fragment\smoke.frag" />
     <None Include="Shaders\Fragment\space.frag" />
     <None Include="Shaders\Fragment\tapestry.frag" />
+    <None Include="Shaders\Fragment\triangles.frag" />
     <None Include="Shaders\Fragment\tunnel.frag" />
     <None Include="Shaders\Fragment\vintage.frag" />
     <None Include="Shaders\Geometry\shader.gs" />

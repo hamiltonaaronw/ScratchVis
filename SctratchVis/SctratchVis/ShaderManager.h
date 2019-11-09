@@ -22,6 +22,7 @@ enum class ShaderProgram
 	TAPESTRY,
 	INFINITY_,
 	PILLARS,
+	TRIANGLES,
 	MISC
 };
 
