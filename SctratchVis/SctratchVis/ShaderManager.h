@@ -8,8 +8,8 @@
 enum class ShaderProgram
 {
 	PSYCH,
-	RETRO,
-	DISCO,
+	BLOSSOM,
+	MOONS,
 	EYE,
 	LIGHTS,
 	ECLIPSE,
@@ -20,9 +20,10 @@ enum class ShaderProgram
 	PINNEAL,
 	SPACE_STATION,
 	TAPESTRY,
-	INFINITY_,
+	INFINITE,
 	PILLARS,
 	TRIANGLES,
+	STATIC,
 	MISC
 };
 

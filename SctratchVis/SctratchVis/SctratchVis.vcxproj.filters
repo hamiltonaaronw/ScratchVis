@@ -46,11 +46,14 @@
     <Filter Include="Event\Header">
       <UniqueIdentifier>{bf309383-2d7b-422c-874e-fa43c0977cf1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Audio\Source">
+      <UniqueIdentifier>{d1eb88b3-5bba-42ea-878e-159a82af686e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\Headers">
+      <UniqueIdentifier>{b2b7be22-95ac-4d75-985d-8f67e45b5c3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Audio\Audio.cpp">
-      <Filter>Audio</Filter>
-    </ClCompile>
     <ClCompile Include="RunGraphics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,11 +81,14 @@
     <ClCompile Include="CircularQueue.cpp">
       <Filter>Event\Source</Filter>
     </ClCompile>
+    <ClCompile Include="Recording.cpp">
+      <Filter>Audio\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio\Audio.cpp">
+      <Filter>Audio\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio\Audio.h">
-      <Filter>Audio</Filter>
-    </ClInclude>
     <ClInclude Include="dirent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -107,6 +113,12 @@
     <ClInclude Include="CircularQueue.h">
       <Filter>Event\Header</Filter>
     </ClInclude>
+    <ClInclude Include="Audio\Audio.h">
+      <Filter>Audio\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Recording.h">
+      <Filter>Audio\Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Geometry\shader.gs">
@@ -114,9 +126,6 @@
     </None>
     <None Include="Shaders\Vertex\basic_vert.vs">
       <Filter>Shaders\Vertex</Filter>
-    </None>
-    <None Include="Shaders\Fragment\disco.frag">
-      <Filter>Shaders\Fragment</Filter>
     </None>
     <None Include="Shaders\Fragment\eclipse.frag">
       <Filter>Shaders\Fragment</Filter>
@@ -154,13 +163,19 @@
     <None Include="Shaders\Fragment\tunnel.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\vintage.frag">
-      <Filter>Shaders\Fragment</Filter>
-    </None>
     <None Include="Shaders\Fragment\pillars.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
     <None Include="Shaders\Fragment\triangles.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\blossom.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\moons.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\static.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

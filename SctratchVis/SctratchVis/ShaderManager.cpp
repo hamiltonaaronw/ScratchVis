@@ -50,8 +50,8 @@ void ShaderManager::clean()
 void ShaderManager::init()
 {
 	this->addShader(ShaderProgram::PSYCH,				new ShaderInfo("Psychedelicious",	0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/tunnel.frag",			NULL));
-	this->addShader(ShaderProgram::RETRO,				new ShaderInfo("Retro",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/vintage.frag",		NULL));
-	this->addShader(ShaderProgram::DISCO,				new ShaderInfo("DiscoTHICC",		0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/disco.frag",			NULL));
+	this->addShader(ShaderProgram::BLOSSOM,				new ShaderInfo("Blossom",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/blossom.frag",		NULL));
+	this->addShader(ShaderProgram::MOONS,				new ShaderInfo("Moons",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/moons.frag",			NULL));
 	this->addShader(ShaderProgram::EYE,					new ShaderInfo("Eye",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/eye.frag",			NULL));
 	this->addShader(ShaderProgram::LIGHTS,				new ShaderInfo("Lightshow",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/lightshow.frag",		NULL));
 	this->addShader(ShaderProgram::ECLIPSE,				new ShaderInfo("Eclipse",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/eclipse.frag",		NULL));
@@ -62,9 +62,11 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::PINNEAL,				new ShaderInfo("Pinneal",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/pinneal.frag",		NULL));
 	this->addShader(ShaderProgram::SPACE_STATION,		new ShaderInfo("Space Station",		0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/space.frag",			NULL));
 	this->addShader(ShaderProgram::TAPESTRY,			new ShaderInfo("Tapestry",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/tapestry.frag",		NULL));
-	this->addShader(ShaderProgram::INFINITY_,			new ShaderInfo("Infinity",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/infinity.frag",		NULL));
+	this->addShader(ShaderProgram::INFINITE,			new ShaderInfo("Infinity",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/infinity.frag",		NULL));
 	this->addShader(ShaderProgram::PILLARS,				new ShaderInfo("Pillars",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/pillars.frag",		NULL));
-	this->addShader(ShaderProgram::TRIANGLES,			new ShaderInfo("Triangles",			0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/triangles.frag",		NULL));
+	this->addShader(ShaderProgram::TRIANGLES,			new ShaderInfo("Triangles",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/triangles.frag",		NULL));
+	this->addShader(ShaderProgram::STATIC,				new ShaderInfo("Static",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/static.frag",			NULL));
+
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

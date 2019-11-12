@@ -4,19 +4,16 @@
 #include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod.hpp>
 #include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod_common.h>
 #include <../../FMOD/FMOD Studio API Windows/api/core/inc/fmod_errors.h>
+#include "../dirent.h"
+
 #include <iostream>
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
-#include <filesystem>
 #include <random>
-
-//#include <include/glm/glm/glm.hpp>
 #include <sys/types.h>
 #include <Windows.h>
 #include <vector>
 #include <time.h>
-#include "../dirent.h"
 
 struct Song
 {

@@ -14,8 +14,6 @@ uniform float uTime;
 uniform float uLastFrame;
 uniform float uDeltaTime;
 
-uniform sampler2D uTex;
-
 uniform vec2 uRes;
 
 uniform float[256] uSpectrum;
