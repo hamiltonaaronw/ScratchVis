@@ -181,7 +181,7 @@
     <None Include="Shaders\Fragment\squiggles.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\cells.frag">
+    <None Include="Shaders\Fragment\zap.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

@@ -92,11 +92,26 @@ float lanczosInterp(int ai, float x)
 mat2 rot(float a)
 {
 	mat2 ret = mat2(
-		cos(a), sin(a),
-		-sin(a), cos(a)
+		cos(TAU + a), sin(PI * a),
+		-sinc(PI * a), cos(TAU * a)
 	);
 
 	return ret;
+}
+
+float perlin(vec2 p, float f)
+{
+	mat2 m = mat2(2.0);
+	float v = 0.0;
+	float s = 1.0;
+
+	for (int i = 0; i < 7; i++, s /= 2.0)
+	{
+		v += s * noise(p, f);
+		p *= m;
+	}
+
+	return v;
 }
 
 vec3 col(vec2 p)
@@ -114,6 +129,7 @@ vec3 col(vec2 p)
 
 	vec2 q = p;
 	q.x *= uRes.x / uRes.y;
+	//q.y *= sin(q.x * f + sin(uTime));// * 4.0;
 	q *= rot(sin(t) + cosc(t / (1.0 - uDeltaFreq)) * liff / length(p));
 
 //	vec3 c = vec3(0.2, 0.4 - q.x, 0.98 + q.y);
@@ -122,7 +138,9 @@ vec3 col(vec2 p)
 		sin(PI / fd) / ((dot(sin(q), cos(p)) * 0.5) * 2.0),
 		smoothstep(fd, ffd, lkff) + atan(cosc(lkf))
 	);
-	float a = uDeltaFreq;// * 5.0;
+
+	c.g *= 0.25;
+	float a = perlin(q, f);// * 5.0;
 
 	for (float i = 1.0; i <= 10.0 + liff; ++i)
 	{
@@ -132,17 +150,20 @@ vec3 col(vec2 p)
 			(
 					(-(1.0 / ffd + sin(uTime) * f) - q.x + fbm(q + t / i)) 
 							* 
-					(i * 15.0)
+					(i * 15.0 * perlin(sin(q), lkf))
 				)
 			);
 		a += s;
 	}
 
-	c *= a;
+	c *= perlin(fract(q), a - liff);
 	vec3 ret;
 	ret = c;
 
-	return ret * f;
+	ret *= f;
+	//ret *= perlin(q, f);
+
+	return ret;
 }
 
 void main()

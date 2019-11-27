@@ -25,7 +25,7 @@ enum class ShaderProgram
 	TRIANGLES,
 	STATIC,
 	SQUIGGLES,
-	CELLS,
+	ZAP,
 	MISC
 };
 
