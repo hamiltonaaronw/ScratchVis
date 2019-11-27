@@ -24,6 +24,8 @@ enum class ShaderProgram
 	PILLARS,
 	TRIANGLES,
 	STATIC,
+	SQUIGGLES,
+	CELLS,
 	MISC
 };
 

@@ -231,6 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment\blossom.frag" />
+    <None Include="Shaders\Fragment\cells.frag" />
     <None Include="Shaders\Fragment\eclipse.frag" />
     <None Include="Shaders\Fragment\eye.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />
@@ -243,6 +244,7 @@
     <None Include="Shaders\Fragment\pinneal.frag" />
     <None Include="Shaders\Fragment\smoke.frag" />
     <None Include="Shaders\Fragment\space.frag" />
+    <None Include="Shaders\Fragment\squiggles.frag" />
     <None Include="Shaders\Fragment\static.frag" />
     <None Include="Shaders\Fragment\tapestry.frag" />
     <None Include="Shaders\Fragment\triangles.frag" />

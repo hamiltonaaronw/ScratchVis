@@ -66,7 +66,8 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::PILLARS,				new ShaderInfo("Pillars",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/pillars.frag",		NULL));
 	this->addShader(ShaderProgram::TRIANGLES,			new ShaderInfo("Triangles",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/triangles.frag",		NULL));
 	this->addShader(ShaderProgram::STATIC,				new ShaderInfo("Static",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/static.frag",			NULL));
-
+	this->addShader(ShaderProgram::SQUIGGLES,			new ShaderInfo("Squiggles",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/squiggles.frag",		NULL));
+	this->addShader(ShaderProgram::CELLS,				new ShaderInfo("Cells",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/cells.frag",			NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

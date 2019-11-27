@@ -178,5 +178,11 @@
     <None Include="Shaders\Fragment\static.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
+    <None Include="Shaders\Fragment\squiggles.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\cells.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
   </ItemGroup>
 </Project>

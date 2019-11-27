@@ -96,7 +96,7 @@ vec3 col(vec2 p)
 	float ti = uTime * 0.1;
 	vec3 c = vec3(f * 0.1);
 	
-	for (int i = 0; i < 20 + int(floor(fract(uFreq) * 100.0)); ++i)
+	for (int i = 0; i < int(floor(fract(uFreq) * 100.0)); ++i)
 	{
 		float j = float(i) * f / fbm(q * sin(uTime));
 		float a = 10.0 + (j * 500.0);
@@ -104,23 +104,36 @@ vec3 col(vec2 p)
 		float thicc = mix(0.9, 1.0, noise(q * j));
 		float t = abs(1.0 / (sin(q.y + fbm(q + ti * pe)) * a) * thicc);
 
+		float f_ind = mod(p.x / p.y, length(p)) / f;
+		int ind = int(floor(fract(f_ind * 10.0)));
+
 		c += t * vec3(
 			atan(0.5, f) * (p.x * sin(uFreq)) + f,
-			exp(0.95 * f) - exp(fract(uSpectrum[i * 10] * 10.0)),
+			exp(0.95 * f) - exp(fract(uSpectrum[i * 10 * ind] * 10.0)),
 			fract(sinc(f * 10.0)) * (p.y * sin(uTime))
 			);
 
 
+/*
+		c += t * vec3(
+			f * atan(f, sinc(p.x)), 
+			fract(tanh(f)),
+			sin(uTime)
+		);
+		
+		*/
+
 	}
 
-	vec3 ret = uFreq == 0.0 ? vec3(0.0) : c + (f / 3.0);
+	vec3 ret = uFreq == 0.0 ? vec3(0.0) : c;
 
-	return ret * 1.125;
+	return ret;// * 0.75;
 }
 
 void main()
 {
 	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+
 	vec4 ret;
 
 	//ret = vec4(1.0);
