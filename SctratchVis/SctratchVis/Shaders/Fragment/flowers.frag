@@ -73,8 +73,6 @@ vec3 col(vec2 p)
 	return ret;
 }
 
-
-
 void main()
 {	
 	vec4 ret;

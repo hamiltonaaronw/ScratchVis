@@ -32,92 +32,106 @@ float cosc(float x)
 
 mat2 rot(float a)
 {
-	mat2 ret = mat2(
+	return mat2(
 		cos(a), sin(a),
 		-sin(a), cos(a)
 	);
+}
 
+float angle(vec2 p)
+{
+	if (p.x <= 0.0)
+		return atan(p.y / p.x) / TAU + 0.5;
+	if (p.y >= 0.0) 
+		return atan(p.y / p.x) / TAU;
+
+	return atan(p.y / p.x) / TAU + 2.0;
+}
+
+float dist(vec2 p)
+{
+	float ret = distance(vec2(0.0), p);
 	return ret;
 }
 
-mat3 rot3(float a)
+float lanczosKernel(int ai, float x)
 {
-	mat3 ret = mat3(
-		0.0, cos(a), sin(a), 
-		0.0, -sin(a), cos(a),
-		0.0, 0.0, 0.0
-	);
+	float ret;
+	float af = float(ai);
 
-	return ret;
+	if (x == 0.0)
+		return 1.0;
+	if (-af <= x && x < af)
+		return (af * sin(PI * x) * sin((PI * x) / af)) / ((PI * PI) * (x * x));
+	else
+		return 0;
 }
 
-mat4 rot4(float a)
+float lanczosInterp(int ai, float x)
 {
-	mat4 ret = mat4(
-		0.0,	0.0,		0.0,	0.0,
-		0.0,	cos(a),		sin(a), 0.0,
-		0.0,	-sin(a),	cos(a),	0.0,
-		0.0,	0.0,		0.0,	0.0
-	);
-	return ret;
-}
+	float ret = 0.0;
+	int ub = int(floor(x));
+	int lb = int(floor(x)) - ai + 1;
 
+	for (int i = lb; i <= ub; i++)
+	{
+		ret += uSpectrum[i] * lanczosKernel(ai, x - float(i));
+		//ret = mod(abs(ret), 1.0);
+	}
 
-float m(vec3 p)
-{
-	vec3 q = p;
-	p.z *= sin(uTime) + uFreq;
-	p.z *= 0.5;
-	float s = 1.0;
-	float k;
-
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
-
-	for (float i = 1.0; i <= 5.0; i++)
-		p *= k = 2.0 / dot(p = mod(p - 1.0, 2.0) - 1.0, p), s *= k;
-
-	p.xy *= sin(oTexCoord.xy);
-	p.xy *= sin(oTexCoord.xy);
-	p.xy *= sin(oTexCoord.xy);
-
-	p += (uTime * 0.001);
-
-	s += sin(s * f)  + cosc(uTime / uDeltaFreq);
-
-	return length(p) / s;
+	return abs(ret);
 }
 
 vec3 col(vec2 p)
 {
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
-	float tf = sin(uTime + uFreq) / uFreq;
-	
-	vec3 d = vec3(gl_FragCoord.xy / uRes.y - 0.5, 1.0) / 2.0;
-	vec3 o = vec3(1.0, 1.0, 0.0);
-	for (float i = 1.0; i <= 80.0; i++)
-		o += m(o) * d;// - dot(p, p);
+	vec3 ret;
+	vec2 q = p;
 
+	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
+	float ff = fract(f * 100.0);
+	float lif = lanczosInterp(2, f);
+	float liff = lanczosInterp(2, ff);
 
-	float r = sin(tf / f) - mod(min(sin(f), sinc(f)), max(sin(f), sinc(f)));
-	float g = cos(sin(tf)) / 0.5 * mod(min(cos(f), cosc(f)), max(cos(f), cosc(f)));
-	float b = min(uFreq, mod(uTime, 1.0)) / m(vec3(f, tf, uFreq));
+	float fd = max(f, lif) / min(f, lif);
+	fd = clamp(fd, min(f, 0.1), mod(f, 1.0));
+	float ffd = max(ff, liff) / min(ff, liff);
+	ffd = clamp(ffd, min(f, 0.1), mod(uFreq, 1.0));
 
+	q *= rot(uTime * 0.5);
+
+	float a = angle(q * ff);
+	float d = dist(q);
+
+	float df = abs(uDeltaFreq - uLastFreq);
+
+	float t = df >= 0.6 ? sin(uTime) : uTime + f;
+
+	float va = sin(a * TAU * 6.0 + t) + ffd;
+	float vb = cos(d * TAU * 0.5 - 4.0 * t + ffd);
+
+	//float v1 = mix((va / vb), (va * vb), uFreq);
+	float v1 = max(va / vb, vb / va) - (va * vb);
+	float v2 = cos(v1 * PI * (1.125 * (2.5 * ffd)) + uTime * sin(liff));
+	float v3 = cos(v2 * 15.0) * cosc(uFreq);
 
 	vec3 c = vec3(
-		smoothstep(r, g, b) * f,
-		smoothstep(b, r, g) / 2.0,
-		smoothstep(g, b, r)
-		);
+		v1  * d + sin(uTime / ffd),
+		exp(liff) * v2,
+		sin(exp(fract(df * v3 * 100.0) + ffd) * fd)
+	);
 
-	vec3 ret = c + m(c - sin(f + tf));
-	ret += (o.z - 2.0);
-
+	ret = c * uFreq;
+	ret /= 1.0 - f;
+	
 	return ret;
 }
 
 void main()
 {
-	vec2 uv = ((gl_FragCoord.xy / uRes.xy) / 2.0 - 0.5);
-	retColor = vec4(mod(uTime, 0.8), mod(uTime, 0.5), mod(uTime, 0.7), sin(mod(uFreq, 1.0)));
-	retColor = vec4(col(uv), 1.0);
+	vec4 ret;
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+
+	ret = vec4(col(uv), 1.0);
+
+	retColor = ret;
 }
