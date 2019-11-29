@@ -30,54 +30,46 @@ float cosc(float x)
 mat2 rot(float a)
 {
 	mat2 ret = mat2(
-		cos(a), -sin(a),
-		sin(a), cos(a)
+		cos(a), sin(a),
+		-sin(a), cos(a)
 	);
 	return ret;
 } 
 
 vec3 col(vec2 p)
 {
-	float w = 2.0;
-	float h = 4.0;
-	float f = min(uFreq, uLastFreq) + abs(uDeltaFreq / 2.0);
-	float ft = smoothstep(uTime, uFreq, f);
-	float tf = uTime / f;
-	ft *= sinc(cosc(tf * length(oTexCoord)));
-	f += smoothstep(max(ft, tf), min(tf, ft), 1.0 / f);
-	//p /= f;
-	float lp = length(p);
-	float dp = dot(p, p);
+	vec3 ret;
+	vec2 q = p;
 
-	float c;
-	vec3 co;
+	q *= rot(uTime * 0.2);
 
-	vec3 ret = vec3(0.1);
+	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
+	float ff = fract(f * 100.0);
 
-	for (int i = 0; i < 7; i++)
-	{
-		float it;
-		if (i % 2 != 0)
-			it = -1.0;
-		else
-			it = 1.0;
+	float a = atan(q.y, q.x) * 100.0;
+	float l = 0.2 / abs(length(q * sinc(ff)) - 0.8 + sin(a * ff + uTime * 1.5) * 0.04);
+	l += 0.2 / abs(length(q / sinc(ff * TAU)) - 0.2 + sin(a * ff + uTime * 3.5) * 4.0);
 
-		p *= rot(it * (uTime - f));
-		p /= 1.6;
+	l *= length(ff / q);
 
-		c = smoothstep(w * f, h * f, abs(length(p) - 25.0 + sin(atan(p.y, p.x) * 9.0 - TAU / 2.0) * 14.0 * sin(f + uTime)));
-		co = vec3(sinc(p.x) / pow(uFreq, PI), cosc(p.y) / pow(uFreq, PI), f) * c * f;
-		ret *= co;
-	}
+	vec3 c = vec3(
+		tan(f) + ff,
+		ff * cosc(uTime) * dot(q, p),
+		sinc(ff - f) - ((q.x / q.y) * sin(uTime) / f)
+	);
 
+	c *= 0.5 + sin(a * uTime * 1.3) * 0.0003;
+	
+	ret = c * l * f;
+
+	//ret = vec3(1.0, 0.0, 0.0);
 	return ret;
 }
 
 void main()
 {	
 	vec4 ret;
-
-	vec2 uv = gl_FragCoord.xy - uRes;
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 
 	ret = vec4(col(uv), 1.0);
 
