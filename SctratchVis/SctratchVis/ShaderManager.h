@@ -26,6 +26,7 @@ enum class ShaderProgram
 	STATIC,
 	SQUIGGLES,
 	ZAP,
+	HEX,
 	MISC
 };
 

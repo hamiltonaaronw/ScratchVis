@@ -235,6 +235,7 @@
     <None Include="Shaders\Fragment\eye.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />
     <None Include="Shaders\Fragment\fractid.frag" />
+    <None Include="Shaders\Fragment\hex.frag" />
     <None Include="Shaders\Fragment\infinity.frag" />
     <None Include="Shaders\Fragment\lightning.frag" />
     <None Include="Shaders\Fragment\lightshow.frag" />
