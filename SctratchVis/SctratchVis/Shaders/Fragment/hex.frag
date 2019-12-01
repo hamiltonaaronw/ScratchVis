@@ -36,11 +36,19 @@ vec3 hue(float h)
 	return ret;
 }
 
-mat2 rot(float a)
+mat2 rotR(float a)
 {
 	return mat2(
 		cos(a), -sin(a),
 		sin(a), cos(a)
+	);
+}
+
+mat2 rotL(float a)
+{
+	return mat2(
+		cos(a), sin(a),
+		-sin(a), cos(a)
 	);
 }
 
@@ -137,7 +145,7 @@ vec3 uni(vec2 p, float m)
 		return vec3(0.0);
 
 	float t = uTime * 0.1;
-	p *= rot(t);
+	p *= rotR(t);
 
 	for (float i = 0.0; i < 1.0; i += 1.0 / 4.0)
 	{
@@ -160,12 +168,15 @@ vec3 col(vec2 p)
 	float f = abs(uFreq - uLastFreq) + abs(uDeltaFreq);
 	float ff = fract(f * 100.0);
 
-	vec2 q = length(p) < ff * 5.0 ? p / (2.5 + f) : p / (2.5 - f);
-	q *= rot(uTime * 0.1);// + clamp(ff, 0.1, 0.5));
-	vec4 coord = grid(q / ff, TAU * ff + f);
-	vec2 st = coord.xy;
+	float t = uTime * 0.1;
 
-	float t = uTime;
+	float rs = abs(t + ff);
+	mat2 rot = floor(mod(length(p), 2.0)) < 1.0 ? rotR(rs) : rotL(t * 0.1); 
+
+	vec2 q = length(p) < ff * 5.0 ? p / (3.0 + f) : p / (3.0 - f);
+	q *= (rot * (0.25 + (1.0 - ff)));
+	vec4 coord = grid(q / ff, PI * ff + f);
+	vec2 st = coord.xy;
 
 	float r = length(hex(st));
 	float ind = ((coord.w * 3.0) + (coord.z * 3.0)) * 0.6;
