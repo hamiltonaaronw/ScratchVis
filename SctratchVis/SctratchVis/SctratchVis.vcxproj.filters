@@ -130,9 +130,6 @@
     <None Include="Shaders\Fragment\eclipse.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\eye.frag">
-      <Filter>Shaders\Fragment</Filter>
-    </None>
     <None Include="Shaders\Fragment\flowers.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
@@ -185,6 +182,9 @@
       <Filter>Shaders\Fragment</Filter>
     </None>
     <None Include="Shaders\Fragment\hex.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
+    <None Include="Shaders\Fragment\cubes.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

@@ -49,6 +49,27 @@ enum class SetupStage
 	CLEAR_SCREEN
 };
 
+struct Uniforms
+{
+	float mCurFreq;
+	float mDFreq;
+	float mLastFreq;
+
+	float mCurTime;
+	float mDTime;
+	float mLastTime;
+
+	int mResWidth;
+	int mResHeight;
+
+	Uniforms()
+		: mCurFreq(0.0), mDFreq(0.0), mLastFreq(0.0),
+		mCurTime(0.0), mDTime(0.0), mLastTime(0.0),
+		mResWidth(0), mResHeight(0)
+	{}
+};
+
+
 class Graphics
 {
 private:
@@ -63,6 +84,7 @@ private:
 	void initShaders		();
 	void processInput		(GLFWwindow *window);
 	void selectShader		(int i);
+	void sendUniforms		(Uniforms *pUni);
 	void togglePauseSong	();
 	void toggleShader		(int prevNext);
 	void toggleSong			(int prevNext);
@@ -99,7 +121,6 @@ private:
 						mEBO,
 						mSWidth, 
 						mSHeight;
-
 
 public:
 

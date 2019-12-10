@@ -3,18 +3,11 @@
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
-in vec2 oTexCoord;
-
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
-
 uniform float uTime;
-uniform float uLastFrame;
-uniform float uDeltaTime;
-
 uniform float[256] uSpectrum;
-
 uniform vec2 uRes;
 
 out vec4 retColor;

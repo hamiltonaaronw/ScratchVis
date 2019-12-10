@@ -6,36 +6,22 @@
 
 out vec4 retColor;
 
-in vec3 oColor;
-in vec2 oTexCoord;
-
 uniform float uFreq;
 uniform float uTime;
-
 uniform float uLastFreq;
-uniform float uLastFrame;
-
 uniform float uDeltaFreq;
 uniform float uDeltaTime;
-
 uniform float[256] uSpectrum;
-
 uniform vec2 uRes;
 
 float sinc(float x)
 {
-//	return sin(PI * x) / ((TWO_PI * x) * (uFreq * (uTime * uDeltaTime)));
 	return sin(x) / x;
-	//return sin(x) / (PI * x);
-	//return sin(mod(TWO_PI * uFreq, uTime) * x) / x;
 }
 
 float cosc(float x)
 {
-	return cos(PI * x) / ((TWO_PI * x) * (uFreq / (uTime * uDeltaTime)));
-	//return cos(x) / x;
-	// return cos(x) / (PI * x);
-	// return cos(mod(TWO_PI * uFreq, uTime) * x) / x;
+	return cos(x) / x;
 }
 
 vec3 col(vec2 p)

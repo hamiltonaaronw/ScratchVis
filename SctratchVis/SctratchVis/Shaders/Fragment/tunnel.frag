@@ -12,23 +12,14 @@ code source: https://www.shadertoy.com/view/4dfGDr
 
 out vec4 retColor;
 
-in vec3 oColor;
 in vec2 oTexCoord;
 
 uniform float uFreq;
 uniform float uTime;
-
 uniform vec2 uRes;
-
-uniform float uLastFreq;
-uniform float uLastFrame;
-
-uniform float uDeltaFreq;
 uniform float uDeltaTime;
 
 uniform float[256] uSpectrum;
-
-uniform sampler2D uTex;
 
 float sinc(float x)
 {

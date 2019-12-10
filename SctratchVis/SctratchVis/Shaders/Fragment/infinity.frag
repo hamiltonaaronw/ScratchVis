@@ -8,13 +8,10 @@ in vec2 oTexCoord;
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
-
 uniform float uTime;
 uniform float uLastFrame;
 uniform float uDeltaTime;
-
 uniform vec2 uRes;
-
 uniform float[256] uSpectrum;
 
 out vec4 retColor;

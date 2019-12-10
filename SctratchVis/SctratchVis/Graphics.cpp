@@ -58,7 +58,7 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 
 	case DebugOutputType::CURRENT_SHADER:
 		
-		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName() << std::endl;
+		std::cout << "Current Shader Program:\t\t" << mpShaderMan->getCurrentShader()->getProgramName() << "\t\tProgram Number:\t\t" << (int)mCurProg << std::endl;
 		break;
 
 	case DebugOutputType::LIST_SHADERS:
@@ -486,6 +486,10 @@ void Graphics::render()
 		curFreq = 0.0,
 		dFreq = 0.0;
 
+	Uniforms* pUni = new Uniforms();
+	pUni->mLastTime = this->getCurTime();
+	pUni->mLastFreq = mpAudio->getFreq();
+
 	// render loop
 	while (!glfwWindowShouldClose(mpWindow))
 	{
@@ -495,6 +499,7 @@ void Graphics::render()
 		if (!mpAudio->update())
 			mpEventMan->addEvent(new SongEndEvent(), 1);
 
+		/*
 		if (!mpAudio->getIsPaused())
 		{
 			// send frequency uniforms to the shader
@@ -515,12 +520,12 @@ void Graphics::render()
 		}
 		else
 			glfwSetTime(curFrame);
+			*/
 
-		int w, h;
-		glfwGetFramebufferSize(mpWindow, &w, &h);
+		sendUniforms(pUni);
 
-		mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)w / 2.0, (float)h / 2.0));
 		mpShaderMan->use();
+
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -549,6 +554,157 @@ void Graphics::selectShader(int i)
 	this->debugOutput(DebugOutputType::SPACE, false);
 }
 
+void Graphics::sendUniforms(Uniforms *pUni)
+{
+	if (mpAudio->getIsPaused())
+	{
+		glfwSetTime(pUni->mCurTime);
+		return;
+	}
+
+	pUni->mCurFreq = mpAudio->getFreq();
+	pUni->mCurTime = this->getCurTime();
+	glfwGetFramebufferSize(mpWindow, &pUni->mResWidth, &pUni->mResHeight);
+
+	pUni->mDFreq = pUni->mCurFreq - pUni->mLastFreq;
+	pUni->mDTime = pUni->mCurTime - pUni->mLastTime;
+
+
+	// resolution, current frequency and current time will always be sent to all shaders
+	mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)pUni->mResWidth / 2.0, (float)pUni->mResHeight / 2.0));
+	mpShaderMan->getCurrentShader()->setFloat("uFreq", pUni->mCurFreq);
+	mpShaderMan->getCurrentShader()->setFloat("uTime", pUni->mCurTime);
+
+	switch (mCurProg)
+	{
+	case ShaderProgram::PSYCH:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		break;
+
+	case ShaderProgram::BLOSSOM:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		break;
+
+	case ShaderProgram::MOONS:
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::CUBES:
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::LIGHTS:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		break;
+
+	case ShaderProgram::ECLIPSE:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		break;
+
+	case ShaderProgram::FRACTID:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::SMOKE:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::FLOWER:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::LIGHTNING:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::PINNEAL:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFrame", pUni->mLastTime);
+
+		break;
+
+	case ShaderProgram::SPACE_STATION:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFrame", pUni->mLastTime);
+		break;
+
+	case ShaderProgram::TAPESTRY:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case (ShaderProgram)13: // gives errors when written as ShaderProgram::INFINITE
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFrame", pUni->mLastTime);
+		break;
+
+	case ShaderProgram::PILLARS:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFrame", pUni->mLastTime);
+		break;
+
+	case ShaderProgram::TRIANGLES:
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::STATIC:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::SQUIGGLES:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::ZAP:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uFreq", pUni->mCurFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	case ShaderProgram::HEX:
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
+	}
+
+	pUni->mLastFreq = pUni->mCurFreq;
+	pUni->mLastTime = pUni->mCurTime;
+}
+
 void Graphics::togglePauseSong()
 {
 	mpAudio->togglePause();
@@ -557,6 +713,7 @@ void Graphics::togglePauseSong()
 void Graphics::toggleShader(int prevNext)
 {
 	mpShaderMan->toggleShader(prevNext);
+	setCurProg(mpShaderMan->getCurProgram());
 	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
 	this->debugOutput(DebugOutputType::SPACE, false);
 }

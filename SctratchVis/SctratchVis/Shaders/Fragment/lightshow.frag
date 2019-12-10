@@ -5,21 +5,11 @@
 
 out vec4 retColor;
 
-in vec3 oColor;
-in vec2 oTexCoord;
-
 uniform float uFreq;
 uniform float uTime;
-
 uniform float uLastFreq;
-uniform float uLastFrame;
-
-uniform float uDeltaFreq;
 uniform float uDeltaTime;
-
 uniform float[256] uSpectrum;
-
-uniform sampler2D uTex;
 uniform vec2 uRes;
 
 mat2 rot(float a)

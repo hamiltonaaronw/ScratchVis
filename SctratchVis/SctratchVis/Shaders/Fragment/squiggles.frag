@@ -3,31 +3,23 @@
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
-in vec2 oTexCoord;
-
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
-
 uniform float uTime;
-uniform float uDeltaTime;
-
 uniform vec2 uRes;
-
 uniform float[256] uSpectrum;
 
 out vec4 retColor;
 
 float sinc(float x)
 {
-	float ret = sin(x) / x;
-	return ret;
+	return sin(x) / x;
 }
 
 float cosc(float x)
 {
-	float ret = cos(x) / x;
-	return ret;
+	return cos(x) / x;
 }
 
 float hash(vec2 p, float s)
