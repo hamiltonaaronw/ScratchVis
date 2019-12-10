@@ -52,7 +52,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::PSYCH,				new ShaderInfo("Psychedelicious",	0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/tunnel.frag",			NULL));
 	this->addShader(ShaderProgram::BLOSSOM,				new ShaderInfo("Blossom",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/blossom.frag",		NULL));
 	this->addShader(ShaderProgram::MOONS,				new ShaderInfo("Moons",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/moons.frag",			NULL));
-	this->addShader(ShaderProgram::EYE,					new ShaderInfo("Eye",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/eye.frag",			NULL));
+	this->addShader(ShaderProgram::CUBES,					new ShaderInfo("Cubes",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/cubes.frag",			NULL));
 	this->addShader(ShaderProgram::LIGHTS,				new ShaderInfo("Lightshow",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/lightshow.frag",		NULL));
 	this->addShader(ShaderProgram::ECLIPSE,				new ShaderInfo("Eclipse",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/eclipse.frag",		NULL));
 	this->addShader(ShaderProgram::FRACTID,				new ShaderInfo("Fractid",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/fractid.frag",		NULL));

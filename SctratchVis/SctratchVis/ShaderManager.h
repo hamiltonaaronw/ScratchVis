@@ -10,7 +10,7 @@ enum class ShaderProgram
 	PSYCH,
 	BLOSSOM,
 	MOONS,
-	EYE,
+	CUBES,
 	LIGHTS,
 	ECLIPSE,
 	FRACTID,
@@ -58,6 +58,44 @@ struct ShaderInfo
 			delete[] mGeomPath;
 	}
 };
+
+/*
+union ShaderInfo
+{
+	const char*			mName;
+	unsigned int		mVID;
+	unsigned int		mFID;
+	unsigned int		mGID;
+	const char*			mVertPath;
+	const char*			mFragPath;
+	const char*			mGeomPath;
+
+	ShaderInfo(const char* n, unsigned int vi, unsigned int fi, unsigned int gi, const char* vp, const char* fp, const char* gp)
+	{
+		mName = n;
+		mVID = vi;
+		mFID = fi;
+		mGID = gi;
+		mVertPath = vp;
+		mFragPath = fp;
+		mGeomPath = gp;
+	}
+
+	~ShaderInfo()
+	{
+		if (mName)
+			delete[] mName;
+		if (mVertPath)
+			delete[] mVertPath;
+		if (mFragPath)
+			delete[] mFragPath;
+		if (mGeomPath)
+			delete[] mGeomPath;
+	}
+};
+*/
+
+
 
 class ShaderManager
 {

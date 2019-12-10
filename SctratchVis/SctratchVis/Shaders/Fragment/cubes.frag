@@ -75,7 +75,7 @@ float map(vec3 p, float t)
 
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d)
 {
-	vec3 ret = a + b * cos(TAU * (c * t + d));
+	vec3 ret = a + b * cos(6.28318 * (c * t + d));
 	return ret;
 }
 
@@ -85,7 +85,7 @@ vec3 col(vec2 p)
 
 	float f = abs(uFreq + uLastFreq * uDeltaFreq) * 0.5;
 	float ff = fract(f * 10.0);
-	ff = abs(abs(ff - sin(f - uFreq)) - uLastFreq) - uDeltaFreq * 0.5;
+	ff = abs(abs(ff - f) - uLastFreq) - uDeltaFreq * 0.5;
 
 	vec3 cPos = vec3(0.0, 0.0, 15.0);
 	vec3 ray = normalize(vec3(p.xy, -1.0));
@@ -93,23 +93,22 @@ vec3 col(vec2 p)
 	float depth = 0.0;
 	float d = 0.0;
 	vec3 pos = vec3(0.0);
-	vec3 c = vec3(f);
+	vec3 c = vec3(ff);
 
 	float t = smoothstep(min(f, ff) * max(f, ff), max(f, ff), 1.0 + uDeltaFreq);
-	t *= exp(f);
 	for (int i = 0; i < 99; i++)
 	{
 		pos = cPos + ray * depth;
 		d = map(pos, t);
-		if (d < 0.0001 || pos.z > 75.0)
+		if (d < 0.0001 || pos.z > 50.0)
 			break;
 		c += exp(-d * 2.0) * palette(length(pos) / ff / f * sin(uTime),
-									 vec3(0.1, exp(f), uDeltaFreq),
-									 vec3(0.1, 0.2, f),
+									 vec3(0.1, f, uDeltaFreq),
+									 vec3(0.1, 0.8 - f, f),
 									 vec3(1.0),
-									 vec3(ff / uDeltaFreq, 0.3, 0.4)
+									 vec3(ff, 0.3, 0.4)
 									 );
-		depth += d * ff;
+		depth += d * 0.2;
 	}
 
 	c *= 0.03;
