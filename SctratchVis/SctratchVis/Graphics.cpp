@@ -476,15 +476,7 @@ void Graphics::render()
 	glEnableVertexAttribArray(2);
 
 	mpAudio->playSong();
-
-	float lastFrame = this->getCurTime(),
-		curFrame = 0.0,
-		dTime = 0.0;
-
 	mpAudio->update();
-	float lastFreq = mpAudio->getFreq(),
-		curFreq = 0.0,
-		dFreq = 0.0;
 
 	Uniforms* pUni = new Uniforms();
 	pUni->mLastTime = this->getCurTime();
@@ -498,29 +490,6 @@ void Graphics::render()
 
 		if (!mpAudio->update())
 			mpEventMan->addEvent(new SongEndEvent(), 1);
-
-		/*
-		if (!mpAudio->getIsPaused())
-		{
-			// send frequency uniforms to the shader
-			curFreq = mpAudio->getFreq();
-			dFreq = curFreq - lastFreq;
-			mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
-			mpShaderMan->getCurrentShader()->setFloat("uFreq", curFreq);
-			mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", dFreq);
-			mpShaderMan->getCurrentShader()->setFloat("uLastFreq", lastFreq);
-			lastFreq = curFreq;
-			
-			// send time uniforms to the shader
-			curFrame = this->getCurTime();
-			dTime = curFrame - lastFrame;
-			mpShaderMan->getCurrentShader()->setFloat("uTime", curFrame);
-			mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", dTime);
-			mpShaderMan->getCurrentShader()->setFloat("uLastFrame", lastFrame);
-		}
-		else
-			glfwSetTime(curFrame);
-			*/
 
 		sendUniforms(pUni);
 
@@ -537,6 +506,9 @@ void Graphics::render()
 
 		mpEventMan->processEvents();
 	}
+
+	pUni = NULL;
+	delete pUni;
 }
 
 void Graphics::selectShader(int i)

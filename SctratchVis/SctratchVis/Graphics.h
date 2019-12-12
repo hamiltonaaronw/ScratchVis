@@ -7,10 +7,8 @@
 #include <string>
 #include <map>
 #include <thread>
-//#include "EventManager.h"
 
 #include "ShaderManager.h"
-//#include "Shaders/Shader.h"
 #include "Audio/Audio.h"
 #include "Text.h"
 
@@ -63,9 +61,9 @@ struct Uniforms
 	int mResHeight;
 
 	Uniforms()
-		: mCurFreq(0.0), mDFreq(0.0), mLastFreq(0.0),
-		mCurTime(0.0), mDTime(0.0), mLastTime(0.0),
-		mResWidth(0), mResHeight(0)
+		:	mCurFreq(0.0),	mDFreq(0.0),	mLastFreq(0.0),
+			mCurTime(0.0),	mDTime(0.0),	mLastTime(0.0),
+			mResWidth(0),	mResHeight(0)
 	{}
 };
 
