@@ -138,7 +138,7 @@ vec3 col(vec2 p)
 	float fd = min(f, lif) / max(f, lif);
 	fd = mod(fd, 1.0);
 	float ffd = max(ff, liff) / min(ff, liff);
-	fd = mod(fd, 1.0);
+	ffd = mod(ffd, 1.0);
 
 	float fp = perlin(p, f);
 	float fps = fp * uSpectrum[int(floor(ff * 100.0))];

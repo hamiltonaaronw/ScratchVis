@@ -69,6 +69,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::SQUIGGLES,			new ShaderInfo("Squiggles",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/squiggles.frag",		NULL));
 	this->addShader(ShaderProgram::ZAP,					new ShaderInfo("Zap",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/zap.frag",			NULL));
 	this->addShader(ShaderProgram::HEX,					new ShaderInfo("Hex",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/hex.frag",			NULL));
+	this->addShader(ShaderProgram::MISC,				new ShaderInfo("Misc",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/misc.frag",			NULL));
 
 	this->setNumShaders(mShaders.size());
 	this->setCurProg(mShaders.begin()->first);

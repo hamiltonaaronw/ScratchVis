@@ -239,6 +239,7 @@
     <None Include="Shaders\Fragment\infinity.frag" />
     <None Include="Shaders\Fragment\lightning.frag" />
     <None Include="Shaders\Fragment\lightshow.frag" />
+    <None Include="Shaders\Fragment\misc.frag" />
     <None Include="Shaders\Fragment\moons.frag" />
     <None Include="Shaders\Fragment\pillars.frag" />
     <None Include="Shaders\Fragment\pinneal.frag" />
