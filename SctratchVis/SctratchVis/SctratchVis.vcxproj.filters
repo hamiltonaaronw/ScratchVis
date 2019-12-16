@@ -187,7 +187,7 @@
     <None Include="Shaders\Fragment\cubes.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
-    <None Include="Shaders\Fragment\misc.frag">
+    <None Include="Shaders\Fragment\fractal.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
   </ItemGroup>

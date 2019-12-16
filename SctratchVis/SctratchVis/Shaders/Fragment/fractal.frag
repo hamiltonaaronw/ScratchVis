@@ -3,14 +3,10 @@
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
-in vec2 oTexCoord;
-
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
 uniform float uTime;
-uniform float uLastFrame;
-uniform float uDeltaTime;
 uniform vec2 uRes;
 uniform float[256] uSpectrum;
 
@@ -208,12 +204,13 @@ vec3 col(vec2 p)
 	float fp = perlin(p, f);
 	float ffp = perlin(p, ff);
 
-	float t = uTime + sin(fract(fp * liff) * length(p));
+	float t = uTime + sin(fract(fp * liff) * length(p * uDeltaFreq));
 
 	float cycle = cos(t) * 0.5 + 0.5;
 	float invCycle = 1.0 - cycle;
 
-	vec2 q = p * rot(uTime);
+	vec2 q;
+	q = p * rot(uTime / TAU + (uFreq * 0.1));
 
 	float r = q.x;
 	float i = q.y;
@@ -222,17 +219,20 @@ vec3 col(vec2 p)
 
 	int sInd = 0;
 
-	for (int j = 0; j < 25; j++)
+	int k = int(floor(fract(uFreq * 100.0)));
+	k *= 10;
+
+	for (int j = 0; j < 25 + k; j++)
 	{
 		float sp = uSpectrum[j * 10];
-		tr = r * r - i * i + cycle * q.x + invCycle * (q.x * fp);
-		i = 2.0 * i * r + cycle * q.y + invCycle * (q.y * lkf);
+		tr = r * r - i * i + cycle * q.x + invCycle * (dot(p, q) * fp * q.x);
+		i = 2.0 * i * r + cycle * q.y + invCycle * (dot(p, q) * lkf * q.y);
 		//i *= sp;
 		r = tr;
 		iterations++;
 
-		float cond = r * r + i * i + sp * sp;
-		if (cond > 4.0 + fp)
+		float cond = r * r + i * i; // + sp * sp;
+		if (cond > 4.0 + ffp)
 		{
 			sInd = j * 10;
 			break;

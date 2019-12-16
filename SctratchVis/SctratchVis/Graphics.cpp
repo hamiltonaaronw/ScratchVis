@@ -671,6 +671,12 @@ void Graphics::sendUniforms(Uniforms *pUni)
 		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
 		break;
 
+	case ShaderProgram::FRACTAL:
+		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
+		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+		break;
+
 	case ShaderProgram::MISC:
 		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);

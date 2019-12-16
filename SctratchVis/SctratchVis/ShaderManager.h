@@ -27,6 +27,7 @@ enum class ShaderProgram
 	SQUIGGLES,
 	ZAP,
 	HEX,
+	FRACTAL,
 	MISC
 };
 

@@ -234,12 +234,12 @@
     <None Include="Shaders\Fragment\cubes.frag" />
     <None Include="Shaders\Fragment\eclipse.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />
+    <None Include="Shaders\Fragment\fractal.frag" />
     <None Include="Shaders\Fragment\fractid.frag" />
     <None Include="Shaders\Fragment\hex.frag" />
     <None Include="Shaders\Fragment\infinity.frag" />
     <None Include="Shaders\Fragment\lightning.frag" />
     <None Include="Shaders\Fragment\lightshow.frag" />
-    <None Include="Shaders\Fragment\misc.frag" />
     <None Include="Shaders\Fragment\moons.frag" />
     <None Include="Shaders\Fragment\pillars.frag" />
     <None Include="Shaders\Fragment\pinneal.frag" />
