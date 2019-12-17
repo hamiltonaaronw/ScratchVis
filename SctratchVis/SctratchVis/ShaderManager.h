@@ -12,7 +12,6 @@ enum class ShaderProgram
 	MOONS,
 	CUBES,
 	LIGHTS,
-	ECLIPSE,
 	FRACTID,
 	SMOKE,
 	FLOWER,

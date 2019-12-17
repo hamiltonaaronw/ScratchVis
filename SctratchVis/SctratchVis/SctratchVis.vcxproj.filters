@@ -127,9 +127,6 @@
     <None Include="Shaders\Vertex\basic_vert.vs">
       <Filter>Shaders\Vertex</Filter>
     </None>
-    <None Include="Shaders\Fragment\eclipse.frag">
-      <Filter>Shaders\Fragment</Filter>
-    </None>
     <None Include="Shaders\Fragment\flowers.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>

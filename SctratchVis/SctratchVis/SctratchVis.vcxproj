@@ -232,7 +232,6 @@
   <ItemGroup>
     <None Include="Shaders\Fragment\blossom.frag" />
     <None Include="Shaders\Fragment\cubes.frag" />
-    <None Include="Shaders\Fragment\eclipse.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />
     <None Include="Shaders\Fragment\fractal.frag" />
     <None Include="Shaders\Fragment\fractid.frag" />

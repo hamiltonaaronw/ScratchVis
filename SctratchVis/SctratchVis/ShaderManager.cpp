@@ -54,7 +54,6 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::MOONS,				new ShaderInfo("Moons",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/moons.frag",			NULL));
 	this->addShader(ShaderProgram::CUBES,					new ShaderInfo("Cubes",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/cubes.frag",			NULL));
 	this->addShader(ShaderProgram::LIGHTS,				new ShaderInfo("Lightshow",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/lightshow.frag",		NULL));
-	this->addShader(ShaderProgram::ECLIPSE,				new ShaderInfo("Eclipse",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/eclipse.frag",		NULL));
 	this->addShader(ShaderProgram::FRACTID,				new ShaderInfo("Fractid",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/fractid.frag",		NULL));
 	this->addShader(ShaderProgram::SMOKE,				new ShaderInfo("Smoke",				0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/smoke.frag",			NULL));
 	this->addShader(ShaderProgram::FLOWER,				new ShaderInfo("Flowers",			0,	0,	0, "Shaders/Vertex/basic.vert",	"Shaders/Fragment/flowers.frag",		NULL));

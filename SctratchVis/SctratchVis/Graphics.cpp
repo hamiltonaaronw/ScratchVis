@@ -577,13 +577,6 @@ void Graphics::sendUniforms(Uniforms *pUni)
 		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
 		break;
 
-	case ShaderProgram::ECLIPSE:
-		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
-		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
-		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
-		mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
-		break;
-
 	case ShaderProgram::FRACTID:
 		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
@@ -627,7 +620,7 @@ void Graphics::sendUniforms(Uniforms *pUni)
 		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
 		break;
 
-	case (ShaderProgram)13: // gives errors when written as ShaderProgram::INFINITE
+	case (ShaderProgram)12: // gives errors when written as ShaderProgram::INFINITE
 		mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
 		mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
 		mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
