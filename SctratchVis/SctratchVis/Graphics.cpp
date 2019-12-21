@@ -5,9 +5,6 @@ Graphics* gpGraphics = NULL;
 
 Graphics::Graphics()
 {
-	//initAudio();
-	//initGraphics();
-	//init();
 	initAll();
 }
 
@@ -22,12 +19,6 @@ void Graphics::clean()
 	{
 		mpAudio = NULL;
 		delete mpAudio;
-	}
-
-	if (mpText)
-	{
-		mpText = NULL;
-		delete mpText;
 	}
 
 	if (mpShaderMan)
@@ -104,11 +95,6 @@ void Graphics::debugOutput(DebugOutputType type, bool isIO)
 	}
 }
 
-void Graphics::drawText()
-{
-
-}
-
 void Graphics::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -133,84 +119,18 @@ void Graphics::hotReloadAudio(bool changeDir)
 	mpAudio->playSong();
 }
 
-void Graphics::init()
-{
-	int iJunk = 0;
-	std::string sJunk = "";
-	this->setRenderText(false);
-
-	mpText = new Text();
-
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
-
-	mpAudio = new Audio();
-	mpEventMan = new EventManager();
-
-	this->userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
-	mpAudio->loadSongs();
-
-//	this->userSetup(SetupStage::SONG, iJunk, sJunk);
-
-	this->userSetup(SetupStage::WINDOW, iJunk, sJunk);
-
-	switch (mViewMode)
-	{
-	case ViewMode::VIEW_DEBUG:
-		msWidth = 800;
-		msHeight = 600;
-		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
-
-		break;
-
-	case ViewMode::VIEW_FULLSCREEN:
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-		mpWindow = glfwCreateWindow(mode->width, mode->height, "Don't do drugz", glfwGetPrimaryMonitor(), NULL);
-		break;
-	}
-
-	if (mpWindow == NULL)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		return;
-	}
-	glfwMakeContextCurrent(mpWindow);
-	glfwSetFramebufferSizeCallback(mpWindow, Graphics::framebuffer_size_callback);
-
-	// glad: load all OpenGL function pointers
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		return;
-	}
-
-	this->userSetup(SetupStage::CLEAR_SCREEN, iJunk, sJunk);
-
-	mpShaderMan = new ShaderManager();
-	mNumShaders = mpShaderMan->getNumShaders();
-}
-
 void Graphics::initAll()
 {
 	int n = 0;
 	std::string songDir = "";
 	this->userSetup(SetupStage::MUSIC_DIR, n, songDir);
-	//this->userSetup(SetupStage::SONG, n, songDir);
 	this->userSetup(SetupStage::WINDOW, n, songDir);
 
 	std::thread tAudio(initAudioWrapper, this, songDir);
-	//	std::thread tGraphics(initGraphicsWrapper,	this);
 	std::thread tShaders(initShadersWrapper, this);
 
 	tAudio.join();
 	tShaders.join();
-	//	tGraphics.join();
 
 	this->initGraphics();
 
@@ -250,9 +170,6 @@ void Graphics::initAudio(std::string s)
 void Graphics::initGraphics()
 {
 	this->mGraphicsInit = false;
-	this->setRenderText(false);
-
-	mpText = new Text();
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -419,14 +336,6 @@ void Graphics::processInput(GLFWwindow *window)
 				if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
 					mpEventMan->addEvent(new InputEvent(InputKey::TAB_B), 0);
 		}
-	}
-
-	if (mViewMode == ViewMode::VIEW_FULLSCREEN)
-	{
-		// toggle text rendering to screen - T
-		if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-			if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE)
-				toggleTextRender();
 	}
 }
 
@@ -702,11 +611,6 @@ void Graphics::toggleSong(int prevNext)
 	glfwSetTime(0.0);
 	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
 	this->debugOutput(DebugOutputType::SPACE, false);
-}
-
-void Graphics::toggleTextRender()
-{
-	this->setRenderText(!this->getRenderText());
 }
 
 void Graphics::userSetup(SetupStage stage, int &n, std::string &s)

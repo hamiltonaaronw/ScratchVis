@@ -36,7 +36,7 @@ enum class InputKey
 	INVALID_KEY = -1,
 	ESC,		SPACE_KEY,
 	RIGHT,		LEFT,		UP,			DOWN,
-	Q,			R,			T,
+	Q,			R,	
 	SHIFT_S,	SHIFT_A,	SHIFT_Z,	SHIFT_X,	SHIFT_B,
 	TAB_S,		TAB_A,		TAB_Z,		TAB_X,		TAB_B,
 };

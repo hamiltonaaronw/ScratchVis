@@ -63,9 +63,6 @@
     <ClCompile Include="Graphics.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Text.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Shader.cpp">
       <Filter>Shaders\Source</Filter>
     </ClCompile>
@@ -93,9 +90,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Graphics.h">
-      <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Text.h">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\Shader.h">

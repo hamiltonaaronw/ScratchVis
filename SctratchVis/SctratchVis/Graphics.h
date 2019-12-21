@@ -10,18 +10,10 @@
 
 #include "ShaderManager.h"
 #include "Audio/Audio.h"
-#include "Text.h"
 
 class Audio;
 class EventManager;
 class ShaderManager;
-class Text;
-
-enum class AudioInputMode
-{
-	AUDIO_PRE_INPUT,	// pre-recorded signal processing
-	AUDIO_REAL_INPUT	// live audio input real-time signal processing
-};
 
 enum class ViewMode
 {
@@ -73,9 +65,7 @@ class Graphics
 private:
 	// functions
 	void clean				();
-	void drawText			();
 	void hotReloadAudio		(bool changeDir);
-	void init				();
 	void initAll			();
 	void initAudio			(std::string s);
 	void initGraphics		();
@@ -86,7 +76,6 @@ private:
 	void togglePauseSong	();
 	void toggleShader		(int prevNext);
 	void toggleSong			(int prevNext);
-	void toggleTextRender	();
 	void userSetup			(SetupStage stage, int &n, std::string &s);
 
 	static void initAudioWrapper		(Graphics *g, std::string s)	{ if (!g) return; g->initAudio(s); };
@@ -98,16 +87,13 @@ private:
 	// variables
 	GLFWwindow			*mpWindow;
 	Audio				*mpAudio;
-	Text				*mpText;
 	ShaderManager		*mpShaderMan;
 	EventManager		*mpEventMan;
 	
 	ShaderProgram		mCurProg;
 	ViewMode			mViewMode;
-	AudioInputMode		mAudioInputMode;
 
-	bool				mRenderText,
-						mAudioInit,
+	bool				mAudioInit,
 						mGraphicsInit,
 						mShadersInit;
 
@@ -132,9 +118,6 @@ public:
 
 	void setCurProg(ShaderProgram p)	{ mCurProg = p; };
 	ShaderProgram getCurProg()			{ return mCurProg; };
-
-	void setRenderText(bool b)			{ mRenderText = b; };
-	bool getRenderText()				{ return mRenderText; };
 
 	float getCurTime()					{ return (float)glfwGetTime(); };
 	void setTime(float t)				{ glfwSetTime(t); };

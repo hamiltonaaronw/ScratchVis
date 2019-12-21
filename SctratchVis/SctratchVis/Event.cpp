@@ -54,9 +54,6 @@ void InputEvent::process()
 		gpGraphics->reloadShader_Wrapper();
 		break;
 
-	case InputKey::T:
-		break;
-
 	case InputKey::SHIFT_S:
 		gpGraphics->debug_Wrapper(DebugOutputType::LIST_SHADERS, false);
 		break;

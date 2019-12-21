@@ -215,7 +215,6 @@
     <ClCompile Include="RunGraphics.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
-    <ClCompile Include="Text.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio\Audio.h" />
@@ -227,7 +226,6 @@
     <ClInclude Include="Recording.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Shaders\Shader.h" />
-    <ClInclude Include="Text.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Fragment\blossom.frag" />
