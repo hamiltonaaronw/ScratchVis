@@ -69,6 +69,7 @@ void ShaderManager::init()
 	this->addShader(ShaderProgram::ZAP,					new ShaderInfo("Zap",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/zap.frag",			NULL));
 	this->addShader(ShaderProgram::HEX,					new ShaderInfo("Hex",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/hex.frag",			NULL));
 	this->addShader(ShaderProgram::FRACTAL,				new ShaderInfo("Fractal",			0,  0,  0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/fractal.frag",		NULL));
+	this->addShader(ShaderProgram::FRACTAL_2,			new ShaderInfo("Fractal_2",			0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/fract2.frag",			NULL));
 	//this->addShader(ShaderProgram::MISC,				new ShaderInfo("Misc",				0,	0,	0, "Shaders/Vertex/basic.vert", "Shaders/Fragment/misc.frag",			NULL));
 
 	this->setNumShaders(mShaders.size());

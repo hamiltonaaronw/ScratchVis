@@ -181,5 +181,8 @@
     <None Include="Shaders\Fragment\fractal.frag">
       <Filter>Shaders\Fragment</Filter>
     </None>
+    <None Include="Shaders\Fragment\fract2.frag">
+      <Filter>Shaders\Fragment</Filter>
+    </None>
   </ItemGroup>
 </Project>

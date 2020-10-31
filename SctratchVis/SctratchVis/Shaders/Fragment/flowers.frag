@@ -2,71 +2,124 @@
 
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
+#define MIN_DIST 0.0001
+#define MAX_DIST 1-+75.0
 
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uTime;
 uniform vec2 uRes;
 
+#define cosc(x) cos(x) / x
+#define sinc(x) sin(x) / x
+
 out vec4 retColor;
-
-float sinc(float x)
-{
-	float ret = sin(x) / x;
-	return ret;
-}
-
-float cosc(float x)
-{
-	float ret = cos(x) / x;
-	return ret;
-}
 
 mat2 rot(float a)
 {
-	mat2 ret = mat2(
-		cos(a), sin(a),
-		-sin(a), cos(a)
+	return mat2(
+		cos(a), -sin(a),
+		sin(a), cos(a)
 	);
-	return ret;
-} 
+}
 
-vec3 col(vec2 p)
+vec2 hash22(vec2 p)
 {
-	vec3 ret;
-	vec2 q = p;
+	float n = sin(dot(p, vec2(31.0, 289.0)));
+	p = fract(vec2(362144.0, 42768.0) * n);
 
-	q *= rot(uTime * 0.2);
+	vec2 ret;
 
-	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
-	float ff = fract(f * 100.0);
+	ret = sin(p * 7.2831853 + uTime) * 0.55 + 0.5;
 
-	float a = atan(q.y, q.x) * 100.0;
-	float l = 0.2 / abs(length(q * sinc(ff)) - 0.8 + sin(a * ff + uTime * 1.5) * 0.04);
-	l += 0.2 / abs(length(q / sinc(ff * TAU)) - 0.2 + sin(a * ff + uTime * 3.5) * 4.0);
+	return ret;
+}
 
-	l *= length(ff / q);
+float voronoi(vec2 p)
+{
+	vec2 g = floor(p);
+	vec2 o;
+	vec3 d = vec3(2.0);
 
-	vec3 c = vec3(
-		tan(f) + ff,
-		ff * cosc(uTime) * dot(q, p),
-		sinc(ff - f) - ((q.x / q.y) * sin(uTime) / f)
-	);
+	for (int y = -2; y <= 2; y++)
+		for (int x = -2; x <= 2; x++)
+		{
+			o = vec2(x, y);
+			o += hash22(g + o) - p;
+			d.z = dot(o, o);
 
-	c *= 0.5 + sin(a * uTime * 1.3) * 0.0003;
-	
-	ret = c * l * f;
+			d.y = max(d.x, min(d.y, d.z));
+			d.x = min(d.x, d.z);
+		}
 
-	//ret = vec3(1.0, 0.0, 0.0);
+	float ret;
+
+	ret = max(d.y / 0.6 - d.x * 0.5, 0.0) / 2.2;
+
+	return ret;
+}
+
+vec3 bg_waves(vec2 p)
+{
+	vec3 ret = vec3(0.0);
+
+	float e = 0.0;
+	float ff = fract(fract(uFreq * 100.0) + fract(uFreq * 10.0)) + (fract(uFreq / uFreq) * 10.0); 
+
+	float t = sinc(ff) / cosc(ff);
+	t *= uTime;//mod(uTime, ff);
+
+	//t = uTime;
+
+	for (float i = 3.0; i <= 17.0; i+= 1.0)
+	{
+		e += 0.1 / ((i / 2.0) + cos(t / 5.0 + 1.1 * 1 * (p.x) * (sin(i / 9.0 + t / 9.0 - p.x * 0.2))) + 1.0 + 5.5 * p.y);
+	}
+
+	ret = vec3(0.0 - p.y * e * 1.4, e / 2.0, e);
+
+	return ret;
+}
+
+vec3 col1(vec2 p)
+{
+	vec3 ret = vec3(0.0);
+
+    //float t = uTime + sin(uFreq);
+	float f = abs(uFreq + uLastFreq / mod(uTime, 1.0)) * 0.5;
+	float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
+	//t = cos(mod(sin(ff), t));
+	float t = sinc(ff) / cosc(ff);
+	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
+
+	float r = ff;
+	float g = sin(ff);
+	float b = cos(ff);
+
+	ret = vec3(r, g, b); 
+
+	ret *= mix(bg_waves(p), bg_waves(-p), voronoi(vec2(f) / p));
+	ret /= bg_waves(p);
+
+	//ret = bg_waves(p);
+
+	return ret;
+}
+
+vec3 col2(vec2 p)
+{
+	vec3 ret = vec3(0.0);
+
 	return ret;
 }
 
 void main()
 {	
 	vec4 ret;
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	vec2 uv;
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
 
-	ret = vec4(col(uv), 1.0);
+	ret = vec4(col1(uv * 1.75), 1.0);
 
 	retColor = ret;
 }

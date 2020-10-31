@@ -30,49 +30,6 @@ mat2 rot(float a)
 	);
 }
 
-vec3 sim(vec3 p, float s)
-{
-	vec3 ret = p;
-	ret = p + s / 2.0;
-	ret = fract(ret / s) * s - s / 2.0;
-	return ret;
-}
-
-vec2 rotV(vec2 p, float r)
-{
-	vec2 ret = vec2(
-		p.x * cos(r) - p.y * sin(r),
-		p.y * sin(r) + p.y * cos(r)
-	);
-	return ret;
-}
-
-vec2 rotsim(vec2 p, float s)
-{
-	vec2 ret = p;
-	ret = rotV(p, -PI / (s * 2.0));
-	ret = rotV(p, floor(atan(ret.x, ret.y) / PI * s) * (PI / s));
-
-	return ret;
-}
-
-vec2 makeSymmetry(vec2 p, float t)
-{
-	vec2 ret = p;
-	ret = rotsim(ret, sin(t * 0.3) * 2.0 + 3.0);
-	ret.x = abs(ret.x);
-	return ret;
-}
-
-float makePoint(float x, float y, float fx, float fy, float sx, float sy, float t)
-{
-	float xx = x + tan(t * fx) * sx;
-	float yy = y - tan(t * fy) * sy;
-	float ret = 0.5 / sqrt(abs(x * xx + yy * yy));
-
-	return ret;
-}
-
 float hash(vec2 p, float s)
 {
 	vec3 p2 = vec3(p.xy, 27.0 * abs(sin(s)));
@@ -137,8 +94,62 @@ float perlin(vec2 p, float f)
 	return v;
 } 
 
-void makeFreqVars(out float f, out float ff, out float lkf, out float lkff, out float lif, out float liff, out float fd, out float ffd)
+vec2 rotate(vec2 space, vec2 center, float amount)
 {
+	return vec2(
+		cos(amount) * (space.x - center.x) + sin(amount) * (space.y - center.y),
+		cos(amount) * (space.y - center.y) - sin(amount) * (space.x - center.x)
+			);
+}
+
+float reflection(inout vec2 p, float theta)
+{
+	vec2 norm = vec2(cos(theta), sin(theta));
+
+	float d = dot(p, norm);
+	p -= norm * min(0.0, d) * 2.0;
+
+	return smoothstep(0.1, 0.0, abs(d));
+}
+
+vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d)
+{
+	vec3 ret = a + b * cos(TAU * (c * t + d));
+
+	return ret;
+}
+
+float apollonian(vec2 z, float f)
+{
+	float s = 1.0;
+	
+	for (int i = 0; i < 10; i++)
+	{
+		float a = 4.0 / dot(z, z);
+		z *= a;
+		s *= a;
+
+		reflection(z, -PI / 2.0);
+		z.y = 2.0 * fract(z.y * 0.5) - 1.0;
+	}
+
+	//z /= perlin(z, f);
+	z *= 2.0;
+	z.x /= perlin(z, f);
+	z.y *= perlin(z, f);
+
+	return (length(z) - 0.3) / s;
+}
+
+vec4 col2(vec2 p)
+{
+	vec4 ret;
+	float m = min(0.5, fract(uFreq * 100.0));
+	p *= (sin(uTime - m) / cos(uTime * m));
+	p *= rot(uTime * 0.1);
+	vec2 q = p;
+	float f, ff, lkf, lkff, lif, liff, fd, ffd;
+
 	f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
 	ff = fract(f * 100.0);
 	lkf = lanczosKernel(2, f);
@@ -150,98 +161,24 @@ void makeFreqVars(out float f, out float ff, out float lkf, out float lkff, out 
 	fd = mod(fd, 1.0);
 	ffd = max(ff, liff) / min(ff, liff);
 	ffd = mod(ffd, 1.0);
-}
 
-vec3 blobs(vec2 p, float t)
-{
-	t *= 0.5;
+	q /= 10.0;
+	q *= rot(uTime * 0.1);
+	vec4 color = vec4(0.5);
 
-	p = makeSymmetry(p, t);
+	vec3 a = vec3(0.2);
+	vec3 b = vec3(0.5);
+	vec3 c = vec3(3.0, 1.5, 2.0);
+	vec3 d = vec3(0.1, 0.17, 0.23);
 
-	float x = p.x;
-	float y = p.y;
+	float cir = perlin(q, 1.5) - length(q);
+	float t = min(f * 10.0, 
+		apollonian(q, (fract(uFreq) * 10.0) + sin(ff - uDeltaFreq))
+	);
+	color.rgb = palette(t + (uTime) * 0.21, a, b, c, d);
+	color.w = mod(uFreq + 0.75, 0.5);
 
-	float a = makePoint(x,y, 3.3, 2.9, 0.3, 0.3, t);
-	a += makePoint(x, y, 1.9, 2.0, 0.4, 0.4, t);
-	a += makePoint(x, y, 0.8, 0.7, 0.4, 0.5, t);
-	a += makePoint(x, y, 2.3, 0.1, 0.6, 0.3, t);
-	a += makePoint(x, y, 0.8, 1.7, 0.5, 0.4, t);
-	a += makePoint(x, y, 0.3, 1.0, 0.4, 0.4, t);
-	a += makePoint(x, y, 1.4, 1.7, 0.4, 0.5, t);
-	a += makePoint(x, y, 1.3, 2.1, 0.6, 0.3, t);
-	a += makePoint(x, y, 1.8, 1.7, 0.5, 0.4, t);
-
-	float b = makePoint(x, y, 1.2, 1.9, 0.3, 0.3, t);
-	b += makePoint(x, y, 0.7, 2.7, 0.4, 0.4, t);
-	b += makePoint(x, y, 1.4, 0.6, 0.4, 0.5, t);
-	b += makePoint(x, y, 2.6, 0.4, 0.6, 0.3, t);
-	b += makePoint(x, y, 0.7, 1.4, 0.5, 0.4, t);
-	b += makePoint(x, y, 0.7, 1.7, 0.4, 0.4, t);
-	b += makePoint(x, y, 0.8, 0.5, 0.4, 0.5, t);
-	b += makePoint(x, y, 1.4, 0.9, 0.6, 0.3, t);
-	b += makePoint(x, y, 0.7, 1.3, 0.5, 0.4, t);
-
-	float c = makePoint(x, y, 3.7, 0.3, 0.3, 0.3, t);
-	c += makePoint(x, y, 1.9, 1.3, 0.4, 0.4, t);
-	c += makePoint(x, y, 0.8, 0.9, 0.4, 0.5, t);
-	c += makePoint(x, y, 1.2, 1.7, 0.6, 0.3, t);
-	c += makePoint(x, y, 0.3, 0.6, 0.5, 0.4, t);
-	c += makePoint(x, y, 0.3, 0.3, 0.4, 0.4, t);
-	c += makePoint(x, y, 1.4, 0.8, 0.4, 0.5, t);
-	c += makePoint(x, y, 0.2, 0.6, 0.6, 0.3, t);
-	c += makePoint(x, y, 1.3, 0.5, 0.5, 0.4, t);
-
-	vec3 ret = vec3(a, b, c) / 32.0;
-
-	return ret;
-}
-
-vec3 col(vec2 p)
-{
-	float f, ff, lkf, lkff, lif, liff, fd, ffd;
-	makeFreqVars(f, ff, lkf, lkff, lif, liff, fd, ffd);
-
-	float fp = perlin(p, f);
-	float ffp = perlin(p, ff);
-
-	float t = uTime + sin(fract(fp * liff) * length(p * uDeltaFreq));
-
-	float cycle = cos(t) * 0.5 + 0.5;
-	float invCycle = 1.0 - cycle;
-
-	vec2 q;
-	q = p * rot(uTime / TAU + (uFreq * 0.1));
-
-	float r = q.x;
-	float i = q.y;
-	float tr = 0.0;
-	float iterations = 0.0;
-
-	int sInd = 0;
-
-	int k = int(floor(fract(uFreq * 100.0)));
-	k *= 10;
-
-	for (int j = 0; j < 25 + k; j++)
-	{
-		float sp = uSpectrum[j * 10];
-		tr = r * r - i * i + cycle * q.x + invCycle * (dot(p, q) * fp * q.x);
-		i = 2.0 * i * r + cycle * q.y + invCycle * (dot(p, q) * lkf * q.y);
-		//i *= sp;
-		r = tr;
-		iterations++;
-
-		float cond = r * r + i * i; // + sp * sp;
-		if (cond > 4.0 + ffp)
-		{
-			sInd = j * 10;
-			break;
-		}
-	}
-	
-	vec3 c = blobs(vec2(tr + atan(fp, uSpectrum[sInd]), f / i), t * uSpectrum[sInd] + uTime);
-
-	vec3 ret = uFreq > 0.0 ? c : vec3(0.0);
+	ret = color;
 
 	return ret;
 }
@@ -249,11 +186,13 @@ vec3 col(vec2 p)
 void main()
 {
 	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	//vec2 uv = (gl_FragCoord.xy / uRes.xy * 2.0 - 1.0);
+	//vec2 uv = vec2(uRes.y / uRes.x, 1.0);
 
 	vec4 ret;
 
-	ret = vec4(col(uv), 1.0);
+	//ret = vec4(col(uv), 1.0);
+	ret = col2(uv);
 
 	retColor = ret;
-
 }

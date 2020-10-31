@@ -21,137 +21,98 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-float hash(vec2 p)
-{
-	vec3 q = vec3(p.xy, 1.0);
-	float ret = fract(sin(dot(q, vec3(37.1, 61.7, 12.4))) * 375.85453123);
-	return ret;
-}
-
-float noise(vec2 p)
-{
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f *= f * (3.0 - 2.0 * f);
-
-	float ret = mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), f.x),
-					mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-					f.y);
-
-	return ret;
-}
-
-float perlin(vec2 p, float f)
-{
-	mat2 m = mat2(2.0);
-	float v = 0.0;
-	float s = 1.0;
-
-	for (int i = 0; i < 7; i++, s /= 2.0)
-	{
-		v += s * noise(p);
-		p *= m;
-	}
-
-	return v;
-}
-
-float fbm(vec2 p)
-{
-	float v = 0.0;
-	float n = 2.8;
-	float c = 4.0;
-
-	for (float i = 1.0; i <= c; i++)
-		v += perlin(p * i, uFreq) * (n - i + uFreq) / (n * n * n * sin(uFreq));
-
-	float ret = v;
-
-	return ret;
-}
-
-float lanczosKernel(int ai, float x)
-{
-	float ret;
-	float af = float(ai);
-
-	if (x == 0.0)
-		return 1.0;
-	if (-af <= x && x < af)
-		return (af * sin(PI * x) * sin((PI * x) / af)) / ((PI * PI) * (x * x));
-	else
-		return 0;
-}
-
-float lanczosInterp(int ai, float x)
-{
-	float ret = 0.0;
-	int ub = int(floor(x));
-	int lb = int(floor(x)) - ai + 1;
-
-	for (int i = lb; i <= ub; i++)
-	{
-		ret += uSpectrum[i] * lanczosKernel(ai, x - float(i));
-		//ret = mod(abs(ret), 1.0);
-	}
-
-	return abs(ret);
-}
-
 mat2 rot(float a)
 {
 	return mat2(
 		cos(a), sin(a),
-		-sin(PI * a), cos(PI * a)
+		-sin(a), cos(a)
 	);
+}
+
+float sdTorus(vec3 p, vec2 t)
+{
+	vec2 q = vec2(length(p.xz) - t.x, p.y);
+	return length(q) - t.y;
+}
+
+float de(vec3 p, float f)
+{
+	float t = -sdTorus(p, vec2(2.3, 2.0));
+	p.y += f;
+	float d = 100.0;
+	float s = mod(0.5, fract(f * 10.0));
+	p *= 0.5;
+
+
+	for (int i = 0; i < 2; i++)
+	{
+		p.xz *= rot(f);
+		p.xz = abs(p.xz);
+		float inv = 1.0 / clamp(dot(p, p), fract(f * 10.0), 1.0);
+		s /= inv;
+		d = min(d, length(p.xz) + fract(p.y * f + uTime * 0.2) - sin(f));
+	}
+
+	return min(d / s, t);
+}
+
+float march(vec3 from, vec3 dir, float f)
+{
+	float td = 0.0;
+	float g = 0.0;
+
+	vec3 p;
+
+	float modR = min(cosc(f), sinc(uTime * 0.1));
+	float modL = max(cosc(f), sinc(uTime * 0.1));
+
+	for (int i = 0; i < 100; i++)
+	{
+		p = from + dir * td;
+		float d = de(p, f) - mod(uTime, sinc(length(p)) / cosc(f));
+
+		if (d < mod(modL, modR))
+			break;
+
+		g++;
+		td += d * f;
+	}
+
+	return smoothstep(0.3, 0.0, abs(0.5 - fract(p.y * 15.0))) * exp(-0.07 * td * td) * sin(p.y * 10.0 + uTime * 10.0) + g * g * 0.00008;
 }
 
 vec3 col(vec2 p)
 {
 	vec3 ret;
-	vec2 q = p;
-	//q.x *= uRes.x / uRes.y;
-	q.x = dot(q, q * 2.0);
+
+	p /= 2.5 + mod(fract(uFreq * 10.0) + uFreq, abs(abs(uFreq / uLastFreq) + 0.5));
 
 	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
 	float ff = fract(f * 100.0);
-	float lif = lanczosInterp(3, f);
-	float liff = lanczosInterp(3, ff);
+	float ft = mod(f, uTime * 0.1);
+	float tf = uFreq * (fract(ft * 10.0));
 
-	float fd = min(f, lif) / max(f, lif);
-	fd = mod(fd, 1.0);
-	float ffd = max(ff, liff) / min(ff, liff);
-	fd = mod(fd, 1.0);
+	vec2 q = p;
 
-	float fn = fbm(vec2(liff / fd, lif / ffd));
+	q.x *= uRes.x / uRes.y;
 
-	q *= rot(fd * uTime);
+	float t = uTime * 0.5;
+	t += mod(t, ft);
 
-	vec3 fc = vec3(0.0);
-	float i = 1.0;
-	float hh = 0.1;
+	vec3 from = vec3(0.0, sin(ft * 0.1), -3.3);
+	vec3 dir = normalize(vec3(p, 0.7));
+	dir.xy *= rot(uTime + sin(tf));//rot(0.75 * sin(ft));
+	dir.xy *= rot(max(sin(uLastFreq), sin(uFreq)) * ft);
+	float c = march(from, dir, sin(ft * sinc(tf)));
 
-	// blue line
-	float t = abs(1.0 / ((q.y - fbm(q + (uTime * 3.0) / i)) * 75.0));
-	fc += t * vec3(hh + 0.1, 0.5, 2.0);
 
-	// red circle
-	float u = abs(1.0 / ((q.x - fbm(q + (uTime * ff) / f)) * 75.0));
-	fc += u * vec3(2.0, 0.5, hh + 0.1);
+	ret = vec3(
+		fract(f + c) / sinc(tf),
+		clamp((sinc(c) / cos(ft)) / sin(t), uFreq, tf * 0.5),
+		fract(c) * fract(uFreq * (ft * 10.0))
+		);
 
-	// green circle
-	float v = abs(1.0 / ((q.x - q.y - fbm(q + (uTime * 5.0) / i)) * 75.0));
-	fc += v * vec3(hh + 0.1, 2.0, 0.5);
-
-	// yellow circle
-	float w = abs(1.0 / ((q.x - q.y - fbm(q + (uTime * fn) / i)) * 75.0));
-	fc += w * vec3(0.7, 0.7, hh + 0.1);
-	
-	// purple circle
-	float x = abs(1.0 / ((q.x * sin(lif) - q.y * cos(uTime) - fbm(q + (uTime * fn) / i)) * 75.0));
-	fc += x * vec3(0.5, hh, 0.5);
-
-	ret = fc;
+	ret += abs(uFreq - uLastFreq);
 
 	return ret;
 }
@@ -159,11 +120,12 @@ vec3 col(vec2 p)
 void main()
 {
 	vec4 ret;
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	vec2 uv;
+	
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	//uv = gl_FragCoord.xy / uRes.xy - 0.5;
 
-
-	//ret = vec4(col(uv), 1.0);
-	ret += vec4(col(vec2(uv.x, uv.y - 1.0)), 1.0);
-	ret += vec4(col(vec2(uv.x, uv.y + 1.0)), 1.0);
+	ret = vec4(col(uv), 1.0);
+	//ret = col(uv);
 	retColor = ret;
 }

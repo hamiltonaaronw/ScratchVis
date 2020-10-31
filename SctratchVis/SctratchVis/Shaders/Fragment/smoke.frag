@@ -91,7 +91,7 @@ vec3 hsv(float h, float s, float v)
 	return ret;
 }
 
-vec3 col(vec2 p)
+vec3 col2(vec2 p)
 {
 	vec3 ret;
 
@@ -142,6 +142,94 @@ vec3 col(vec2 p)
 		);
 
 	ret = uFreq > 0.0 ? c : vec3(0.0);
+
+	return ret;
+}
+
+vec4 capsule(vec4 color, vec4 bg, vec4 region, vec2 p)
+{
+	if (p.x > (region.x - region.z) && p.x < (region.x + region.z) &&
+		p.y > (region.y - region.w) && p.y < (region.y + region.w) ||
+		distance(p, region.xy - vec2(0.0, region.w)) < region.z ||
+		distance(p, region.xy + vec2(0.0, region.w)) < region.z)
+		return color;
+	return bg;
+}
+
+vec4 bar(vec4 color, vec4 bg, vec2 pos, vec2 dim, vec2 p)
+{
+	return capsule(
+		color, bg, 
+		vec4(
+			pos.x, 
+			pos.y + dim.y / 2.0,
+			dim.x / 2.0, 
+			dim.y / 2.0),
+		p);
+}
+
+vec2 rotate(vec2 point, vec2 center, float theta)
+{
+	float s = sin(radians(theta));
+	float c = cos(radians(theta));
+
+	point.x -= center.x;
+	point.y -= center.y;
+
+	float x = point.x * c - point.y * s;
+	float y = point.x * s + point.y * c;
+
+	point.x = x + center.x;
+	point.y = y + center.y;
+
+	return point;
+}
+
+vec4 rays(vec4 color, vec4 bg, vec2 pos, float rad, float rays, float rayLen, vec2 p)
+{
+	float inside = (1.0 - rayLen) * rad;
+	float outside = rad - inside;
+	float circle = TAU * inside;
+
+	for (int i = 0; float(i) < rays; i++)
+	{
+		float len = outside * ((uFreq * i) / rays) * cos(fract(uSpectrum[i] * 10.0) + mod(i, uFreq));
+		bg = bar(color, bg, vec2(pos.x, pos.y + inside),
+			vec2(circle / (rays * 2.0), len), rotate(p, pos, 360.0 / rays * float(i + uFreq)));
+	}
+
+	return bg;
+}
+
+vec3 col(vec2 p)
+{
+	vec3 ret;
+
+	float aspect = uRes.x / uRes.y;
+	vec2 q = gl_FragCoord.xy / uRes.xy - 0.5;
+	q.x *= aspect;
+	vec4 c = mix(
+		vec4(cos(uSpectrum[int(floor(mod(fract(uFreq * 100.0) * 10.0, 256.0)))]), 1.0, 0.8 / uFreq, 1.0),
+		vec4(uFreq, 0.3, 0.25, 1.0),
+		distance(vec2(aspect/ 2.0, 0.5), q));
+
+	const float RAYS = 256.0;
+	float rad = 0.25 + sinc(uFreq + 0.125);
+	float rayLen = 0.3;
+
+	c = rays(
+		vec4(1.0),
+		c,
+		vec2(aspect / 2.0, 1.0 / 2.0),
+		rad,
+		RAYS,
+		rayLen,
+		q);
+
+	ret = c.xyz;
+	//ret = vec3(1.0, 0.0, 0.0);
+	//ret = vec3(0.0, 1.0, 0.0);
+	//ret = vec3(0.0, 0.0, 1.0);
 
 	return ret;
 }

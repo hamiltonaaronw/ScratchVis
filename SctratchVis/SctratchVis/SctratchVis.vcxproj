@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -228,9 +228,11 @@
     <ClInclude Include="Shaders\Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\Fragment\arena.frag" />
     <None Include="Shaders\Fragment\blossom.frag" />
     <None Include="Shaders\Fragment\cubes.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />
+    <None Include="Shaders\Fragment\fract2.frag" />
     <None Include="Shaders\Fragment\fractal.frag" />
     <None Include="Shaders\Fragment\fractid.frag" />
     <None Include="Shaders\Fragment\hex.frag" />

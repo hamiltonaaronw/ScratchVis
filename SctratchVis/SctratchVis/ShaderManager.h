@@ -27,6 +27,7 @@ enum class ShaderProgram
 	ZAP,
 	HEX,
 	FRACTAL,
+	FRACTAL_2,
 	MISC
 };
 

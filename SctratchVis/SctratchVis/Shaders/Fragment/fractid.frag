@@ -163,6 +163,5 @@ void main()
 
 	ret = vec4(c, a);
 
-
 	retColor = ret;
 }

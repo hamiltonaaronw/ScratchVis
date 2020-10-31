@@ -33,59 +33,29 @@ mat2 rot(float a)
 
 vec3 col(vec2 p)
 {
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
-	//vec2 p = (gl_FragCoord.xy * 2.0 - uRes) / min(uRes.x, uRes.y);
-	vec2 q = p;
-
-	vec3 c = vec3(
-		sin(0.75 * f), 
-		fract(sin(0.6 / f)) * uFreq, 
-		sin(0.5 / f)) * 1.5 / fract(uFreq * 10.0);
-	//c *= f;
-
-	p *= 1.4 + sin(uTime * 1.79) * 0.05;
-
-	p.y += sin(p.x * 3.0 + uTime * 1.4) * 0.1;
-
-	float d = length(p);
-	float a = atan(p.y / p.x) * 24.0;
-	float l = 2.5 / abs(length(p) - 0.1 + sin(a * 4.0 + uTime * 3.5) * 0.04);
-
-	c = l * c * 2.0 - d * d;
-
-	d = smoothstep(0.75, 0.8, d);
-
-	c = clamp(c, vec3(0.0), vec3(1.0)) * d;
-	c = clamp(c, vec3(0.0), vec3(1.0));
-
-	vec3 i = vec3(1.0, 0.4, 0.4) * 0.07 /
-		abs(sin(uTime / f + (q.y * q.y) * f));
-	i *= 1.0 - d * f;
-	i = clamp(i, vec3(0.0), vec3(1.0));
-
-	c = mix(i, c, d);
-	c = fract(c);
-
+	//vec2 po = (gl_FragCoord.xy / uRes.xy);
 	vec3 ret;
+	float c = 0.0;
 
-	ret = c;
+	float t = uTime * sin(uFreq);
+	float f = abs(uFreq + uLastFreq * sinc(t)) * 0.5;
+	float ff = fract(f * 10.0);
+	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
+	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
+	float fstep = smoothstep(sin(uFreq / f), uFreq + uLastFreq, uTime);
+	float tf = smoothstep(sin(f), 2.0, uTime);
+	t *= sin(cosc(tf));
+	t *= abs(sin(uTime) + ff);
 
-	return ret;
-}
+	c += sin(p.x * cos(t / 15.0) * 40.0 + (fract(uFreq * 100.0) * 10.0)) + cos(p.y * cos(t / 15.0) * 10.0);
 
-vec3 cols(vec2 p)
-{
-	vec3 ret;
+	c += sin(p.y * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
 
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
-	//float fr = fract(atan(TAU, f * sinc(uTime)) * exp(cosc(uTime + f)));// + sin(uTime);
-	float fr = fract(f)  / uDeltaFreq > abs(sin(uTime)) + uDeltaFreq ? sin(uTime) : f;
-	
-	p *= rot(fr);
+	c += sin(p.x * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
 
-	ret = col(p);
-	ret += col(p - 1.5);
-	ret += col(p + 1.5);
+	c *= sin(uTime / 10.0) * uFreq;
+
+	ret = vec3(c, c * c, sin(c) * c);
 
 	return ret;
 }
@@ -95,7 +65,7 @@ void main()
 	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 	vec4 ret;
 
-	ret = vec4(cols(uv), 1.0);
+	ret = vec4(col(uv), 1.0);
 	retColor = ret;
 
 }
