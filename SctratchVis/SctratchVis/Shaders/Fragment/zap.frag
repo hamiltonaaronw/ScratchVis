@@ -105,7 +105,6 @@ vec3 col(vec2 p)
 	dir.xy *= rot(max(sin(uLastFreq), sin(uFreq)) * ft);
 	float c = march(from, dir, sin(ft * sinc(tf)));
 
-
 	ret = vec3(
 		fract(f + c) / sinc(tf),
 		clamp((sinc(c) / cos(ft)) / sin(t), uFreq, tf * 0.5),

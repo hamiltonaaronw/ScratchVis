@@ -55,7 +55,7 @@ void Audio::initAudio()
 
 	// no sound cards (disable sound)
 	if (mNumDrivers == 0)
-	{
+	{ 
 		//res = FMOD_System_SetOutput(mpSystem, FMOD_OUTPUTTYPE_NOSOUND);
 		res = mpSystem->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
 		FMODErrorCheck(res, "set output in initAudio()");
@@ -111,14 +111,13 @@ void Audio::loadSongs()
 
 	int i = 0;
 
-
 	if (d != NULL)
 	{
 		// initialize mpSongs
 		d = opendir(musicDir);
 		while ((dir = readdir(d)) != NULL)
 		{
-			if (strstr(dir->d_name, ".mp3"))
+			if (strstr(dir->d_name, ".mp3") || strstr(dir->d_name, ".wav"))
 			{
 				FMOD::Sound *pTmp;
 				strcpy(tmp, musicDir);

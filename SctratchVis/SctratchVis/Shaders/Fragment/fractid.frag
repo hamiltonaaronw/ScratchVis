@@ -6,21 +6,18 @@
 uniform float uFreq;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
-uniform float uTime;
 uniform float[256] uSpectrum;
 uniform vec2 uRes;
 
+uniform float uTime;
+#define uTiem uTime;
+#define UtImE uTime;
+#define uTIme uTime;
+
 out vec4 retColor;
 
-float sinc(float x)
-{
-	return sin(x) / x;
-}
-
-float cosc(float x)
-{
-	return cos(x) / x;
-}
+float sinc(float x) { return sin(x) / x;	}
+float cosc(float x) { return cos(x) / x;	}
 
 float lanczosKernel(int ai, float x)
 {
@@ -104,57 +101,122 @@ float circ(vec2 p)
 	return ret;
 }
 
-vec3 col(vec2 p)
+vec2 pmod(vec2 p, float n)
 {
-	vec3 ret;
+	float np = TAU / n;
+	float r = atan(p.y, p.x) - 0.5 * np;
+	r = mod(r, np) - 0.5 * np;
+	vec2 ret;
+	ret = length(p) * vec2(cos(r), sin(r));
+	return ret;
+}
 
-	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
-	float ff = fract(f * 100.0);
-	float lif = lanczosInterp(3, f);
-	float liff = lanczosInterp(3, ff);
+float cube(vec3 p, vec3 s)
+{
+	vec3 q = abs(p);
+	vec3 m = max(s - q, 0.0);
+	float ret;
+	ret = length(max(q - s, 0.0)) - min(min(m.x, m.y), m.z);
+	return ret;
+}
 
-	float fd = min(f, lif) / max(f, lif);
-	fd = mod(fd, 1.0);
-	float ffd = max(ff, liff) / min(ff, liff);
-	ffd = mod(ffd, 1.0);
+float crossBox(vec3 p, float s, float f)
+{
+	float ret;
+	float m1 = cube(p, vec3(s, s, 99999.0));
+	float m2 = cube(p, vec3(99999.0, s, s));
+	float m3 = cube(p, vec3(s, 99999.0, s));
 
-	float t = TAU * uTime / 5.0 * 0.05;
-	t += lif;
-
-	vec2 q = p - 0.5;
-	q.x *= uRes.x / uRes.y;
-	q *= 6.0;
-
-	float fp = perlin(q, f);
-	float fps = fp * uSpectrum[int(floor(ff * 100.0))];
-
-	float lw = 0.1 * atan(fd, fps);
-	float w = lw / 3.0 + f / (uTime);
-
-	q.x += w * cos(mod(fps, 0.5) * t + 30.0 * q.y * fp);
-	q.y += w * sin(mod(fps, 0.5) * t + 30.0 * q.x * fps);
-
-	q /= exp(mod(t * 10.0, PI));
-	//q *= rot(uTime);
-
-	float v = circ(q);
-	float d = 0.4 + lif;
-	d *= pow(abs(fps - v), 0.9);
-
-	vec3 lc = vec3(fp, 0.2 * fps, ff);
-
-	vec3 c = lc / abs(d - sinc(fp / lw));
-
-	c = pow(abs(c), vec3(0.99));
-
-	ret = c;
+	ret = min(min(m1, m2), m3);
+	ret *= f;
 
 	return ret;
 }
 
+float dist(vec3 p, float f)
+{
+	float ret;
+	p.xy  *= rot(uTime * 0.2);
+	p.z += uTime;
+	for (int i = 0; i < 4; i++)
+	{
+		p = abs(p) - 1.0;
+		p.xz *= rot(0.3);
+	}
+
+	float k = 0.6;
+	p = mod(p, k) - 0.5 * k;
+
+	ret = min(crossBox(p, 0.02, f), cube(p, vec3(0.1)));
+
+	return ret;
+}
+
+vec3 col(vec2 p)
+{
+	vec2 q = p;
+	//q *= circ(vec2(sin(p.y) / p.x)) / sinc(perlin(p, cosc(uFreq)));
+	q *= rot(1.0 - min(uTime, 1.0) + uTime);
+
+	float f = abs(uFreq + uLastFreq / mod(uTime, 1.0)) * mod(sin(uTime), 0.5);
+	float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
+
+	q = (q - 0.5) * 2.0;
+	q.x *= uRes.x / uRes.y;
+	
+	//q *= rot(uTime * 0.2);
+	q *= rot(uTime * ff);
+
+	vec3 ro = vec3(cos(uTime), vec2(length(p + f)) * rot(f));
+	vec3 rd = normalize(vec3(p, 0.0) - ro);
+
+	float d, t = 2.0;
+
+	float ac = mod(0.5 / uTime, 1.0) * ff; //0.0  // on to something
+
+	for (int i = 0; i < 66; i++)
+	{
+		d = dist(ro + rd * t, mod(fract(f * 10000.0) * 10.0, sin(uTime) / cos(uTime)));
+		t += d;
+		ac += exp(-4.0 * d) * f;
+		if (d < 0.01)
+			break;
+	}
+
+	float cl = exp(-1.0 * t);
+
+	float a = sinc(ff);
+	float b = perlin(q, ff);
+	float y = min(cosc(ff), perlin(p, ff));
+
+	vec3 c;
+	//c = vec3(0.7, 0.7, 0.2) * 0.05 * vec3(ac);
+	c = vec3(
+		max(min(a, b), y),
+		0.1 * hash(1.0 / q, max(0.1, ff)), 
+		y
+	);
+	//c += vec3(0.0, 0.3, 0.3);
+	c += pow(c / f, vec3(0.7));
+	if (d < 0.01)
+		c += vec3(0.4, 0.8, 0.9) * 0.01 / abs(mod((ro + rd * t).z, 1.0) - 0.5);
+
+		vec3 ret;
+		//ret = vec3(1.0, 0.0, 0.0);
+		//ret = vec3(0.0, 1.0, 0.0);
+		//ret = vec3(0.0, 0.0, 1.0);
+
+		ret = c;
+
+		return ret;
+	
+}
+
 void main()
 {
-	vec2 uv = (gl_FragCoord.xy / uRes) - 0.5;
+	vec2 uv = (gl_FragCoord.xy / uRes.xy);
+	uv.yx *= 1.5;
+	uv.xy -= 1.5;
 
 	vec4 ret;
 

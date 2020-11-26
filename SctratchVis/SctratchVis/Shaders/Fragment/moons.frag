@@ -41,9 +41,10 @@ vec3 col(vec2 p)
 	float f = abs(uFreq + uLastFreq * sinc(t)) * 0.5;
 	float ff = fract(f * 10.0);
 	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
+	//float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
 	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 	float fstep = smoothstep(sin(uFreq / f), uFreq + uLastFreq, uTime);
-	float tf = smoothstep(sin(f), 2.0, uTime);
+	float tf = smoothstep(sinc(f), 2.0, uTime);
 	t *= sin(cosc(tf));
 	t *= abs(sin(uTime) + ff);
 
@@ -53,14 +54,15 @@ vec3 col(vec2 p)
 
 	c += sin(p.x * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
 
-	c *= sin(uTime / 10.0) * uFreq;
+    c *= 1.0 / fract(sinc(uTime / 10.0) * 100.0) * sinc(f);
+    //c *= sinc(uTime / 10.0) * uFreq;
 
-	ret = vec3(c, c * c, sin(c) * c);
+	ret = vec3(c, c * cosc(c - uTime), sin(c) * c);
 
 	return ret;
 }
 
-void main()
+void main() 
 {
 	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 	vec4 ret;

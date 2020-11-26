@@ -94,7 +94,6 @@ vec3 col(vec2 p)
 	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
 	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 
-
 	q.y /= sqrt(3.0) / 2.0;
 	q.x += q.y * 0.5;
 	q.y -= f * 0.1;
@@ -144,7 +143,7 @@ vec3 col(vec2 p)
 
 	//c *= mix(c, ref, f);
 
-	ret = c * s;
+	ret = abs(c - dot(p, p * uFreq)) * sinc(s) / (1.0 - (1.0 - uFreq));
 
 	//ret = reflect(c * s, normalize(mix(c, rot, f)));
 	ret = uFreq > 0.0 ? c * s : vec3(0.0);
