@@ -8,11 +8,7 @@ uniform float uLastFreq;
 uniform float uDeltaFreq;
 uniform float[256] uSpectrum;
 uniform vec2 uRes;
-
 uniform float uTime;
-#define uTiem uTime;
-#define UtImE uTime;
-#define uTIme uTime;
 
 out vec4 retColor;
 
@@ -91,139 +87,116 @@ float perlin(vec2 p, float f)
 	return v;
 } 
 
-float circ(vec2 p)
+vec3 hsv2rgb(vec3 c)
 {
-	float r = length(p);
-	r = log(sqrt(r));
+	vec4 k = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	vec3 p = abs(fract(c.xxx + k.xyz) * 6.0 - k.www);
 
-	float ret = abs(mod(r * 4.0, TAU) - PI) * 3.0 + 0.2;
-
-	return ret;
+	return c.z * mix(k.xxx, clamp(p - k.xxx, 0.0, 1.0), c.y);
 }
 
-vec2 pmod(vec2 p, float n)
+vec3 trans(vec3 p)
 {
-	float np = TAU / n;
-	float r = atan(p.y, p.x) - 0.5 * np;
-	r = mod(r, np) - 0.5 * np;
-	vec2 ret;
-	ret = length(p) * vec2(cos(r), sin(r));
-	return ret;
+	return mod(p, 4.0 * 2.0) - 2.0;
 }
 
-float cube(vec3 p, vec3 s)
+float sphere(vec3 p, float sz)
 {
-	vec3 q = abs(p);
-	vec3 m = max(s - q, 0.0);
-	float ret;
-	ret = length(max(q - s, 0.0)) - min(min(m.x, m.y), m.z);
-	return ret;
+	return length(trans(p)) - sz;
 }
 
-float crossBox(vec3 p, float s, float f)
+vec3 getNormal(vec3 p, float sz)
 {
-	float ret;
-	float m1 = cube(p, vec3(s, s, 99999.0));
-	float m2 = cube(p, vec3(99999.0, s, s));
-	float m3 = cube(p, vec3(s, 99999.0, s));
-
-	ret = min(min(m1, m2), m3);
-	ret *= f;
-
-	return ret;
+	float ep = 0.0001;
+	return normalize(vec3(
+		sphere(p, sz) - sphere(vec3(p.x - ep, p.y, p.z), sz),
+		sphere(p, sz) - sphere(vec3(p.x, p.y - ep, p.z), sz),
+		sphere(p, sz) - sphere(vec3(p.x, p.y, p.z - sz), sz)
+	));
 }
 
-float dist(vec3 p, float f)
+vec3 hsv2rgb(float h, float s, float v)
 {
-	float ret;
-	p.xy  *= rot(uTime * 0.2);
-	p.z += uTime;
-	for (int i = 0; i < 4; i++)
-	{
-		p = abs(p) - 1.0;
-		p.xz *= rot(0.3);
-	}
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+}
 
-	float k = 0.6;
-	p = mod(p, k) - 0.5 * k;
+float rand(vec2 st)
+{
+	return fract(sin(dot(st, vec2(12.9898, 78.233))) * 42758.5453);
+}
 
-	ret = min(crossBox(p, 0.02, f), cube(p, vec3(0.1)));
-
-	return ret;
+float perlinNoise(float x)
+{
+	float al = rand(vec2(floor(x), 0.1));
+	float ar = rand(vec2(floor(x + 1.0), 0.1));
+	float wl = al * fract(x);
+	float wr = ar * (fract(x) - 1.0);
+	float f = fract(x);
+	float u = pow(f, 2.0) * (3.0 - 2.0 * f);
+	float n = mix(wl, wr, u);
+	return n;
 }
 
 vec3 col(vec2 p)
 {
-	vec2 q = p;
-	//q *= circ(vec2(sin(p.y) / p.x)) / sinc(perlin(p, cosc(uFreq)));
-	q *= rot(1.0 - min(uTime, 1.0) + uTime);
+	vec2 q;
+	vec3 ret;
+
+	q = p;
+	q *= rot(uTime - fract(sinc(uFreq) * 100.0) * 0.025);
+	//q = vec2(uRes.x / uRes.y, 1.0);
 
 	float f = abs(uFreq + uLastFreq / mod(uTime, 1.0)) * mod(sin(uTime), 0.5);
-	float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
+	float ff = fract(fract(f * 1000.0) + fract(f * 100.0)) + (fract(f  * 10.0)); 
 
-	q = (q - 0.5) * 2.0;
-	q.x *= uRes.x / uRes.y;
-	
-	//q *= rot(uTime * 0.2);
-	q *= rot(uTime * ff);
+	vec3 cPos = vec3(0.0, 0.0, (10.0 * fract(uFreq * 100.0)) / sin(uTime / fract(sinc(uFreq) * 100.0)));
+	vec3 lPos = normalize(vec3(1.0));
 
-	vec3 ro = vec3(cos(uTime), vec2(length(p + f)) * rot(f));
-	vec3 rd = normalize(vec3(p, 0.0) - ro);
+	vec3 c = vec3(0.0);
 
-	float d, t = 2.0;
+	vec3 ray = normalize(vec3(q, 0.0) - cPos);
+	vec3 cur = cPos;
 
-	float ac = mod(0.5 / uTime, 1.0) * ff; //0.0  // on to something
-
-	for (int i = 0; i < 66; i++)
+	for (int i = 0; i < 64; i++)
 	{
-		d = dist(ro + rd * t, mod(fract(f * 10000.0) * 10.0, sin(uTime) / cos(uTime)));
-		t += d;
-		ac += exp(-4.0 * d) * f;
-		if (d < 0.01)
+		float d = sphere(cur, 0.5);
+		d = sphere(cur, 0.5 + perlinNoise(sinc(d * ff) + (ff * sin(uTime))));
+
+		if (d < 0.001 + fract(cosc(ff * mod(uTime, uFreq)) * 100.0))
+		{
+			vec3 norm = getNormal(cur, 0.5);
+			float dif = dot(norm, lPos);
+
+			c = vec3(1.0) * dif * hsv2rgb(ff / length(cur * 0.1) + perlinNoise(uTime), 1.0, 1.0) * 3.0;
 			break;
+		}
+
+		cur += ray * d;
 	}
 
-	float cl = exp(-1.0 * t);
+	//ret = vec3(1.0, 0.0, 0.0);
+	//ret = vec3(0.0, 1.0, 0.0);
+	ret = vec3(0.0, 0.0, 1.0);
 
-	float a = sinc(ff);
-	float b = perlin(q, ff);
-	float y = min(cosc(ff), perlin(p, ff));
+	//ret *= q.x;
 
-	vec3 c;
-	//c = vec3(0.7, 0.7, 0.2) * 0.05 * vec3(ac);
-	c = vec3(
-		max(min(a, b), y),
-		0.1 * hash(1.0 / q, max(0.1, ff)), 
-		y
-	);
-	//c += vec3(0.0, 0.3, 0.3);
-	c += pow(c / f, vec3(0.7));
-	if (d < 0.01)
-		c += vec3(0.4, 0.8, 0.9) * 0.01 / abs(mod((ro + rd * t).z, 1.0) - 0.5);
+	ret = c;
 
-		vec3 ret;
-		//ret = vec3(1.0, 0.0, 0.0);
-		//ret = vec3(0.0, 1.0, 0.0);
-		//ret = vec3(0.0, 0.0, 1.0);
-
-		ret = c;
-
-		return ret;
-	
+	return ret;
 }
 
 void main()
 {
-	vec2 uv = (gl_FragCoord.xy / uRes.xy);
-	uv.yx *= 1.5;
-	uv.xy -= 1.5;
+	vec2 uv;
+	
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 
 	vec4 ret;
 
 	vec3 c = col(uv);
-	float a = smoothstep(0.0, 0.1, min(min(c.r, c.g), c.b));
+	//float a = smoothstep(0.0, 0.1, min(min(c.r, c.g), c.b));
 
-	ret = vec4(c, a);
+	ret = vec4(c, 1.0);
 
 	retColor = ret;
 }

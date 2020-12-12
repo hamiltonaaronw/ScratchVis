@@ -59,56 +59,118 @@ float voronoi(vec2 p)
 	return ret;
 }
 
-vec3 bg_waves(vec2 p)
+float rnd(vec3 p) 
 {
-	vec3 ret = vec3(0.0);
+    return fract(sin(dot(p, vec3(12.345, 67.89, 412.12))) * 42123.45) * 2.0 - 1.0;
+}
 
-	float e = 0.0;
-	float ff = fract(fract(uFreq * 100.0) + fract(uFreq * 10.0)) + (fract(uFreq / uFreq) * 10.0); 
+float perlin(vec3 p)
+{
+	vec3 u = floor(p);
+	vec3 v = fract(p);
+	vec3 s = smoothstep(0.0, 1.0, v);
 
-	float t = sinc(ff) / cosc(ff);
-	t *= uTime;//mod(uTime, ff);
+	float a = rnd(u),
+		  b = rnd(u + vec3(1.0, 0.0, 0.0)),
+		  c = rnd(u + vec3(0.0, 1.0, 0.0)),
+		  d = rnd(u + vec3(1.0, 1.0, 0.0)),
+		  e = rnd(u + vec3(0.0, 0.0, 1.0)),
+		  f = rnd(u + vec3(1.0, 0.0, 1.0)),
+		  g = rnd(u + vec3(0.0, 1.0, 1.0)),
+		  h = rnd(u + vec3(1.0, 1.0, 1.0));
 
-	//t = uTime;
+	float ret = mix(mix(mix(a, b, s.x), mix(c, d, s.x), s.y),
+					mix(mix(e, f, s.x), mix(g, h, s.x), s.y),
+					s.z);
+	return ret;
+}
 
-	for (float i = 3.0; i <= 17.0; i+= 1.0)
+float hd(vec2 p)
+{
+	return max(dot(abs(p), normalize(vec2(1.0, 1.73))), abs(p.x));
+}
+
+vec4 hx(vec2 p)
+{
+	vec2 r = vec2(1.0, 1.73);
+	vec2 hr = r * 0.5;
+	vec2 ga = mod(p, r) - hr;
+	vec2 gb = mod(p - hr, r) - hr;
+	vec2 g = dot(ga, ga) < dot(gb, gb) ? ga : gb;
+
+	vec4 ret;
+
+	ret = vec4(atan(g.x, g.y), 0.5 - hd(g), (p - g));
+
+	return ret;
+}
+
+vec3 col(vec2 p)
+{
+	vec3 ret;
+
+	vec2 u;
+	//u = (2.0 * gl_FragCoord.xy - uRes.xy) / max(uRes.x, uRes.y);
+	u = p;
+
+	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0)) * sinc(uTime / sin(uFreq));
+	float maxF = max(f, uFreq);
+	float minF = min(f, uFreq);
+
+	vec3 lp = vec3(0.0);
+	vec3 ro = vec3(-3.21, 13.0, -12.0);
+
+	vec3 cf = normalize(lp - ro);
+	vec3 cp = vec3(0.0, 1.0, 0.0);
+	vec3 cr = normalize(cross(cp, cf));
+	vec3 cu = normalize(cross(cf, cr));
+	vec3 _c = ro + cf * 0.95;
+	vec3 i = _c + u.x * cr + u.y * cu;
+	vec3 rd = i - ro;
+	vec3 _C = vec3(0.0);
+	vec3 _p = vec3(0.0);
+	vec4 _t = vec4(0.0);
+	vec4 d = vec4(0.0);
+
+	// bumping
+	float t = sin(uTime) / voronoi(vec2(mod(maxF, minF)));
+	t *= 0.5;
+
+	float pr;
+	for (int i = 0; i < 36; i++)
 	{
-		e += 0.1 / ((i / 2.0) + cos(t / 5.0 + 1.1 * 1 * (p.x) * (sin(i / 9.0 + t / 9.0 - p.x * 0.2))) + 1.0 + 5.5 * p.y);
+		_p = ro + d.x * rd;
+
+		_p.xz * mat2(cos(uTime * 0.16 + vec4(0.0, 11.0, 33.0, 0.0)));
+		vec4 h = hx(_p.xz * 0.25) * 1.0;
+		float _pr = perlin(vec3(h.zw * 0.4, t * 1.25)) * 1.75;
+		float hMap = 0.12 * (_p.y - _pr) / 1.0;
+		pr = _pr;
+		_t = vec4(hMap, pr, h.z, h.y);
+
+		d.yzw = _t.yzw;
+
+		if (_t.x < 0.005 * d.x || d.x > 50.0 + sinc(f))
+			break;
+
+		d.x = _t.x;
 	}
+	
+	// freq -> color
+	float co = sin(uFreq);
+	// brightness
+	float ao = fract(uFreq * 10.0);
+	float ac = co * ao;
+	float _a1 = minF; //mod(uFreq * 10.0, 1.25);
+	float _a2 = sin(maxF);//sin(uTime) + uFreq;
 
-	ret = vec3(0.0 - p.y * e * 1.4, e / 2.0, e);
+	vec3 m = ao * cos(2.0 * pr + vec3(1.0, _a1, _a2));
+	m += mod(sin(uTime), sinc(minF));
 
-	return ret;
-}
+	if (d.x < 48.0)
+		_C += m * smoothstep(0.4, 0.05, d.w);
 
-vec3 col1(vec2 p)
-{
-	vec3 ret = vec3(0.0);
-
-    //float t = uTime + sin(uFreq);
-	float f = abs(uFreq + uLastFreq / mod(uTime, 1.0)) * 0.5;
-	float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
-	//t = cos(mod(sin(ff), t));
-	float t = sinc(ff) / cosc(ff);
-	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
-
-	float r = ff;
-	float g = sin(ff);
-	float b = cos(ff);
-
-	ret = vec3(r, g, b); 
-
-	ret *= mix(bg_waves(p), bg_waves(-p), voronoi(vec2(f) / p));
-	ret /= bg_waves(p);
-
-	//ret = bg_waves(p);
-
-	return ret;
-}
-
-vec3 col2(vec2 p)
-{
-	vec3 ret = vec3(0.0);
+	ret = vec3(pow(abs(_C), vec3(1.0)));
 
 	return ret;
 }
@@ -117,9 +179,11 @@ void main()
 {	
 	vec4 ret;
 	vec2 uv;
-	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
 
-	ret = vec4(col1(uv * 1.75), 1.0);
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
+	uv *= 5.0;
+
+	ret = vec4(col(uv * 1.75), 1.0);
 
 	retColor = ret;
 }
