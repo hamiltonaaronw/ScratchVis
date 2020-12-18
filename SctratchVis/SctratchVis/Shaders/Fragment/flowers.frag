@@ -105,6 +105,11 @@ vec4 hx(vec2 p)
 	return ret;
 }
 
+vec3 hsv2rgb(float h, float s, float v)
+{
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+}
+
 vec3 col(vec2 p)
 {
 	vec3 ret;
@@ -155,22 +160,31 @@ vec3 col(vec2 p)
 
 		d.x = _t.x;
 	}
+
+	// try something like f - sin(uTime)
 	
 	// freq -> color
-	float co = sin(uFreq);
+	float co = cosc(uTime) / sinc(f);
+	co *= atan(cos(uTime / f / TAU) / f);
 	// brightness
-	float ao = fract(uFreq * 10.0);
+	float ao = fract(uFreq * 100.0) + 2.0;
 	float ac = co * ao;
-	float _a1 = minF; //mod(uFreq * 10.0, 1.25);
-	float _a2 = sin(maxF);//sin(uTime) + uFreq;
+	float _a1 = 1.0 - fract(sinc(minF) * 100.0);
+	float _a2 = sinc(mod(maxF, minF));
 
-	vec3 m = ao * cos(2.0 * pr + vec3(1.0, _a1, _a2));
+	vec3 m = ao * cos(2.0 * pr + vec3(mod(uFreq * 100.0, 1.0), fract(_a1 / f), _a2));
 	m += mod(sin(uTime), sinc(minF));
 
 	if (d.x < 48.0)
 		_C += m * smoothstep(0.4, 0.05, d.w);
 
 	ret = vec3(pow(abs(_C), vec3(1.0)));
+
+	ret *= cross(ret, hsv2rgb(fract(f * 10.0), fract(f * 100.0), fract(f * 1000.0)) + mod(uFreq, 0.35));
+	//ret /= 3.0 *  hsv2rgb(fract(f * 1000.0), fract(f * 100.0), fract(f * 10.0)) + mod(uFreq, 0.5);
+	//ret += sinc(cos(f) * 0.0005);
+	//ret += cosc(sin(f) * 0.0005);
+	ret *= (uFreq * (floor(fract(uFreq * 10.0) * 10.0)));
 
 	return ret;
 }
@@ -183,7 +197,7 @@ void main()
 	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
 	uv *= 5.0;
 
-	ret = vec4(col(uv * 1.75), 1.0);
+	ret = vec4(col(uv * 1.5), 1.0);
 
 	retColor = ret;
 }

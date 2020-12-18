@@ -29,42 +29,76 @@ mat2 rot(float a)
 	);
 }
 
+vec3 hsv2rgb(float h, float s, float v)
+{
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+}
+
+
+#define less(a, b, c) mix(a, b, step(0.0, c));
+#define sabs(x, k) less((0.5 / k) * x * x + k * 0.5, abs(x), abs(x) - k);
+
+float smin(float a, float b, float k)
+{
+	float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+
+	return mix(b, a, h) - k * h * (1.0 - h);
+}
+
 vec3 col(vec2 p)
 {
 	vec3 ret;
+	vec3 c;
 
-	vec2 q;
-	q = p;
-	//q = (2.0 * gl_FragCoord.xy - uRes) / uRes.y;
-	q /= (3.6 - sin(mod(3.6, uFreq)));
+	vec2 q = p;
+	//q *= rot(uTime);
 
-	vec3 c = vec3(0.0);
-	vec3 rd = vec3(q, -1.0);
+	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0));
+	float maxF = max(f, uFreq);
+	float minF = min(f, uFreq);
+	float ff = mod(maxF, minF) / 0.025;
+	float t;
+	t = uTime * sinc(uFreq) + cosc(ff);
+	t += sin(uTime) / mod(ff, 0.5);
+	t *= 0.5;
+	t *= 0.5;
 
-	float s = 0.5;
-	for (int i = 0; i < 8; i++)
-	{
-		rd = abs(rd) / dot(rd, rd);
-		rd -= s;
-		rd.xy *= rot(0.0 + uTime * 0.11);
-		rd.xz *= rot(0.0 - uTime * 0.231);
-		rd.zy *= rot(0.3 + uTime * 0.131);
+	q = sabs(q, 0.05);
+	q *= rot(uTime + sinc(ff * t));
 
-		s *= 0.8;
+	float d = length(q + vec2(ff, 0.0));// - 0.5;
+	float d2 = length(q - vec2(0.0, ff));// - 0.5;
 
-		float b = 0.005;
-		c.gb += 0.014 / max(abs(rd.x * 0.8), abs(rd.y * 0.8));
-		c.rb += 0.015 / max(abs(rd.y * 0.6), abs(rd.z * 0.6));
-		c.rg += 0.01 / max(abs(rd.x), abs(rd.z));;
-	}
+	vec2 offset = vec2(sin(q.y * 8.0 + t * 1.3), cos(q.x * 8.0 + t));
+	offset = sabs(offset, sinc(0.7 + f));
+	offset *= 0.45;
 
-	c *= 0.4;
+	float d3 = length(q - offset) - 0.3;
+	d *= smin(d, d2, 0.45);
+	d = smin(d, d3, 0.3 + sin(t) * 0.125);
+	d = sin(d * 15.0 - t);
+
+	d = sabs(d, 0.5);
+	d = 0.55 / d;
+
+	float dr = d * 0.38 * sin(uTime);
+	float dg = d * 0.41 + sin((uFreq - uLastFreq) * ff - t) * 0.005;
+	float db = d * 0.05 + sin(uTime);
+
+	vec3 hc = hsv2rgb(db, dr, dg) * cross(hsv2rgb(ff, (t + sinc(dot(q, q))), dg), hsv2rgb(db, ff, dg));;
 
 	//ret = vec3(1.0, 0.0, 0.0);
 	//ret = vec3(0.0, 1.0, 0.0);
 	//ret = vec3(0.0, 0.0, 1.0);
 
-	ret = vec3(c);
+	c = vec3(dr, dg, db) - sinc(ff * t) * 0.5;
+
+	c.rb *= rot(ff) / hc.b;
+	c.gb *= rot(sinc(uTime / t)) * hc.r;
+
+	c *= uFreq > 0.075 ? 1.0 : 0.0;
+
+	ret = c;
 
 	return ret;
 }
