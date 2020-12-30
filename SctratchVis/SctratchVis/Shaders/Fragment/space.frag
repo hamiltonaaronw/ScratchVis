@@ -43,116 +43,74 @@ float lerp(float a, float b, float i)
 	return ret;
 }
 
-vec3 lerp(vec3 a, vec3 b, float i)
-{
-	if (i < 0.0)
-		i += 1.0;
-	vec3 ret = a * (1.0 - i) + b * i;
-	return ret;
-}
-
 vec3 hsv(float h, float s, float v)
 {
 	vec3 ret = ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 	return ret;
 }
 
-vec2 pmod(vec2 p, float n)
+float smin(float a, float b, float k)
 {
-	float np = TAU / n;
-	float r = atan(p.x, p.y) - 0.5 * np;
-	r = mod(r, np) - 0.5 * np;
-	return length(p) * vec2(cos(r), sin(r));
+	float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+	return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+vec3 cMap(float x)
+{
+	const vec4 kRedVec4 = vec4(0.13572138, 4.61539260, -42.66032258, 132.13108234);
+	const vec4 kGreenVec4 = vec4(0.09140261, 2.19418839, 4.84296658, -14.18503333);
+	const vec4 kBlueVec4 = vec4(0.10667330, 12.64194608, -60.58204836, 110.36276771);
+	const vec2 kRedVec2 = vec2(-152.94239396, 59.28637943);
+	const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);
+	const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973); 
+	x = clamp(x, 0., 1.);
+	vec4 v4 = vec4( 1.0, x, x * x, x * x * x);
+	vec2 v2 = v4.zw * v4.z;
+	return vec3(
+		dot(v4, kRedVec4)   + dot(v2, kRedVec2),
+		dot(v4, kGreenVec4) + dot(v2, kGreenVec2),
+		dot(v4, kBlueVec4)  + dot(v2, kBlueVec2)
+	);
 }
 
 vec3 col(vec2 p)
 {
-	vec2 q;
 	vec3 ret;
 
-	p *= 2.0 - floor(fract(uFreq * 1000.0) * 10.0);
-	q /= dot(q, p) * uFreq;
+	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0));
+	float maxF = max(f, uFreq);
+	float minF = min(f, uFreq);
+	float ff = mod(maxF, minF) / 0.025;
+	float t;
+	t = uTime;
 
-	float f = abs(uFreq + uLastFreq / mod(uTime, 1.0)) * mod(sin(uTime), 0.5);
-	float ff = fract(fract(f * 1000.0) + fract(f * 100.0)) + (fract(f  * 10.0)); 
-	
-	q = p;
-	q.x *= uRes.x / uRes.y;
+	vec2 q = mod(p * TAU, TAU) - 250.0;
+	vec2 i = vec2(q);
+	float c = 1.0;
+	float inten = 0.005;
 
-	vec3 c = vec3(1.0);
-
-	vec2 sp = q;
-
-	float t = uTime * uFreq / 0.01;
-
-	q /= 1.2 + sinc(ff / t);
-	q /= 4.0 + 10.0 * (fract(ff * 10000.0) / 10.0);
-	q *= rot(t * 0.01);
-	q = pmod(q, 3.0 + mod(floor(uTime * 0.3), min(sinc(ff), cosc(f))));
-
-	for (int i = 0; i < 3; i++)
+	for (int n = 0; n < 5; n++)
 	{
-		q = abs(q) - mod(ff + fract(f * 100.0), uFreq);
-		//q *= rot(uTime * 2.0 + min(q.x, 1.0));\
-		ff += uSpectrum[int(mod(i * 100, 256))];
-		q *= rot(ff* t);
+		float _t = t * (1.0 - (3.5 / float(n + 1)));
+		i = q + vec2(cos(_t - i.x) + sin(_t + i.y), sin(_t - i.y) + cos(_t + i.x));
+		c += 1.0 / length(vec2(q.x / (sin(i.x + _t) / inten), q.y / cos(i.y + _t) / inten));
 	}
 
-	q.x -= 0.3 + 0.2 * uTime + ff;
-	float kx = 0.5;
-	q.x = mod(q.x, kx) - 0.5 * kx* sin(mod(sin(uTime), t));
+	c /= 5.0;
+	c = 1.17 - pow(c, 1.4);
 
-	float ins = 0.028 * pow(abs(sin(uTime * 6.0)), 12.0) +0.0002;
-	float c0 = ins / abs(q.x);
+	//ret = vec3(1.0, 0.0, 0.0);
+	//ret = vec3(0.0, 1.0, 0.0);
+	//ret = vec3(0.0, 0.0, 1.0);
 
-	c += c0 * vec3(0.3, 0.5, 0.8);
-	q.x += kx / 3.0;
-
-	c0 = ins / abs(q.x - ff);
-	c += c0 * vec3(0.7, f, 0.1);
-	q.x -= 2.0 * kx / 3.0;
-
-	c0 = ins / abs(q.x);
-	c += c0 * vec3(0.3, 0.8, 0.5);
-	c *= 1.3 * vec3(0.3, 0.5, 0.9);
-	c = pow(c, vec3(0.9));
-
-	float g0;
-	g0 = dot(q * ff, p * mod(fract(ff * 100.0) , f)) / 0.5;
-
-	c += vec3(
-		uSpectrum[int(floor(fract(ff * 100.0)) * sin(uTime + uFreq))] / sinc(ff),
-		sinc(uLastFreq / uFreq), // * mod(g0, uSpectrum[int(floor(fract(g0 * 10000.0)))],
-		cosc(g0) * sin(ff / g0)
-	);
-
-	c *= hsv(
-		c.r * sinc(uFreq),
-		mod(c.g / c.r, (1.0 + c.b) - ff), //* mod(cosc(ff), sinc(f)),
-		cosc((t / ff) + sinc(uFreq)) * dot(c.rg / q.xy, c.gr / q.xx)
-	);
-
-	c -= vec3(q * rot(t), length(p) * f);
-
-	//c += sinc(uTime);
-
-	vec3 cc = cross(vec3(p, ff), vec3(p, f));
-	float cl = length(cc);
-
-	c.rb *= rot((cl + ff) / sin(uTime)) / t;
-
-	//c /= sin(t) * cross(vec3(q * uFreq, ff), vec3(ff, p * rot(ff)));
-	c *= uFreq > 0.075 ? 1.0 : 0.0;
-
-	ret = c;
+	ret = cMap(smoothstep(0.15, 1.1, pow(abs(c), 3.5)));
 
 	return ret;
 }
 
-
 void main()
 {
-	vec2 uv = ((gl_FragCoord.xy / uRes.xy) / 2.0 - 0.5);
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 
 	vec4 ret = vec4(col(uv), 1.0);
 
