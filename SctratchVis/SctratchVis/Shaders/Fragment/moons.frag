@@ -36,8 +36,6 @@ vec3 col(vec2 p)
 	//vec2 po = (gl_FragCoord.xy / uRes.xy);
 	vec3 ret;
 	float c = 0.0;
-	p += sinc(uTime + mod(uFreq, cos(uTime)));
-	p *= 0.5 + mod(uFreq, 0.5);
 
 	float t = uTime * sin(uFreq);
 	float f = abs(uFreq + uLastFreq * sinc(t)) * 0.5;
@@ -50,12 +48,10 @@ vec3 col(vec2 p)
 	t *= sin(cosc(tf));
 	t *= abs(sin(uTime) + ff);
 
-	vec2 vt = vec2(t / ff, ff / t);
-	vt *= rot(uTime / fs);
-	tf *= dot(vt, p);
-
 	c += sin(p.x * cos(t / 15.0) * 40.0 + (fract(uFreq * 100.0) * 10.0)) + cos(p.y * cos(t / 15.0) * 10.0);
+
 	c += sin(p.y * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
+
 	c += sin(p.x * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
 
     c *= 1.0 / fract(sinc(uTime / 10.0) * 100.0) * sinc(f);
