@@ -67,7 +67,6 @@ vec3 col(vec2 p, float mult)
 	ft *= sinc(cosc(tf / length(oTexCoord)));
 	f += smoothstep(max(ft, tf), min(tf, ft), 1.0 / f);
 
-
 	float wt = uTime * (ft / f);
 	float ts =(uTime * f) / smoothstep(max(uTime, f), min(uTime, f), sin(uFreq));
 	ts *= (1.0 / wt) * f;
