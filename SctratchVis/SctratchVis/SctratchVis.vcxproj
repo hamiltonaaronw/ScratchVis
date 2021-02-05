@@ -228,7 +228,6 @@
     <ClInclude Include="Shaders\Shader.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Fragment\arena.frag" />
     <None Include="Shaders\Fragment\blossom.frag" />
     <None Include="Shaders\Fragment\cubes.frag" />
     <None Include="Shaders\Fragment\flowers.frag" />

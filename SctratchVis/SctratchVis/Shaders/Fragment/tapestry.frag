@@ -30,98 +30,82 @@ mat2 rot(float a)
 	);
 }
 
-float angle(vec2 p)
+vec2 pMod(vec2 p, float n)
 {
-	if (p.x <= 0.0)
-		return atan(p.y / p.x) / TAU + 0.5;
-	if (p.y >= 0.0) 
-		return atan(p.y / p.x) / TAU;
-
-	return atan(p.y / p.x) / TAU + 2.0;
+	float a = mod(atan(p.y, p.x), TAU / n) - 0.5 * TAU / n;
+	return length(p) * vec2(sin(a), cos(a));
 }
 
-float dist(vec2 p)
+float map(vec3 p, float f)
 {
-	float ret = distance(vec2(0.0), p);
+	p.xy *= rot(uTime * (mod(f + 0.7, 1.3) * 0.0015));
+	p.yz *= rot(uTime * 1.02);
+	//p.zx *= rot(uTime * 0.15);
+	for (int i = 0; i < 4; i++)
+	{
+		p.xy = pMod(p.xy, (12.0 / f) * (0.7 + fract(f * 10.0)));
+		p.y -= 2.0;// + sin(f);
+		p.yz = pMod(p.yz, 12.0);// 1.0 - (12.0 / f) * 0.5);// * cosc(f));
+		p.z -= 10.0;// + f;
+	}
+
+	return dot(abs(p), normalize(vec3(11.0 + sin(uTime), 1.5 + 0.4 * sin(uTime * 0.88), 6.0))) - 0.7;
+}
+
+vec3 hsv(float h, float s, float v)
+{
+	vec3 ret = ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 	return ret;
 }
 
-float lanczosKernel(int ai, float x)
+vec3 hsv(vec3 v)
 {
-	float ret;
-	float af = float(ai);
-
-	if (x == 0.0)
-		return 1.0;
-	if (-af <= x && x < af)
-		return (af * sin(PI * x) * sin((PI * x) / af)) / ((PI * PI) * (x * x));
-	else
-		return 0;
-}
-
-float lanczosInterp(int ai, float x)
-{
-	float ret = 0.0;
-	int ub = int(floor(x));
-	int lb = int(floor(x)) - ai + 1;
-
-	for (int i = lb; i <= ub; i++)
-	{
-		ret += uSpectrum[i] * lanczosKernel(ai, x - float(i));
-		//ret = mod(abs(ret), 1.0);
-	}
-
-	return abs(ret);
+	return hsv(v.x, v.y, v.z);
 }
 
 vec3 col(vec2 p)
 {
 	vec3 ret;
-	vec2 q = p;
+	vec3 c = vec3(0.0);
+	p *= rot(uTime);
+	vec3 rd = normalize(vec3(p, 1.0));
+	vec3 q = vec3(0.0, 0.0, -4.0);
 
 	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
 	float ff = fract(f * 100.0);
-	float lif = lanczosInterp(2, f);
-	float liff = lanczosInterp(2, ff);
+	float _f = abs(1.0 - (uFreq + f + ff));
 
-	float fd = max(f, lif) / min(f, lif);
-	fd = clamp(fd, min(f, 0.1), mod(f, 1.0));
-	float ffd = max(ff, liff) / min(ff, liff);
-	ffd = clamp(ffd, min(f, 0.1), mod(uFreq, 1.0));
+	c = hsv(_f, f, sin(f)) + _f;
+	c *= f;
+	vec3 c2 = hsv(1.0 - length(c.rg), 1.0 - length(c.gb), 1.0 - length(c.br));
 
-	q *= rot(uTime * 0.5);
+	for (int i = 1; i < 75; i++)
+	{
+		float d = map(q, _f);
+		q += rd * d;
+		if (d < 0.001)
+		{
+			//c = vec3(10.0 / float(i));
+			c /= hsv(c2 * vec3(10.0 / float(i)));
+			break;
+		}
+	}
 
-	float a = angle(q * ff);
-	float d = dist(q);
+	//c = sin(c) / cos(c);
+	c *= sin(c);
+	c -= cos(c2) * _f;
+	//c = mix(c, c2, _f);
 
-	float df = abs(uDeltaFreq - uLastFreq);
+	ret = uFreq > 0.0001 ? c : vec3(0.0);
 
-	float t = df >= 0.6 ? sin(uTime) : uTime + f;
-
-	float va = sin(a * TAU * 6.0 + t) + ffd;
-	float vb = cos(d * TAU * 0.5 - 4.0 * t + ffd);
-
-	//float v1 = mix((va / vb), (va * vb), uFreq);
-	float v1 = max(va / vb, vb / va) - (va * vb);
-	float v2 = cos(v1 * PI * (1.125 * (2.5 * ffd)) + uTime * sin(liff));
-	float v3 = cos(v2 * 15.0) * cosc(uFreq);
-
-	vec3 c = vec3(
-		v1  * d + sin(uTime / ffd),
-		exp(liff) * v2,
-		sin(exp(fract(df * v3 * 100.0) + ffd) * fd)
-	);
-
-	ret = c * uFreq;
-	ret /= 1.0 - f;
-	
 	return ret;
 }
 
 void main()
 {
 	vec4 ret;
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	vec2 uv ;
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
 
 	ret = vec4(col(uv), 1.0);
 

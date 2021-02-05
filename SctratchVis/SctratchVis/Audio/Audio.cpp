@@ -38,6 +38,9 @@ void Audio::initAudio()
 	mIsPaused = false;
 	FMOD_RESULT res;
 
+	mExtraDriverData = NULL;
+	//res = FMOD::
+
 	// create system
 	//res = FMOD_System_Create(&mpSystem);
 	res = FMOD::System_Create(&mpSystem);
@@ -45,13 +48,20 @@ void Audio::initAudio()
 
 	//initialize the system
 	//res = FMOD_System_Init(mpSystem, 2, FMOD_INIT_NORMAL, 0);
-	res = mpSystem->init(2, FMOD_INIT_NORMAL, 0);
+	res = mpSystem->init(100, FMOD_INIT_NORMAL, mExtraDriverData);
 	FMODErrorCheck(res, "system init in initAudio()");
 
 	// get number of sound cards
 	//res = FMOD_System_GetNumDrivers(mpSystem, &mNumDrivers);
 	res = mpSystem->getNumDrivers(&mNumDrivers);
 	FMODErrorCheck(res, "get num drivers in initAudio()");
+
+	//set a callback so we can be notified if record list has changed
+	int recordListChangedCount = 0;
+	res = mpSystem->setUserData(&recordListChangedCount);
+	FMODErrorCheck(res, "record list changed count");
+	//res = mpSystem->setCallback(&SystemCallback2, FMOD_SYSTEM_CALLBACK_RECORDLISTCHANGED);
+	//FMODErrorCheck(res, "set system callback");
 
 	// no sound cards (disable sound)
 	if (mNumDrivers == 0)
@@ -88,6 +98,35 @@ void Audio::initAudio()
 
 	mFreq = 0.0f;
 	mIsRandom = false;
+
+	mCursor = 0;
+	mScroll = 0;
+	mNativeRate = 0;
+	mNativeChannels = 0;
+	res = mpSystem->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL, &mNativeRate, NULL, &mNativeChannels, NULL);
+	FMODErrorCheck(res, "get record driver info");
+
+	mDriftThreshold = (mNativeRate * DRIFT_MS) / 1000;       /* The point where we start compensating for drift */
+	mDesiredLatency = (mNativeRate * LATENCY_MS) / 1000;     /* User specified latency */
+	mAdjustedLatency = mDesiredLatency;                      /* User specified latency adjusted for driver update granularity */
+	mActualLatency = mDesiredLatency;                                 /* Latency measured once playback begins (smoothened for jitter) */
+
+	mExinfo = { 0 };
+	mExinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
+	mExinfo.numchannels = mNativeChannels;
+	mExinfo.format = FMOD_SOUND_FORMAT_PCM16;
+	mExinfo.defaultfrequency = mNativeRate;
+	mExinfo.length = mNativeRate * sizeof(short) * mNativeChannels;
+
+	res = mpSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &mExinfo, &mpSound);
+	FMODErrorCheck(res, "create sound");
+
+	res = mpSystem->recordStart(DEVICE_INDEX, mpSound, true);
+	FMODErrorCheck(res, "record start");
+
+	mSoundLength = 0;
+	res = mpSound->getLength(&mSoundLength, FMOD_TIMEUNIT_PCM);
+	FMODErrorCheck(res, "sound length");
 }
 
 void Audio::loadSongs()
@@ -365,6 +404,191 @@ bool Audio::update()
 	FMODErrorCheck(res, "update system in update()");
 
 	return true;
+}
+
+void Audio::updateRecord()
+{
+	FMOD_RESULT res;
+
+	res = mpSystem->update();
+	FMODErrorCheck(res, "system update in updateRecord()");
+
+	// how much time has passed since we last checked
+	unsigned int recPos = 0;
+	res = mpSystem->getRecordPosition(DEVICE_INDEX, &recPos);
+	if (res != FMOD_ERR_RECORD_DISCONNECTED)
+		FMODErrorCheck(res, "get record position");
+	static unsigned int lastRecPos = 0;
+	unsigned int recDelta = (recPos >= lastRecPos) ? (recPos - lastRecPos) : (recPos + mSoundLength - lastRecPos);
+	lastRecPos = recPos;
+	mSamplesRecorded += recDelta;
+
+	static unsigned int minRecDelta = (unsigned int)-1;
+	if (recDelta && (recDelta < minRecDelta))
+	{
+		minRecDelta = recDelta;
+		mAdjustedLatency = (recDelta <= mDesiredLatency) ? mDesiredLatency : recDelta;
+	}
+
+	// delay playback until desired latency is reached
+	if (!mpChannel && mSamplesRecorded >= mAdjustedLatency)
+	{
+		res = mpSystem->playSound(mpSound, 0, false, &mpChannel);
+		FMODErrorCheck(res, "playback latency");
+	}
+
+	if (mpChannel)
+	{
+		// stop playing if recording stops
+		bool isRecording = false;
+		res = mpSystem->isRecording(DEVICE_INDEX, &isRecording);
+		if (res != FMOD_ERR_RECORD_DISCONNECTED)
+			FMODErrorCheck(res, "is recording");
+		if (!isRecording)
+		{
+			res = mpChannel->setPaused(true);
+			FMODErrorCheck(res, "set recording paused");
+		}
+		
+		// determine how much has been played since we last checked
+		unsigned int playPos = 0; 
+		res = mpChannel->getPosition(&playPos, FMOD_TIMEUNIT_PCM);
+		FMODErrorCheck(res, "how much time since we last checked");
+
+		static unsigned int lastPlayPos = 0;
+		unsigned int playDelta = (playPos >= lastPlayPos) ? (playPos - lastPlayPos) : (playPos + mSoundLength - lastPlayPos);
+		lastPlayPos = playPos;
+		mSamplesPlayed += playDelta;
+
+		// compensate for any drift
+		int latency = mSamplesRecorded - mSamplesPlayed;
+		mActualLatency = (int)((0.97f * mActualLatency) + (0.03f * latency));
+
+		int playbackRate = mNativeRate;
+		if (mActualLatency < (int)(mAdjustedLatency - mDriftThreshold))
+		{
+			// play posiiton is catching up to record position
+			// slow playback down by 2%
+			playbackRate = mNativeRate - (mNativeRate / 50);
+		}
+		else if (mActualLatency > (int)(mAdjustedLatency + mDriftThreshold))
+		{
+			// play position is falling behind record position
+			// speed playback up by 2%
+			playbackRate = mNativeRate + (mNativeRate / 50);
+		}
+
+		float freq = 0;
+
+		//res = FMOD_DSP_GetParameterFloat(mpDSP, FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
+		res = mpDSP->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
+		FMODErrorCheck(res, "get dominant freq in update()");
+
+		std::cout << freq << std::endl;
+
+		void* specData;
+		//res = FMOD_DSP_GetParameterData(mpDSP, (int)FMOD_DSP_FFT_SPECTRUMDATA, (void **)&specData, 0, 0, 0);
+		res = mpDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, (void**)&specData, 0, 0, 0);
+		FMODErrorCheck(res, "get spectrum data in update()");
+
+		FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT*)specData;
+
+		if (fft)
+		{
+			for (int i = 0; i < fft->length; i++)
+				mSpectrum[i] = (float&)fft->spectrum[i];
+		}
+
+		freq *= 10000;
+		mFreq = freq;
+
+
+		res = mpChannel->setFrequency((float)playbackRate);
+		FMODErrorCheck(res, "channel set frequency to playback rate");
+
+		res = mpSystem->update();
+		FMODErrorCheck(res, "update system in update()");
+
+		//std::cout << mFreq << std::endl;
+	}
+}
+
+void Audio::updateRecord2()
+{
+	FMOD_RESULT res;
+
+	res = mpSystem->getRecordNumDrivers(&mNumDrivers, &mNumConnectedDrivers);
+	FMODErrorCheck(res, "get record num drivers");
+
+	mNumDrivers = mNumDrivers < MAX_DRIVERS ? mNumDrivers : MAX_DRIVERS;
+
+	int tmp = 1;
+	// btnAction1
+	if (tmp == 1)
+	{
+		bool isRecording = false;
+		mpSystem->isRecording(mCursor, &isRecording);
+
+		if (isRecording)
+			mpSystem->recordStop(mCursor);
+		else
+		{
+			// clean up previous record sound
+			if (record[mCursor].sound)
+			{
+				res = record[mCursor].sound->release();
+				FMODErrorCheck(res, "clear previous record sound");
+			}
+
+			// query device native settions and start a recording
+			mNativeRate = 0;
+			mNativeChannels = 0;
+			res = mpSystem->getRecordDriverInfo(mCursor, NULL, 0, NULL, &mNativeRate, NULL, &mNativeChannels, NULL);
+			FMODErrorCheck(res, "query native settings");
+
+			mExinfo = { 0 };
+			mExinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
+			mExinfo.numchannels = mNativeChannels;
+			mExinfo.format = FMOD_SOUND_FORMAT_PCM16;
+			mExinfo.defaultfrequency = mNativeRate;
+			mExinfo.length = mNativeRate * sizeof(short) * mNativeChannels;
+
+			res = mpSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &mExinfo, &record[mCursor].sound);
+			FMODErrorCheck(res, "create sound");
+
+			res = mpSystem->recordStart(mCursor, record[mCursor].sound, true);
+			if (res != FMOD_ERR_RECORD_DISCONNECTED)
+				FMODErrorCheck(res, "record start");
+		} // end btn_1
+	}
+	else if (tmp == 2)
+	{
+		bool isPlaying = false;
+		record[mCursor].channel->isPlaying(&isPlaying);
+
+		if (isPlaying)
+			record[mCursor].channel->stop();
+		else if (record[mCursor].sound)
+		{
+			res = mpSystem->playSound(record[mCursor].sound, NULL, false, &record[mCursor].channel);
+			FMODErrorCheck(res, "play sound");
+		}
+	}
+	else if (tmp == 3) // button up
+	{
+		mCursor = mCursor - 1 > 0 ? mCursor : 0;
+		mScroll = mScroll - 1 > 0 ? mScroll : 0;
+	}
+	else if (tmp == 4) // btn down
+	{
+		if (mNumDrivers)
+			mCursor = (mCursor + 1 < mNumDrivers - 1) ? (mCursor - 1) : (mNumDrivers - 1);
+		if (mNumDrivers > MAX_DRIVERS_IN_VIEW)
+			mScroll = (mScroll + 1 < mNumDrivers - MAX_DRIVERS_IN_VIEW) ? (mScroll + 1) : (mNumDrivers - MAX_DRIVERS_IN_VIEW);
+	}
+
+	res = mpSystem->update();
+	FMODErrorCheck(res, "system update");
 }
 
 Audio::~Audio()

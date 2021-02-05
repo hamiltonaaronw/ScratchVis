@@ -58,7 +58,8 @@ int FMOD_Main()
     */
     int nativeRate = 0;
     int nativeChannels = 0;
-    result = system->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL, &nativeRate, NULL, &nativeChannels, NULL);
+    result = system->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL,
+        &nativeRate, NULL, &nativeChannels, NULL);
     ERRCHECK(result);
 
     unsigned int driftThreshold = (nativeRate * DRIFT_MS) / 1000;       /* The point where we start compensating for drift */
@@ -122,7 +123,9 @@ int FMOD_Main()
         }
 
         static unsigned int lastRecordPos = 0;
-        unsigned int recordDelta = (recordPos >= lastRecordPos) ? (recordPos - lastRecordPos) : (recordPos + soundLength - lastRecordPos);
+        unsigned int recordDelta = (recordPos >= lastRecordPos) ? 
+            (recordPos - lastRecordPos) : 
+            (recordPos + soundLength - lastRecordPos);
         lastRecordPos = recordPos;
         samplesRecorded += recordDelta;
 
@@ -130,7 +133,8 @@ int FMOD_Main()
         if (recordDelta && (recordDelta < minRecordDelta))
         {
             minRecordDelta = recordDelta; /* Smallest driver granularity seen so far */
-            adjustedLatency = (recordDelta <= desiredLatency) ? desiredLatency : recordDelta; /* Adjust our latency if driver granularity is high */
+            adjustedLatency = (recordDelta <= desiredLatency) ? desiredLatency
+                : recordDelta; /* Adjust our latency if driver granularity is high */
         }
         
         /*
@@ -168,7 +172,9 @@ int FMOD_Main()
             ERRCHECK(result);
 
             static unsigned int lastPlayPos = 0;
-            unsigned int playDelta = (playPos >= lastPlayPos) ? (playPos - lastPlayPos) : (playPos + soundLength - lastPlayPos);
+            unsigned int playDelta = (playPos >= lastPlayPos) ? 
+                (playPos - lastPlayPos) :
+                (playPos + soundLength - lastPlayPos);
             lastPlayPos = playPos;
             samplesPlayed += playDelta;
             

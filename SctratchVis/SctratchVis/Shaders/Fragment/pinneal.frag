@@ -24,86 +24,78 @@ float cosc(float x)
 	return ret;
 }
 
-vec2 cmul(vec2 a, vec2 b)
+mat2 rot(float a)
 {
-	vec2 ret = vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
-	return ret;
-}
-
-float hash(vec2 p, float s)
-{
-	vec3 p2 = vec3(p.xy, 27.0 * abs(sinc(s)));
-	float ret = fract(sin(dot(p2, vec3(27.1, 61.7, 12.4)))* 2.1);
-	return ret;
-}
-
-vec3 hueRGB(float h)
-{
-	float f = min(uFreq, uLastFreq) + abs(uDeltaFreq / 2.0);
-
-	vec3 c;
-	float a = cos(h * PI * 1.5) * f;
-	float b = sin(h * PI * 1.5) * f;
-
-	float s0 = 0.0,
-	s1 = 0.0,
-	s2 = 0.0;
-
-	for (int i = 0; i < 256; i++)
-	{
-		if (i % 3 == 0)
-			s0 += uSpectrum[i];
-		if (i % 3 == 1)
-			s1 += uSpectrum[i];
-		if (i % 3 == 2)
-			s2 += uSpectrum[i];
-	}
-	float avg0 = s0 / 86;
-	float avg1 = s1 / 85;
-	float avg2 = s2 / 85;
-
-	c = vec3(
-		max(-min(0.0, b), a) * hash(uRes, avg0) / avg0,
-		max(0.0, b) * hash(uRes, avg1) / avg1,	
-		-min(0.0, a) * hash(uRes, avg2) / avg2
-		);
-
-	mat3 cMat = mat3(
-		vec3(0.5, 0.0, 0.1),
-		vec3(0.0, 1.0, 0.0),
-		vec3(0.0, 0.0, 1.0)
+	return mat2(
+		cos(a), sin(a),
+		-sin(a), cos(a)
 	);
-
-	c /= mod(uTime, uFreq);
-
-	vec3 ret = normalize(cMat * c);
-
-	return ret;
 }
 
-float hue(vec2 p)
+vec3 zFunc(vec2 v, float f)
 {
-	float f = min(uFreq, uLastFreq) + abs(uDeltaFreq / 2.0);
-	float ft = smoothstep(max(f, uTime), min(f, uTime), uFreq);
-	float sft = uTime * sin(f / cosc(uFreq));
-	sft /= clamp(sinc(uTime), 0.1, uFreq);
+	float x = v.x * 32.0;
+	float y = -v.y * 32.0;
 
-	vec2 n = p * 2.0 - 1.0;
-	n *= vec2(uRes.x / uRes.y, 1.0);
-	n *= sin(sqrt(abs(n) * sft)) * (sin(sft) / f * 50.0);
-	n /= 2.0;
-	float ret = length(n) - uTime;
+	float t = atan( f * x, uTime * y);
+
+	float d = sqrt(x * x + y * y + (f / f));
+	float g = sin(d - ((f /f) + t) * 9.0) / d * (20.0 + (fract(f * 10.0) * 10.0));
+	float z = g + g;
+
+	return vec3(z - 0.5, 0.2 - z, 1.0 - z);
+}
+
+vec3 col(vec2 p)
+{
+	vec3 ret;
+	vec3 c = vec3(0.0);
+
+	p *= rot(uTime * 3.0);
+
+	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
+	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
+
+	float d = sin(uTime / 2.0);
+	d *= d;
+	d *= 0.3;
+
+	float  x = 0.0;
+
+	vec2 q = vec2(f, ff);
+	q *= -rot(uTime);
+	float q2 = length(q) / uFreq;
+
+	x = mod(q2, uFreq);
+	x *= 0.00075;
+
+	vec3 c1 = zFunc(p - vec2(d, x), ff);
+	vec3 c2 = zFunc(p - vec2(-d, x), ff);
+	vec3 c3 = zFunc(p - vec2(x, d), ff);
+	vec3 c4 = zFunc(p - vec2(x, -d), ff);
+	vec3 c5 = zFunc(p - vec2(x, x), ff);
+
+	c = c1 + c2 + c3 + c4 + c5;
+	c *= q2;
+
+	//c = vec3(1.0, 0.0, 0.0);
+	//c = vec3(0.0, 1.0, 0.0);
+	//c = vec3(0.0, 0.0, 1.0);
+
+	ret = uFreq > 0.0009 ?  c : vec3(0.0);
 	return ret;
 }
 
 void main()
 {
 	vec4 ret;
-	vec2 uv = gl_FragCoord.xy / uRes.xy / 2.0;
+	vec2 uv = gl_FragCoord.xy / uRes.xy * 2.0 - 2.0;
+	uv /= 1.5;
 
-	float h = hue(uv);
 
-	ret = vec4(hueRGB(h), 1.0);
+	//float h = hue(uv);
+	//ret = vec4(hueRGB(h), 1.0);
+	ret = vec4(col(uv), 1.0);
 
 	retColor = ret;
 }

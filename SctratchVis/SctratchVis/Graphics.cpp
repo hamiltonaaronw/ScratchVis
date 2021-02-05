@@ -343,7 +343,7 @@ void Graphics::render()
 {
 	mpShaderMan->toggleShader(0);
 	this->debugOutput(DebugOutputType::CURRENT_SHADER, false);
-	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+	//this->debugOutput(DebugOutputType::CURRENT_SONG, false);
 
 	glfwSetInputMode(mpWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	// set up vertex data (and buffer(s)) and configure vertex attributes
@@ -400,6 +400,9 @@ void Graphics::render()
 		if (!mpAudio->update())
 			mpEventMan->addEvent(new SongEndEvent(), 1);
 
+		//mpAudio->updateRecord();
+		//mpAudio->updateRecord2();
+
 		sendUniforms(pUni);
 
 		mpShaderMan->use();
@@ -407,7 +410,6 @@ void Graphics::render()
 		glBindTexture(GL_TEXTURE_2D, GL_TEXTURE0);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(mpWindow);
@@ -449,7 +451,6 @@ void Graphics::sendUniforms(Uniforms *pUni)
 
 	pUni->mDFreq = pUni->mCurFreq - pUni->mLastFreq;
 	pUni->mDTime = pUni->mCurTime - pUni->mLastTime;
-
 
 	// resolution, current frequency and current time will always be sent to all shaders
 	mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)pUni->mResWidth / 2.0, (float)pUni->mResHeight / 2.0));

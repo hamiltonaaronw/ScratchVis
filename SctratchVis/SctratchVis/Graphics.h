@@ -10,6 +10,7 @@
 
 #include "ShaderManager.h"
 #include "Audio/Audio.h"
+#include "Recording.h"
 
 class Audio;
 class EventManager;
@@ -87,6 +88,7 @@ private:
 	// variables
 	GLFWwindow			*mpWindow;
 	Audio				*mpAudio;
+	Recording			*mpRecording;
 	ShaderManager		*mpShaderMan;
 	EventManager		*mpEventMan;
 	

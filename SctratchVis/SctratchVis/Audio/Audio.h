@@ -15,6 +15,23 @@
 #include <vector>
 #include <time.h>
 
+static const int MAX_DRIVERS = 16;
+static const int MAX_DRIVERS_IN_VIEW = 3;
+
+struct RECORD_STATE
+{
+	FMOD::Sound* sound;
+	FMOD::Channel* channel;
+};
+
+//FMOD_RESULT F_CALLBACK SystemCallback2(FMOD_SYSTEM* /*system*/, FMOD_SYSTEM_CALLBACK_TYPE /*type*/, void*, void*, void* userData)
+//{
+//	int* recordListChangedCount = (int*)userData;
+//	*recordListChangedCount = *recordListChangedCount + 1;
+//
+//	return FMOD_OK;
+//}
+
 struct Song
 {
 	FMOD::Sound *mSound;
@@ -28,6 +45,9 @@ struct Song
 	{}
 };
 
+#define LATENCY_MS		(1)
+#define DRIFT_MS		(1)
+#define DEVICE_INDEX	(0)
 
 class Audio
 {
@@ -44,6 +64,7 @@ private:
 	FMOD::Channel				*mpChannel;
 	FMOD::DSP					*mpDSP;
 	FMOD::System				*mpSystem;
+	FMOD::Sound					*mpSound;
 
 	std::vector<Song*>			mSongs;
 
@@ -53,6 +74,22 @@ private:
 
 	const int SPEC_SIZE = 256;
 	int mCurSong;
+
+	unsigned int mSamplesRecorded = 0;
+	unsigned int mSamplesPlayed = 0;
+	void* mExtraDriverData;
+	int mNativeRate;
+	int mNativeChannels;
+	unsigned int mDriftThreshold;
+	unsigned int mDesiredLatency;
+	unsigned int mAdjustedLatency;
+	int mActualLatency;
+	FMOD_CREATESOUNDEXINFO mExinfo;
+	unsigned int mSoundLength;
+	RECORD_STATE record[MAX_DRIVERS] = {};
+	int mNumConnectedDrivers;
+	int mCursor;
+	int mScroll;
 
 	float mFreq;
 	float mSpectrum[256];
@@ -78,6 +115,8 @@ public:
 	void toggleSong(int prevNext);
 	void unloadAudio();
 	bool update();
+	void updateRecord();
+	void updateRecord2();
 
 	// getters/setters
 	float getFreq() { return mFreq; };
