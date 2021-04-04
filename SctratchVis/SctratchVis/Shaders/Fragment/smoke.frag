@@ -60,29 +60,88 @@ mat2 rot(float a)
 	);
 }
 
-float box(vec3 p, vec3 b)
+float RAYS = 54.0;
+
+float r21(vec2 v)
 {
-	vec3 d = abs(p) - b;
-	return length(max(d, 0.0));
+	float a = abs(sin(v.x * 1.1));
+	float b = abs(cos(v.y * 104.7));
+	return (a * b);
 }
 
-float ifsBox(vec3 p)
+float distLine(vec2 p, vec2 a, vec2 b)
 {
-	for (int i = 0; i < 6; i++)
-	{
-		p = abs(p) - 1.0;
-		p.xz *= rot(0.7);
-		p.xy *= rot(0.8);
-	}
+	vec2 ap = p - a;
+	vec2 ab = b - a;
+	float lShadow = dot(ap, ab);
+	float lab = dot(ab, ab);
+	float t = clamp(lShadow / lab, 0.0, 1.0);
+	vec2 sp = ap - ab * t;
 
-	return box(p, vec3(0.0, 1.0, 0.3));
+	return length(sp);
 }
 
-float map(vec3 p)
+float getDist(vec2 v, vec2 p)
 {
-	float c = 8.0;
-	p.z = mod(p.z, c) - c * 0.1;
-	return ifsBox(p);
+	vec2 orig = vec2(0.0);
+	float d = distLine(v, orig, p);
+	float w = 0.0f;
+	float wz = 0.01;
+	float c = smoothstep(w / RAYS, w / RAYS + wz, d);
+
+	return c;
+}
+
+vec2 getRayPoint(float num, float len)
+{
+	float theta = num / RAYS * TAU;
+	float x = cos(theta) * len;
+	float y = sin(theta) * len;
+	vec2 p = vec2(x, y);
+	return p;
+}
+
+float getRayNumber(vec2 v)
+{
+	float theta = (atan(v.y, v.x) / TAU);
+	float ray = theta * RAYS;
+	return ray;
+}
+
+float getRayWheel(vec2 v, float freqOffset, float rLen, float rotate, float f)
+{
+	v *= rot(rotate);
+	float ray = getRayNumber(v);
+	float rayCenter = floor(ray);
+	float freq = rayCenter + RAYS / 2.0;
+	if (freq < 0.1)
+		freq = RAYS;
+	freq += freqOffset;
+	float fft = rLen * f;
+
+	vec2 p = getRayPoint(rayCenter, fft);
+	float d = (1.0 - getDist(v, p));
+	float pSize = 0.99;
+	float pc = smoothstep(pSize, 1.0, 1.0 - length(v - p));
+	float pcBlink = 0.5 + 0.5 * sin(uTime * 20.0 + rayCenter);
+	pc *= pcBlink;
+
+	rayCenter = ceil(ray);
+	freq = rayCenter + RAYS / 2.0;
+	if (freq < 0.1)
+		freq = RAYS;
+	freq += freqOffset;
+	fft = rLen * (f * freq);
+	p = getRayPoint(rayCenter, fft);
+	d += (1.0 - getDist(v, p));
+	float c = d * length(v);
+	if ((RAYS / 2.0 - rayCenter) < 0.1)
+		rayCenter = -rayCenter;
+	pcBlink = 0.5 + 0.5 * sin(uTime * 20.0 + rayCenter);
+	pc += smoothstep(pSize, 1.0, 1.0 - length(v - p)) * pcBlink;
+	c *= r21(v);
+
+	return 10.0 * c + 25.0 * pc;
 }
 
 vec3 hsv(float h, float s, float v)
@@ -91,145 +150,43 @@ vec3 hsv(float h, float s, float v)
 	return ret;
 }
 
-vec3 col2(vec2 p)
-{
-	vec3 ret;
-
-	float f = (abs(uFreq) + abs(uLastFreq)) * 0.5;
-	float ff = fract(f * 100.0);
-	float lif = lanczosInterp(2, f);
-	float liff = lanczosInterp(2, ff);
-
-	float fd = max(f, lif) / min(f, lif);
-	fd = mod(fd * 10.0, 1.0);
-	float ffd = max(ff, liff) / min(ff, liff);
-	ffd = clamp(fd, min(f, 0.1), mod(fd, 1.0));
-
-	p *= rot(uTime + ffd * f);
-
-	vec3 cPos = vec3(2.5 * sin(0.5 * uTime), 0.5 * cos(1.3 * uTime), -20.0 * uTime);
-	vec3 cDir = vec3(0.0, 0.0, -1.0);
-	vec3 cUp = vec3(0.0, 1.0, 0.0);
-	vec3 cSide = cross(cDir, cUp);
-
-	vec3 ray = normalize(cSide * p.x + cUp * p.y + cDir + ffd);
-
-	float t = 0.0;
-	float acc = 0.0;
-	for (int i = 0; i < 150; i++)
-	{
-		vec3 pos = cPos + ray * t * ffd / f + lif;
-		float dist = map(pos + lif);
-
-		dist = max(abs(dist), 0.02);
-		float a = exp(-dist * 3.0) / (ffd / 0.25);
-
-		if (mod(pos.z - 60.0 * uTime, 50.0) <7.0)
-			a *= 5.0;
-
-		acc += a;
-
-		t += dist * 0.5;
-
-		if (t > 100.0)
-			break;
-	}
-
-	vec3 c = hsv(
-		fract(ff),
-		0.4 / liff,
-		acc * 0.001 + ffd
-		);
-
-	ret = uFreq > 0.0 ? c : vec3(0.0);
-
-	return ret;
-}
-
-vec4 capsule(vec4 color, vec4 bg, vec4 region, vec2 p)
-{
-	if (p.x > (region.x - region.z) && p.x < (region.x + region.z) &&
-		p.y > (region.y - region.w) && p.y < (region.y + region.w) ||
-		distance(p, region.xy - vec2(0.0, region.w)) < region.z ||
-		distance(p, region.xy + vec2(0.0, region.w)) < region.z)
-		return color;
-	return bg;
-}
-
-vec4 bar(vec4 color, vec4 bg, vec2 pos, vec2 dim, vec2 p)
-{
-	return capsule(
-		color, bg, 
-		vec4(
-			pos.x, 
-			pos.y + dim.y / 2.0,
-			dim.x / 2.0, 
-			dim.y / 2.0),
-		p);
-}
-
-vec2 rotate(vec2 point, vec2 center, float theta)
-{
-	float s = sin(radians(theta));
-	float c = cos(radians(theta));
-
-	point.x -= center.x;
-	point.y -= center.y;
-
-	float x = point.x * c - point.y * s;
-	float y = point.x * s + point.y * c;
-
-	point.x = x + center.x;
-	point.y = y + center.y;
-
-	return point;
-}
-
-vec4 rays(vec4 color, vec4 bg, vec2 pos, float rad, float rays, float rayLen, vec2 p)
-{
-	float inside = (1.0 - rayLen) * rad;
-	float outside = rad - inside;
-	float circle = TAU * inside;
-
-	for (int i = 0; float(i) < rays; i++)
-	{
-		float len = outside * ((uFreq * i) / rays) * cos(fract(uSpectrum[i] * 10.0) + mod(i, uFreq));
-		bg = bar(color, bg, vec2(pos.x, pos.y + inside),
-			vec2(circle / (rays * 2.0), len), rotate(p, pos, 360.0 / rays * float(i + uFreq)));
-	}
-
-	return bg;
-}
-
 vec3 col(vec2 p)
 {
 	vec3 ret;
+	vec3 c = vec3(0.0);
 
-	float aspect = uRes.x / uRes.y;
-	vec2 q = gl_FragCoord.xy / uRes.xy - 0.5;
-	q.x *= aspect;
-	vec4 c = mix(
-		vec4(cos(uSpectrum[int(floor(mod(fract(uFreq * 100.0) * 10.0, 256.0)))]), 1.0, 0.8 / uFreq, 1.0),
-		vec4(uFreq, 0.3, 0.25, 1.0),
-		distance(vec2(aspect/ 2.0, 0.5), q));
+	p.yx *= rot(uTime) * 2.5;
+	p *= cos(uTime) + (log2(sinc(uFreq)) * 100.0);
 
-	const float RAYS = 256.0;
-	float rad = 0.25 + sinc(uFreq + 0.125);
-	float rayLen = 0.3;
+	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
+	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 
-	c = rays(
-		vec4(1.0),
-		c,
-		vec2(aspect / 2.0, 1.0 / 2.0),
-		rad,
-		RAYS,
-		rayLen,
-		q);
+	p *= rot(-uTime * 0.1);
+	c = 0.3 + 0.3 * vec3(sin(uTime * 0.5), sin(uTime * 0.4), sin(uTime * 0.3));
+	float cf = getRayWheel(p / log2(f), 0.0, 1.0 + ff, 0.0, ff);
 
-	ret = c.xyz;
-	//ret = vec3(1.0, 0.0, 0.0);
-	//ret = vec3(0.0, 1.0, 0.0);
-	//ret = vec3(0.0, 0.0, 1.0);
+	float rotation = -uTime * 0.1;
+	cf += 1.4 * getRayWheel(p * log2(f), 2.0 * RAYS, atan(ff, uLastFreq), rotation, f);
+
+	rotation = -uTime * 0.2;
+	cf += 1.4 * getRayWheel(p, RAYS, 0.75 * log2(f), rotation / f, atan(f, ff));
+	c *= cf;
+
+	float d = 1.0 - length(p);
+	vec3 dCol = vec3(0.5, 0.5, 0.1);
+	c += d * dCol;
+
+	d = smoothstep(0.8, 1.0, 1.0 - length(p * log2(f)));
+	dCol = vec3(0.5 + f);
+	c += d * dCol;
+
+	//c = vec3(1.0, 0.0, 0.0);
+	//c = vec3(0.0, 1.0, 0.0);
+	//c = vec3(0.0, 0.0, 1.0);
+
+	//c *= hsv(c.b, c.r, c.g) + 0.25 + sin(uTime);
+
+	ret = uFreq > 0.0009 ? c : vec3(0.0);
 
 	return ret;
 }
@@ -237,8 +194,8 @@ vec3 col(vec2 p)
 void main()
 {
 	vec4 ret;
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
-	
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 0.25;
+
 	ret = vec4(col(uv), 1.0);
 
 	retColor = ret;

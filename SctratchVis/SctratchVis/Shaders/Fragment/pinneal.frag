@@ -32,18 +32,55 @@ mat2 rot(float a)
 	);
 }
 
-vec3 zFunc(vec2 v, float f)
+vec2 pmod(vec2 p, float r)
 {
-	float x = v.x * 32.0;
-	float y = -v.y * 32.0;
+	float a = atan(p.x, p.y) + PI / r;
+	float n = TAU / r;
+	a = floor(a / n) * n;
 
-	float t = atan( f * x, uTime * y);
+	return p * rot(-a);
+}
 
-	float d = sqrt(x * x + y * y + (f / f));
-	float g = sin(d - ((f /f) + t) * 9.0) / d * (20.0 + (fract(f * 10.0) * 10.0));
-	float z = g + g;
+float box(vec3 p, vec3 b)
+{
+	vec3 d = abs(p) - b;
+	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
 
-	return vec3(z - 0.5, 0.2 - z, 1.0 - z);
+int _max = 5;
+
+float ifsBox(vec3 p)
+{
+	for (int i = 0; i < _max; i++)
+	{
+		p = abs(p) - 1.0;
+		p.xy *= rot(uTime * 0.3);
+		p.xz *= rot(uTime * 0.1);
+	}
+	p.xz *= rot(uTime);
+
+	return box(p, vec3(0.4, 0.8, 0.3));
+}
+
+float map(vec3 p, vec3 cPos)
+{
+	vec3 p1 = p;
+
+	p1.x = mod(p1.x - 5.0, 10.0) - 5.0;
+	p1.y = mod(p1.y - 5.0, 10.0) - 5.0;
+	p1.z = mod(p1.z, 16.0) - 8.0;
+	p1.xy = pmod(p1.xy, 5.0);
+
+	float x;
+	//x = 0.5;
+	x = mod(uFreq, 0.5);
+
+	return ifsBox(p1 + sin(atan(uFreq)) * x);
+}
+
+vec3 hsv(float h, float s, float v)
+{
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 }
 
 vec3 col(vec2 p)
@@ -51,38 +88,63 @@ vec3 col(vec2 p)
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	p *= rot(uTime * 3.0);
-
 	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
 	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 
-	float d = sin(uTime / 2.0);
-	d *= d;
-	d *= 0.3;
+	p *= sin(uTime - (log(uFreq)) * (1.0 + mod(uFreq, 0.5))) + ff;
 
-	float  x = 0.0;
+	vec3 cPos = vec3(0.0, 0.0, -3.0 * uTime);
+	vec3 cDir = normalize(vec3(0.0, 0.0, 1.0));
+	vec3 cUp = vec3(sin(uTime), 1.0, 0.0);
+	vec3 cSide = cross(cDir, cUp);
 
-	vec2 q = vec2(f, ff);
-	q *= -rot(uTime);
-	float q2 = length(q) / uFreq;
+	p.yx *= rot(uTime);
+	p.xy *= -rot(uTime);
 
-	x = mod(q2, uFreq);
-	x *= 0.00075;
+	vec3 ray = normalize(cSide * p.x + cUp * p.y + cDir);
 
-	vec3 c1 = zFunc(p - vec2(d, x), ff);
-	vec3 c2 = zFunc(p - vec2(-d, x), ff);
-	vec3 c3 = zFunc(p - vec2(x, d), ff);
-	vec3 c4 = zFunc(p - vec2(x, -d), ff);
-	vec3 c5 = zFunc(p - vec2(x, x), ff);
+	// phantom mode
+	float acc = 0.0;
+	float acc2 = 0.0;
+	float t = 0.0;
+	for (int i = 0; i < 99; i++)
+	{
+		vec3 q = cPos + ray * t;
+		float dist = map(q, cPos);
+		dist = max(abs(dist), 0.02);
+		float a = exp(-dist * 3.0);
+		if (mod(length(q) + 24.0 * uTime + f + ff, 30.0 - uFreq) < 3.0)
+		{
+			a *= 2.0;
+			acc2 += a;
+		}
+		acc += a;
+		t += dist * 0.5;
+	}
 
-	c = c1 + c2 + c3 + c4 + c5;
-	c *= q2;
+	float r = acc * 0.01 + f; 
+	float g = acc * 0.011 + acc2 * 0.002 / f;
+	float b = acc * 0.012 + acc2 * 0.005 / mod(max(r, g), min(r, g));
 
-	//c = vec3(1.0, 0.0, 0.0);
-	//c = vec3(0.0, 1.0, 0.0);
-	//c = vec3(0.0, 0.0, 1.0);
+	r *= mod(f, sin(uTime) + ff);// * 0.5;
+	//g *= log(f * atan(r) * log(uTime));
+	b += g;
 
-	ret = uFreq > 0.0009 ?  c : vec3(0.0);
+	r *= atan(f, log(f) - b);
+	g *= sin(r) * length(vec2(r, f));
+	g *= 0.5;
+	b -= length(vec3(r / g, g / r, log(f) * f));
+	b *= 0.5;
+	b *= 0.5;
+
+	c = vec3(r, g, b) * 0.5;
+	vec3 h = hsv(r, g, b);
+	h *= 0.5;
+	h *= 0.5;
+	c += h;
+	//c *= 0.5;
+
+	ret = uFreq > 0.00009 ?  c : vec3(0.0);
 	return ret;
 }
 
@@ -95,7 +157,7 @@ void main()
 
 	//float h = hue(uv);
 	//ret = vec4(hueRGB(h), 1.0);
-	ret = vec4(col(uv), 1.0);
+	ret = vec4(col(uv), 0.5);
 
 	retColor = ret;
 }

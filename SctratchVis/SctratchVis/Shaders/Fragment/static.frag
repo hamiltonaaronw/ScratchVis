@@ -12,6 +12,10 @@ uniform float[256] uSpectrum;
 
 out vec4 retColor;
 
+#define LX 35.
+#define LY (50./3.)
+#define speed 3.
+
 float sinc(float x)
 {
 	return sin(x) / x;
@@ -22,109 +26,101 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-float hash(vec2 p)
+vec3 hsv(float h, float s, float v)
 {
-	vec3 q = vec3(p.xy, 1.0);
-	float ret = fract(sin(dot(q, vec3(37.1, 61.7, 12.4))) * 3758.5453123);
-
-	return ret;
-}
-
-float noise(vec2 p)
-{
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f *= f * (3.0 - 2.0 * f);
-
-	float ret = mix(mix(hash(i + vec2(0.0)), hash(i + vec2(1.0, 0.0)), f.x),
-					mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0)), f.x),
-					f.y);
-
-	return ret;
-}
-
-float fbm(vec2 p)
-{
-	float v = 0.0;
-	float a = 1.0;
-	float b = 0.75;
-	for (int i = 0; i < 4; i++)
-	{
-		v += noise(p * a) * b;
-		a *= 3.0;
-		b = b == 0.75 ? b - 0.25 : b * 0.5;
-	}
-
-	/*
-	v += noise(p * 1.0) * 0.75;
-	v += noise(p * 3.0) * 0.5;
-	v += noise(p * 9.0) * 0.25;
-	v += noise(p * 27.0) * 0.125;
-	*/
-
-	float ret = v;
-	return ret;
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 }
 
 mat2 rot(float a)
 {
-	mat2 ret = mat2(
+	return mat2(
 		cos(a), sin(a),
-		-sinc(a), cos(a)
+		-sin(a), cos(a)
 	);
+}
 
-	return ret;
+float rand(vec2 co)
+{
+	return fract(sin(dot(co, vec2(12, 78))) * 43758.5453);
+}
+
+float noise(vec2 v)
+{
+	const vec2 c = vec2(0, 6);
+	vec2 f = fract(v);
+	float xy0 = mix(rand(floor(v - c.ss)), rand(floor(v - c.ts)), f.x);
+	float xy1 = mix(rand(floor(v - c.st)), rand(floor(v * c.tt)), f.x);
+	return mix(xy0, xy1, f.y);
+}
+
+float map(vec3 p)
+{
+	vec2 v = p.xy * vec2(LX, LY);
+	v += 0.5;
+	v.y -= uTime * speed;
+	return p.z - (1.0 - cos(p.x * 5.0)) * 0.2 * noise(v);
+}
+
+float gridCol(vec2 p, float f)
+{
+	float c;
+	vec3 cam = vec3(0.0, 1.0, 0.1);
+	vec3 ray = normalize(vec3(p.x, -1.0, p.y));
+	float distOrig = 0.0;
+	float  t = uTime * speed;
+
+	vec3 q = cam;
+
+	for (int i = 0; i < 100; i++)
+	{
+		float surfDist = map(q + (f * 0.025));
+		if (surfDist > 2.0)
+			break;
+		if (surfDist < 0.001)
+		{
+			float w = 0.2 * distOrig;
+			float xl = smoothstep(w, 0.0, abs(fract(q.x * LX) - 0.5));
+			float yl = smoothstep(w * 2.0, 0.0, abs(fract(q.y * LY - t) - 0.5));
+			c = max(xl, yl);
+			break;
+		}
+		q += ray * surfDist;
+		distOrig += surfDist;
+	}
+	return c - (distOrig * 0.8);
 }
 
 vec3 col(vec2 p)
 {
+	vec3 ret;
+	vec3 c = vec3(0.0);
+
 	vec2 q = p;
-	q.x *= uRes.x / uRes.y;
-	q.y -= 0.25;
 
+	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
+	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
+	float t = uTime;
 
-	float f = (abs(uFreq) + abs(uLastFreq) + abs(uDeltaFreq)) / 2.0;
+	float r = 5.0 + ff;
+	float g = 0.5 * log(sinc(f));
+	float b = 0.7 / uFreq;
 
-	float ti = uTime * 0.1;
-	vec3 c = vec3(f * 0.1);
-	
-	for (int i = 0; i < int(floor(fract(uFreq) * 100.0)); ++i)
-	{
-		float j = float(i) * f / fbm(q * sin(uTime));
-		float a = 10.0 + (j * 500.0);
-		float pe = 2.0 + (j + 2.0);
-		float thicc = mix(0.9, 1.0, noise(q * j));
-		float t = abs(1.0 / (sin(q.y + fbm(q + ti * pe)) * a) * thicc);
+	//p *= rot(uTime);
 
-		float f_ind = mod(p.x / p.y, length(p)) / f;
-		int ind = int(floor(fract(f_ind * 10.0)));
+	c = vec3(r, g, b);
+	c *= gridCol(p, uFreq);
+	//c = mix(c * gridCol(p, f), c * (1.0 / gridCol(q, f)), sin(uTime) + ff);
 
-		c += t * vec3(
-			atan(0.5, f) * (p.x * sin(uFreq)) + f,
-			exp(0.95 * f) - exp(fract(uSpectrum[i * 10 * ind] * 10.0)),
-			fract(sinc(f * 10.0)) * (p.y * sin(uTime))
-			);
-
-
-/*
-		c += t * vec3(
-			f * atan(f, sinc(p.x)), 
-			fract(tanh(f)),
-			sin(uTime)
-		);
-		
-		*/
-
-	}
-
-	vec3 ret = uFreq == 0.0 ? vec3(0.0) : c;
-
-	return ret;// * 0.75;
+	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	ret = c;
+	return ret;
 }
 
 void main()
 {
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	vec2 uv;
+	//uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	uv = (gl_FragCoord.xy - 1.115 * uRes) / uRes.y;
 
 	vec4 ret;
 

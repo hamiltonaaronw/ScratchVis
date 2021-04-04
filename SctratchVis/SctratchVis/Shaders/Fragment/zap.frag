@@ -1,5 +1,7 @@
 #version 410
 
+#extension GL_OES_standard_derivatives : enable
+
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
@@ -29,45 +31,40 @@ mat2 rot(float a)
 	);
 }
 
-vec3 hsv2rgb(float h, float s, float v)
+vec3 hsv(float h, float s, float v)
 {
 	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 }
 
 float scale;
 
-float map(vec3 p, float f)
+float map(vec3 p, float x)
 {
-	float x = length(normalize(vec3(0.1, f, 1.0)));
-	p.z -= uTime * (-5.0 - x);//(-5.0 - sinc(uTime / (abs(uFreq - uLastFreq) * 2.5)));
-	p.xy *= rot(uTime * 0.3 + p.z * 0.5);
-	p.xy = abs(p.xy) - x;
-	p.xy += sin(uTime + p.z);// * mod(x, 0.4);
+	p.z -= uTime * -2.0;
+	p.xy = abs(p.xy) - 2.0;
 	if (p.x < p.y)
 		p.xy = p.yx;
+	p.z = mod(p.z, 1.0) - 2.0 + x;
+	p.xy *= rot(uTime + (mod(x, 0.5)));
 
-	p.z = mod(p.z, 8.0) - 4.0;
-
-	p.x -= (2.0 + x) + sinc(uTime + p.z * 0.4 + p.y * 0.6) * 0.5 + sinc(x);
+	p.x -= 2.0 * cos(uTime + p.z * 0.2 + p.y * 0.6 + x) * 0.88888888888;
 	p = abs(p);
-	float s = 2.0;
-	vec3 offset = p - abs(0.275 - x) * x;
+	float s = 2.0 + x;
+	vec3 offset = p * 1.1 * x;
 	
-	for (float i = 0.0; i < 6.0; i++)
+	for (float i = 0.0; i < 5.0; i++)
 	{
-		p = 1.0 - abs(p);
-		float r = -7.85 * clamp(0.3 * max(1.4 / dot(p, p), 1.0), 0.0, 1.0 + (f + f));
+		p = 1.0 - abs(p - 1.0);
+		float r = -7.5 * clamp(0.38 * max(1.6 / dot(p, p), 1.0), 0.0, 1.0);
 		s *= r;
-		p *= r;
+		p *= r ;
 		p += offset;
-		p.yz *= rot(uTime * r / f);
-		offset /= (2.2 + f);
 	}
 
 	s = abs(s);
 	scale = s;
-	float a = 100.0 * x;
-	p -= clamp(p, -a, a) / x;
+	float a = 100.0;
+	p -= clamp(p, -a, a);
 	return length(p) / s;
 }
 
@@ -90,7 +87,7 @@ vec3 col(vec2 p)
 	vec3 ret;
 	vec3 c;
 
-	p *= rot(uTime);
+	p *= rot(uTime * 2.0);
 
 	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0));
 	float maxF = max(f, uFreq);
@@ -98,22 +95,23 @@ vec3 col(vec2 p)
 	float ff = mod(
 		fract(abs(uFreq - uLastFreq) * 10.0), f
 	);
+	ff = fNorm(ff);
 
-	ff = fNorm(f);
-
-	vec3 rd = normalize(vec3(p, 1.0));
+	vec3 rd = normalize(vec3(p, 1));
 	vec3 q = vec3(0.0, 0.0, -3.0);
 
-	for (int i = 1; i < 100; i++)
+	for (int i = 1; i < 50; i++)
 	{
-		float d = map(q, ff) * 0.75;
+		float d = map(q,cos(uFreq) * sin(ff));
 		q += rd * d;
-		if (d < 0.001)
+		if (d < 0.01)
 		{
-			c = mix(vec3(1.0), cos(vec3(1.0, 18.0, 3.0) + log2(scale * scale * scale)) * 0.5 + 0.5, 0.5) * 12.5 / float(i);
-			break;
+			c = mix(vec3(1.0), cos(vec3(24, 6.0, 9) + log2(scale)) * 0.5 + 0.5, 0.5) * 12.0 / float(i);
 		}
 	}
+
+	c -= hsv(c.r, c.g, c.b);
+	c += 0.25;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
