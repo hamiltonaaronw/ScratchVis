@@ -31,93 +31,104 @@ mat2 rot(float a)
 	);
 }
 
-vec3 hsv(float h, float s, float v)
+float layer (vec2 v)
 {
-	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
-}
-
-float scale;
-
-float map(vec3 p, float x)
-{
-	p.z -= uTime * -2.0;
-	p.xy = abs(p.xy) - 2.0;
-	if (p.x < p.y)
-		p.xy = p.yx;
-	p.z = mod(p.z, 1.0) - 2.0 + x;
-	p.xy *= rot(uTime + (mod(x, 0.5)));
-
-	p.x -= 2.0 * cos(uTime + p.z * 0.2 + p.y * 0.6 + x) * 0.88888888888;
-	p = abs(p);
-	float s = 2.0 + x;
-	vec3 offset = p * 1.1 * x;
-	
-	for (float i = 0.0; i < 5.0; i++)
+	float s = 0.5;
+	for (int i = 0; i < 8; i++)
 	{
-		p = 1.0 - abs(p - 1.0);
-		float r = -7.5 * clamp(0.38 * max(1.6 / dot(p, p), 1.0), 0.0, 1.0);
-		s *= r;
-		p *= r ;
-		p += offset;
+		v = abs(v) - s;
+		v *= 1.25;
+		v = v.yx;
+
+		v *= rot(uTime * 0.1);
+		s *= 0.995;
 	}
 
-	s = abs(s);
-	scale = s;
-	float a = 100.0;
-	p -= clamp(p, -a, a);
-	return length(p) / s;
+	float d = abs(max(abs(v.x), abs(v.y)) - 0.3);
+
+	return 0.01 / d;
 }
 
-float fNorm(float x)
+vec3 rgb2hsv(vec3 c)
 {
-	if (x < 1.0 && x > 0.01)
-		return x;
-	while (x > 1.0 && x < 0.01)
-	{
-		if (x > 1.0)
-			x /= 10.0;
-		else if (x < 0.01)
-			x *= 10.0;
-	}
-	return x;
+	vec4 k = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	vec4 p = mix(vec4(c.bg, k.wz), vec4(c.gb, k.xy), step(c.b, c.g));
+	vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+	float d = q.x - min(q.w, q.y);
+	float e = 1.0e-10;
+
+	return vec3(
+		abs(q.z + (q.w - q.y) / (6.0 * d + e)),
+		d / (q.x + e),
+		q.x
+	);
 }
 
 vec3 col(vec2 p)
 {
 	vec3 ret;
-	vec3 c;
+	vec3 c = vec3(0.2, 0.3, 0.4);
 
-	p *= rot(uTime * 2.0);
+	//p *= rot(uTime * 0.1);
 
-	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0));
-	float maxF = max(f, uFreq);
-	float minF = min(f, uFreq);
-	float ff = mod(
-		fract(abs(uFreq - uLastFreq) * 10.0), f
-	);
-	ff = fNorm(ff);
+	float x = mod(fract(uFreq * 8.0) * 2.0, 1.0);
+	x = sinc(x);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 14.0);
+	float ft = sin(uTime * f) + f;
+	float t = fract(uTime / f);// uTime +smoothstep(min(ft, fs), min(f, fs), uLastFreq) * uFreq;
+	ft = abs(ft - t) * sinc(f);
+	ft += sinc(uTime * fs) - f;
+	ft *= mod(f, 0.25);
+	ft *= mod(f, 0.25);
+	ft += mod(fs, 0.25);
 
-	vec3 rd = normalize(vec3(p, 1));
-	vec3 q = vec3(0.0, 0.0, -3.0);
+	float s = 0.5;
 
-	for (int i = 1; i < 50; i++)
+	p *= rot((uTime + uFreq) * 0.1);
+
+	for (int i = 0; i < 4; i++)
 	{
-		float d = map(q,cos(uFreq) * sin(ff));
-		q += rd * d;
-		if (d < 0.01)
-		{
-			c = mix(vec3(1.0), cos(vec3(24, 6.0, 9) + log2(scale)) * 0.5 + 0.5, 0.5) * 12.0 / float(i);
-		}
+		p = abs(p) - s;
+		p *= 1.25;
+		p *= rot(ft * 0.1);
+		s *= 0.995;
 	}
 
-	c -= hsv(c.r, c.g, c.b);
-	c += 0.25;
+	p *= sin(ft) + (2.0 * uFreq);
+
+	p *= rot(ft * 0.1);
+
+	t -= step(max(t, ft), min(t, ft)) * uFreq;
+
+	for (float i = 0.0; i < 1.0; i += 0.3)
+	{
+		p *= rot(0.8);
+		float t = fract(i + ft * 0.1);
+		float s = smoothstep(1.0, 0.0, t);
+		float r = smoothstep(2.0, 0.1, t);
+		r *= smoothstep(0.0, 1.0, t);
+		c += layer(p * s) * r;
+	}
+
+	c *= vec3(
+		1.0 / f,
+		ft - abs(1.0 - fs) + 0.7,
+		t * c.r * uFreq + 0.3
+	);
+
+	c.r += sin(t) * 0.125;
+	c.g *= sinc(t) * c.r;
+	c.g += sin(t) / c.g;
+
+	c /= rgb2hsv(c * f) / 0.5;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	ret = uFreq > 0.009 ? c : vec3(0.0);
 
 	return ret;
 }
@@ -126,8 +137,10 @@ void main()
 {
 	vec4 ret;
 	vec2 uv;
-	
-	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	//uv = (gl_FragCoord.xy - 0.5 * uRes.xy) / uRes.y;
+	uv = (2.0 * gl_FragCoord.xy - uRes) / uRes.y * 2.0 - 2.0;
+	uv.x -= 1.5;
+	uv /= 5.0;
 
 	ret = vec4(col(uv), 1.0);
 	retColor = ret;

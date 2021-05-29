@@ -38,7 +38,8 @@ vec3 col(vec2 p)
 	float c = 0.0;
 
 	float t = uTime * sin(uFreq);
-	float f = abs(uFreq + uLastFreq * sinc(t)) * 0.5;
+	float x = mod(uFreq * 4.0, 1.0);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);//abs(uFreq + uLastFreq * sinc(t)) * 0.5;
 	float ff = fract(f * 10.0);
 	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
 	//float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
@@ -49,15 +50,20 @@ vec3 col(vec2 p)
 	t *= abs(sin(uTime) + ff);
 
 	c += sin(p.x * cos(t / 15.0) * 40.0 + (fract(uFreq * 100.0) * 10.0)) + cos(p.y * cos(t / 15.0) * 10.0);
-
 	c += sin(p.y * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
-
 	c += sin(p.x * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
 
     c *= 1.0 / fract(sinc(uTime / 10.0) * 100.0) * sinc(f);
     //c *= sinc(uTime / 10.0) * uFreq;
 
-	ret = vec3(c, c * cosc(c - uTime), sin(c) * c);
+	float r = c + f;
+	float g = c * cos(c - t);
+	float b = sinc(c) * c;
+	g *= sin(p.x + uFreq) / f;// + sin(uTime);
+	b += r;
+	r *= 2.0;
+
+	ret = vec3(r, g, b);
 
 	return ret;
 }

@@ -44,18 +44,32 @@ vec2 pmod(vec2 p, float r)
 float box(vec3 p, vec3 b)
 {
 	vec3 d = abs(p) - b;
-	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+	float x = 0.0;
+	// x += (uFreq + uLastFreq);
+	return min(max(d.x, max(d.y, d.z)), x) + length(max(d, 0.0));
 }
-
-int _max = 5;
 
 float ifsBox(vec3 p)
 {
-	for (int i = 0; i < _max; i++)
+	int max;
+
+	max = 5;
+	//max += int(floor(fract(uFreq * 100.0)));
+
+	float xx;
+	//xx = lenth(p.xz) * 0.3;
+	xx = 0.3;
+	float yy;
+	yy = length(p.yy) * 0.45;
+	yy *= 0.1;
+
+	//max = 5;
+
+	for (int i = 0; i < max; i++)
 	{
 		p = abs(p) - 1.0;
-		p.xy *= rot(uTime * 0.3);
-		p.xz *= rot(uTime * 0.1);
+		p.xy *= rot(uTime * xx);
+		p.xz *= rot(uTime * yy);
 	}
 	p.xz *= rot(uTime);
 
@@ -73,7 +87,7 @@ float map(vec3 p, vec3 cPos)
 
 	float x;
 	//x = 0.5;
-	x = mod(uFreq, 0.5);
+	x = mod(uFreq,length(p.yz));
 
 	return ifsBox(p1 + sin(atan(uFreq)) * x);
 }
@@ -92,6 +106,7 @@ vec3 col(vec2 p)
 	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 
 	p *= sin(uTime - (log(uFreq)) * (1.0 + mod(uFreq, 0.5))) + ff;
+	p /= 5.0;
 
 	vec3 cPos = vec3(0.0, 0.0, -3.0 * uTime);
 	vec3 cDir = normalize(vec3(0.0, 0.0, 1.0));
@@ -122,8 +137,8 @@ vec3 col(vec2 p)
 		t += dist * 0.5;
 	}
 
-	float r = acc * 0.01 + f; 
-	float g = acc * 0.011 + acc2 * 0.002 / f;
+	float r = acc * 0.01 + f;// + ((uRes.y + uRes.x) * 0.025); 
+	float g = acc * 0.011 + acc2 * 0.002 / f;// * (uRes.x * 0.0025);
 	float b = acc * 0.012 + acc2 * 0.005 / mod(max(r, g), min(r, g));
 
 	r *= mod(f, sin(uTime) + ff);// * 0.5;
@@ -142,9 +157,10 @@ vec3 col(vec2 p)
 	h *= 0.5;
 	h *= 0.5;
 	c += h;
-	//c *= 0.5;
+	c *= 0.43;
 
-	ret = uFreq > 0.00009 ?  c : vec3(0.0);
+
+	ret = uFreq > 0.00018 ?  c : vec3(0.0);
 	return ret;
 }
 
@@ -157,7 +173,7 @@ void main()
 
 	//float h = hue(uv);
 	//ret = vec4(hueRGB(h), 1.0);
-	ret = vec4(col(uv), 0.5);
+	ret = vec4(col(uv), 1.0);
 
 	retColor = ret;
 }

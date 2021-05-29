@@ -31,8 +31,8 @@ mat2 rot(float a)
 	float c = cos(a);
 	float s = sin(a);
 	mat2 ret = mat2(
-		c, s,
-		-s, c
+		c, -s,
+		s, c
 	);
 	return ret;
 }
@@ -43,45 +43,39 @@ vec3 hsv(float h, float s, float v)
 	return ret;
 }
 
-//vec2 mainSound( in int samp, float time )
-//{
-    // A 440 Hz wave that attenuates quickly overt time
-//    return vec2( sin(6.2831*440.0*time)*exp(-3.0*time) );
-//}
-
-uniform sampler2D backBuffer;
-
 vec3 col(vec2 p)
 {
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	float f1 = fract(uFreq * 10.0);
-	float f2 = fract(uFreq * 100.0);
+	p *= rot(uTime);
+	
+	float x = mod(uFreq * 4.0, 1.0);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	vec3 vf = vec3(
+		uSpectrum[32] / f,
+		uSpectrum[64] * f,
+		uSpectrum[128] * f
+	) + sin(uFreq);
 
-	float f = mod(max(f1, f2), min(f1, f2));
-	f = fract(sinc(abs(f - uFreq)) * 10.0);
-	float maxF = max(f, uFreq);
-	float minF = min(f, uFreq);
-	float ff = uFreq;
+	float seg = 7.0 + floor(fract(f * 100.0) * 10.0 / length(vf));
 
-	float waves = 8.0;
+	float t = sin(uTime * 0.2) * f;
+	float a = atan(p.x, p.y) / TAU * seg;
+	float d = length(p) - mix(3.0 * sin(3.0 * t + f), 0.5, cos(fract(a) - 0.5));
 
-	for (float i = 0; i < waves; i++)
-	{
-		vec2 q = p;
+	vec3 co = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);
+	co *= 1.0 - exp(-2.0 * abs(d));
+	co *= 0.8 + 0.2 * cos(120.0 * abs(d) + t * 10.0);
+	co = mix(co, vf, 1.0 - smoothstep(0.0, 0.02, abs(d)));
 
-		q.x += i * 0.04 + ff  * 0.3;
-		q.y += sin(q.x * 10. + uTime) * cos(q.x * 2.0) * ff * 0.2 * ((i + 1.0) / waves);
-		float intensity = abs(0.1 / q.y) * clamp(ff, 0.35, 2.0);
-		c += vec3(1.0 * intensity * (i / 5.0), 0.1 * intensity, 3.0 * intensity) * (3.0 / waves);
-	}
+	c = co;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	ret = uFreq > 0.01 ? c : vec3(0.0);
 
 	return ret;
 }
@@ -90,7 +84,7 @@ vec3 col(vec2 p)
 void main()
 {
 	//vec2 uv = gl_FragCoord.xy / uRes.xy / 2.0;
-	vec2 uv = (gl_FragCoord.xy - 0.75 * uRes.xy) / uRes.y / 2.0;
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) / 2.0;
 
 	vec4 ret = vec4(col(uv), 1.0);
 

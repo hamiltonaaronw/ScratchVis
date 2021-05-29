@@ -41,7 +41,7 @@ mat2 rot(float a)
 
 float rand(vec2 co)
 {
-	return fract(sin(dot(co, vec2(12, 78))) * 43758.5453);
+	return fract(sin(dot(co, vec2(12, 78))) * 43758.5453) + uFreq;
 }
 
 float noise(vec2 v)
@@ -64,7 +64,7 @@ float map(vec3 p)
 float gridCol(vec2 p, float f)
 {
 	float c;
-	vec3 cam = vec3(0.0, 1.0, 0.1);
+	vec3 cam = vec3(0.0, 0.0, 0.1);
 	vec3 ray = normalize(vec3(p.x, -1.0, p.y));
 	float distOrig = 0.0;
 	float  t = uTime * speed;
@@ -87,7 +87,7 @@ float gridCol(vec2 p, float f)
 		q += ray * surfDist;
 		distOrig += surfDist;
 	}
-	return c - (distOrig * 0.8);
+	return c - (distOrig * (0.4 + sin(uFreq)));
 }
 
 vec3 col(vec2 p)
@@ -97,35 +97,39 @@ vec3 col(vec2 p)
 
 	vec2 q = p;
 
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
+	float x = mod(fract(uFreq * 8.0) * 2.0, 1.0);
+	x = sinc(x);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
 	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
-	float t = uTime;
+	float t = cos(uTime) + abs(uFreq - f);
 
-	float r = 5.0 + ff;
-	float g = 0.5 * log(sinc(f));
-	float b = 0.7 / uFreq;
+	p *= rot((cos(f * 0.3) * 0.3) * sin(uTime * 0.3));
 
-	//p *= rot(uTime);
+	// something + mabs(uFreq - f)
+
+	float r = 5.0 + (sinc(ff * t));
+	float g = 0.5 * log(sin(f)) * r;
+	float b = (0.7 / t) * (length(p) * mod(ff, abs(p.x - gl_FragCoord.x)) * t);
 
 	c = vec3(r, g, b);
+	c *= gridCol(p, f);
 	c *= gridCol(p, uFreq);
-	//c = mix(c * gridCol(p, f), c * (1.0 / gridCol(q, f)), sin(uTime) + ff);
+	//c -= hsv(c.g, c.b, c.r) * f;
 
-	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	vec3 c2 = mix(c * gridCol(p, f), c * (1.0 / gridCol(q, f)), sin(uTime) + ff);
+	c = f >= 0.7 ? c2 : c;
+
+	ret = uFreq > 0.045 ? c : vec3(0.0);
 	ret = c;
 	return ret;
 }
 
 void main()
 {
-	vec2 uv;
-	//uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
-	uv = (gl_FragCoord.xy - 1.115 * uRes) / uRes.y;
+	vec2 uv = (gl_FragCoord.xy - 1.115 * uRes) / uRes.y;
 
 	vec4 ret;
 
-	//ret = vec4(1.0);
 	ret = vec4(col(uv), 1.0);
-	ret *= vec4(col(vec2(uv.x, uv.y + 1.5)), 1.0);
 	retColor = ret;
 }
