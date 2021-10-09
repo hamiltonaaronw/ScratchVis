@@ -181,9 +181,9 @@ void Graphics::initGraphics()
 	switch (mViewMode)
 	{
 	case ViewMode::VIEW_DEBUG:
-		msWidth = 800;
-		msHeight = 600;
-		mpWindow = glfwCreateWindow(800, 600, "Don't do drugz", NULL, NULL);
+		msWidth = 576;
+		msHeight = 1024;
+		mpWindow = glfwCreateWindow(576, 1024, "Don't do drugz", NULL, NULL);
 
 		break;
 

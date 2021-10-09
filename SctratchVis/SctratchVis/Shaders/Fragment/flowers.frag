@@ -2,8 +2,6 @@
 
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
-#define MIN_DIST 0.0001
-#define MAX_DIST 1-+75.0
 
 uniform float uFreq;
 uniform float uLastFreq;
@@ -23,168 +21,225 @@ mat2 rot(float a)
 	);
 }
 
-vec2 hash22(vec2 p)
-{
-	float n = sin(dot(p, vec2(31.0, 289.0)));
-	p = fract(vec2(362144.0, 42768.0) * n);
-
-	vec2 ret;
-
-	ret = sin(p * 7.2831853 + uTime) * 0.55 + 0.5;
-
-	return ret;
-}
-
-float voronoi(vec2 p)
-{
-	vec2 g = floor(p);
-	vec2 o;
-	vec3 d = vec3(2.0);
-
-	for (int y = -2; y <= 2; y++)
-		for (int x = -2; x <= 2; x++)
-		{
-			o = vec2(x, y);
-			o += hash22(g + o) - p;
-			d.z = dot(o, o);
-
-			d.y = max(d.x, min(d.y, d.z));
-			d.x = min(d.x, d.z);
-		}
-
-	float ret;
-
-	ret = max(d.y / 0.6 - d.x * 0.5, 0.0) / 2.2;
-
-	return ret;
-}
-
-float rnd(vec3 p) 
-{
-    return fract(sin(dot(p, vec3(12.345, 67.89, 412.12))) * 42123.45) * 2.0 - 1.0;
-}
-
-float perlin(vec3 p)
-{
-	vec3 u = floor(p);
-	vec3 v = fract(p);
-	vec3 s = smoothstep(0.0, 1.0, v);
-
-	float a = rnd(u),
-		  b = rnd(u + vec3(1.0, 0.0, 0.0)),
-		  c = rnd(u + vec3(0.0, 1.0, 0.0)),
-		  d = rnd(u + vec3(1.0, 1.0, 0.0)),
-		  e = rnd(u + vec3(0.0, 0.0, 1.0)),
-		  f = rnd(u + vec3(1.0, 0.0, 1.0)),
-		  g = rnd(u + vec3(0.0, 1.0, 1.0)),
-		  h = rnd(u + vec3(1.0, 1.0, 1.0));
-
-	float ret = mix(mix(mix(a, b, s.x), mix(c, d, s.x), s.y),
-					mix(mix(e, f, s.x), mix(g, h, s.x), s.y),
-					s.z);
-	return ret;
-}
-
-float hd(vec2 p)
-{
-	return max(dot(abs(p), normalize(vec2(1.0, 1.73))), abs(p.x));
-}
-
-vec4 hx(vec2 p)
-{
-	vec2 r = vec2(1.0, 1.73);
-	vec2 hr = r * 0.5;
-	vec2 ga = mod(p, r) - hr;
-	vec2 gb = mod(p - hr, r) - hr;
-	vec2 g = dot(ga, ga) < dot(gb, gb) ? ga : gb;
-
-	vec4 ret;
-
-	ret = vec4(atan(g.x, g.y), 0.5 - hd(g), (p - g));
-
-	return ret;
-}
-
 vec3 hsv2rgb(float h, float s, float v)
 {
 	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 }
 
+float t = 0.0;
+vec3 glw;
+
+// cube
+float bx(vec3 p, vec3 s)
+{
+	vec3 q = abs(p) - s;
+	return min(max(q.x, max(q.y, q.z)), 0.0) + length(max(q, 0.0));
+}
+
+// cylinder
+float cyl(vec3 p, float r)
+{
+	return length(p.xz) - r;
+}
+
+// torus
+float tor(vec3 p, vec2 v)
+{
+	vec2 q = vec2(length(p.xz) - v.x, p.y);
+	return length(q) - v.y + uFreq;
+}
+
+// crystal
+float crys(vec3 p, vec3 q)
+{
+	float f = cos((sin(cos(uFreq)) - sin(uFreq) + uFreq * uFreq));
+	float fs = mod(uTime, 1.0 - f);
+	float x = mod(uFreq * 4.0, 1.0);
+	float ff = cos((sin(cos(x)) - sin(x) - x) + x * x);
+
+	for (float i = 0.0; i < 4.0; i++)
+	{
+		q.xy *= rot(i - 2.0 + 0.1);
+		q.xy = abs(q.xy) - i * f;
+		q.xy = abs(q.xy) - (2.1 - f);
+		q.yz *= rot(smoothstep(min(ff, i), max(ff, i) + uFreq, sinc(TAU)) * 0.25);
+	}
+
+	float b = bx(q * 0.9, vec3(2.0)) - 0.03;
+	b = mix(b, bx(p, vec3(1.0)), 0.5);
+
+	float g = length(p);
+	glw += 0.01 / (0.01 + g * g) * 
+		mix(vec3(1.0, 0.0, 0.2), vec3(0.2, 0.5, 1.0), sin(t / 4.0) * 0.5 + 0.5); // glow
+	return b;
+}
+
+// map
+vec2 mp(vec3 p)
+{
+	float i = clamp(10.0 - t, 0.0, 10.0); // smooth morph
+	float z = (sin(t / 3.0) * 0.5 + 0.5) * 1.5; // slow z warping
+	float ta = 1.0 - pow(1.0 - mod(t, 3.0) * 0.3, 2.0);
+
+	vec3 co = mix(vec3(1.0, 0.0, 0.2), vec3(0.2, 0.5, 1.0), sin(-t / 4) * 0.5 + uFreq);
+	vec3 q = p - vec3(0.0, 0.0, i + z);
+	vec3 r = p;
+
+	q.xy *= rot(-t / 3.0);
+	r.xy *= rot(t * 0.1);
+
+	vec2 crystal = vec2(crys(r, q), 1.0);
+	q = p;
+	q.yz *= rot(1.57);
+
+	float torus = tor(q - vec3(0.0, 12.0 * ta, 0.0), vec2(16.0 * ta, 0.01));
+	crystal.x = min(crystal.x, torus);
+	glw += mod(uFreq * 5.0, 0.01) / (0.01 + torus) * co;
+	q = p - vec3(0.0, 9.0, 12.0);
+	q.x = abs(q.x) - 11.0;
+	q.x *= 0.3;
+
+	float br = bx(q, vec3(0.5, 30.0, 50.0)) - 0.2; // background walls
+	q.z -= mod(t * 5.0, 20.0) + 5.0;
+	q.z = abs(q.z) - 10.0;
+	q.z = abs(q.z) - 10.0;
+
+	float g = bx(q, vec3(0.8, 30.0, 2.0)); // bars glow amount
+	br = min(br, g);
+
+	vec3 coInv = vec3(1.0, 1.0, 1.0) - co;
+	glw += 0.01 / (0.01 + g) * coInv * 0.2;
+	r = p;
+	r.y = abs(r.y) - 5.0; // mirror position on Y axis
+
+	vec2 flr = vec2(bx(r - vec3(0.0, 4.0, 0.0), vec3(50.0, 1.0, 100.0)), 2.0); // floor/roof
+	flr.x = min(flr.x, br); // add side walls to raymarch
+
+	return flr.x < crystal.x ? flr : crystal;
+}
+
+// raymarching with distance field
+vec2 tr(vec3 ro, vec3 rd, float f)
+{
+	vec2 d = vec2(0.0); // distance
+
+	for (int i = 0; i < 256; i++)
+	{
+		vec3 p = ro + rd * d.x;
+		vec2 s = mp(p);
+		s.x *= f;
+		d.x += s.x;
+		d.y = s.y;
+
+		// break if something is reached/went too far
+		if (d.x > 64.0 || s.x < 0.001)
+			break;
+	}
+
+	if (d.x > 64.0)
+		d.y = 0.0;
+	
+	return d;
+}
+
+// normalize
+vec3 nm(vec3 p)
+{
+	vec2 e = vec2(0.001, 0.0);
+	return normalize(
+		mp(p).x - vec3(
+			mp(p - e.xyy).x,
+			mp(p - e.yxy).x,
+			mp(p - e.yyx).x
+		)
+	);
+}
+
+vec4 px(vec4 h, vec3 rd, vec3 n)
+{
+	vec4 bg = vec4(0.1, 0.1, 0.1, 1.0); // background
+
+	if (h.a == 0.0)
+		return bg;
+
+	vec4 a = h.a == 1.0 ? vec4(0.0, 1.0, 1.0, 0.2) : vec4(0.1, 0.1, 0.15, 1.0);
+
+	float d = dot(n, -rd);
+	float dd = max(d, 0.0);
+
+	float f = pow(1.0 - d, 4.0);
+	float s = (pow(abs(dot(reflect(rd, n), -rd)), 40.0) * 10.0);
+
+	if (h.a > 1.0)
+		s *= 0.025;
+
+	float ao = clamp(1.0 - mp(h.xyz + n * 0.1).x * 14.0, 0.0, 1.0) * 0.9;
+
+	return vec4(mix(a.rgb * (dd - ao) + s, bg.rgb, f), a.a);
+}
+
 vec3 col(vec2 p)
 {
 	vec3 ret;
+	vec3 c = vec3(0.0);
 
-	vec2 u;
-	//u = (2.0 * gl_FragCoord.xy - uRes.xy) / max(uRes.x, uRes.y);
-	u = p;
+	p *= rot(uTime * 0.5);
 
-	float f = mod(fract(uFreq * 100.0), fract(uFreq * 10.0)) * sinc(uTime / sin(uFreq));
-	float maxF = max(f, uFreq);
-	float minF = min(f, uFreq);
+	t = uTime * 4.0;
 
-	vec3 lp = vec3(0.0);
-	vec3 ro = vec3(-3.21, 13.0, -12.0);
+	float ts = 1.0;
+	float io = 1.14;
 
-	vec3 cf = normalize(lp - ro);
-	vec3 cp = vec3(0.0, 1.0, 0.0);
-	vec3 cr = normalize(cross(cp, cf));
-	vec3 cu = normalize(cross(cf, cr));
-	vec3 _c = ro + cf * 0.95;
-	vec3 i = _c + u.x * cr + u.y * cu;
-	vec3 rd = i - ro;
-	vec3 _C = vec3(0.0);
-	vec3 _p = vec3(0.0);
-	vec4 _t = vec4(0.0);
-	vec4 d = vec4(0.0);
+	float tm = mod(uTime, PI / 10.0);
+	float f = smoothstep(min(uFreq, tm), max(uFreq, tm) * uFreq, sinc(TAU) + uLastFreq);
+	f += sin(uTime / TAU);
 
-	// bumping
-	float t = sin(uTime) / voronoi(vec2(mod(maxF, minF)));
-	t *= 0.5;
+	vec3 ro = vec3(0.0, 0.0, -7.5 - f); // cam pos
+	vec3 rd = normalize(vec3(p, 1.0)); // ray dir
+	vec3 oro = ro, 
+		 ord = rd, 
+		 cc = vec3(0.0);
+	vec3 cp, cn, rc;
 
-	float pr;
-	for (int i = 0; i < 36; i++)
+
+	for (int i = 0; i < 4; i++)
 	{
-		_p = ro + d.x * rd;
+		vec2 fh = tr(oro, ord, 1.0); // find front of object
+		cp = oro + ord * fh.x;
+		cn = nm(cp); // position and normal of hit
 
-		_p.xz * mat2(cos(uTime * 0.16 + vec4(0.0, 11.0, 33.0, 0.0)));
-		vec4 h = hx(_p.xz * 0.25) * 1.0;
-		float _pr = perlin(vec3(h.zw * 0.4, t * 1.25)) * 1.75;
-		float hMap = 0.12 * (_p.y - _pr) / 1.0;
-		pr = _pr;
-		_t = vec4(hMap, pr, h.z, h.y);
+		vec4 co = px(vec4(cp, fh.y), ord, cn); // pixel color
 
-		d.yzw = _t.yzw;
-
-		if (_t.x < 0.005 * d.x || d.x > 50.0 + sinc(f))
+		if (fh.y == 0.0 || co.a == 1.0)
+		{
+			cc = mix(cc, co.rgb, ts) * uFreq;
 			break;
+		}
 
-		d.x = _t.x;
+		ro = cp - cn * 0.01;
+		rd = refract(ord, cn, 1.0 / io);
+
+		vec2 bh = tr(ro, rd, -1.0); // inverted distance
+		cp = ro + rd * bh.x; // position
+		cn = nm(cp); // normal
+		oro = cp + cn * 0.01;
+		ord = refract(rd, -cn, io);
+
+		if (dot(ord, ord) == 0.0)
+			ord = reflect(rd, -cn); // internal refraction
+
+		// update color
+		cc = mix(cc, co.rgb, ts);
+		ts -= co.a;
+
+		if (ts <= 0.0)
+			break;
 	}
 
-	// try something like f - sin(uTime)
-	
-	// freq -> color
-	float co = cosc(uTime) / sinc(f);
-	co *= atan(cos(uTime / f / TAU) / f);
-	// brightness
-	float ao = fract(uFreq * 100.0) + 2.0;
-	float ac = co * ao;
-	float _a1 = 1.0 - fract(sinc(minF) * 100.0);
-	float _a2 = sinc(mod(maxF, minF));
+	c = cc + glw;
+	c += hsv2rgb(c.r, c.g, c.b).z;
 
-	vec3 m = ao * cos(2.0 * pr + vec3(mod(uFreq * 100.0, 1.0), fract(_a1 / f), _a2));
-	m += mod(sin(uTime), sinc(minF));
-
-	if (d.x < 48.0)
-		_C += m * smoothstep(0.4, 0.05, d.w);
-
-	ret = vec3(pow(abs(_C), vec3(1.0)));
-
-	ret *= cross(ret, hsv2rgb(fract(f * 10.0), fract(f * 100.0), fract(f * 1000.0)) + mod(uFreq, 0.35));
-	//ret /= 3.0 *  hsv2rgb(fract(f * 1000.0), fract(f * 100.0), fract(f * 10.0)) + mod(uFreq, 0.5);
-	//ret += sinc(cos(f) * 0.0005);
-	//ret += cosc(sin(f) * 0.0005);
-	ret *= (uFreq * (floor(fract(uFreq * 10.0) * 10.0)));
+	ret = uFreq > 0.001 ? c : vec3(0.0);
 
 	return ret;
 }
@@ -194,10 +249,9 @@ void main()
 	vec4 ret;
 	vec2 uv;
 
-	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
-	uv *= 5.0;
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) / 2.0;
 
-	ret = vec4(col(uv * 1.5), 1.0);
+	ret = vec4(col(uv), 1.0);
 
 	retColor = ret;
 }

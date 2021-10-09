@@ -35,133 +35,70 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-float segim(vec2 p, vec2 a, vec2 b, float nz, float id)
+vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d)
 {
-	vec2 pa = p - a;
-	
-	vec2 ba = b - a;
-
-	float ss = smoothstep(uFreq, uLastFreq, uDeltaTime);
-
-	float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0) + nz * 0.017;
-	float vv = sinc(ss * 0.0225) * 0.1;
-
-	float ret = length(pa - uFreq * 0.015 * (h - 1.0) - ba * h) * uFreq * 7.0 * uFreq;
-	ret /= ss;
-
-	return ret;
+	return (a + b * cos(TAU * (c * t + d)));
 }
 
-float tri(float x)
+vec3 pal(float t, float f)
 {
-	float ret = abs(fract(x) - 0.5);
-	return ret;
+	return pal(t, 
+			vec3(0.15), 
+			vec3(0.5, 0.25, 0.5), 
+			vec3(2.0 + f, 1.0, f), 
+			vec3(0.5 - f, 0.5, 0.25)
+		);
 }
 
-vec2 tri2(vec2 p)
+vec3 hmm(float a, float t)
 {
-	vec2 ret = vec2(tri(p.x + tri(p.y * 2.0)), tri(p.y + tri(p.x * 2.0)));
-
-	return ret;
+	return cos(vec3(
+		cos(a) * cos(t),
+		cos(a) * sin(t),
+		sin(t) * sin(a)
+	) * (sin(t) * cos(t)));
 }
 
-mat2 m2 = mat2(
-	0.970, 0.242,
-	-0.242, 0.970
-);
-
-float triangleNoise(vec2 p)
+vec2 f2(float t)
 {
-	float z = 1.5;
-	float z2 = 1.5;
-	float rz = 0.0;
-	
-	vec2 bp = p * 0.8;
-
-	float a = smoothstep(uFreq, uLastFreq, uDeltaTime);
-
-	for (float i = 0.0; i < 3.0; i++)
-	{
-		vec2 dg = tri2(bp * 2.0) * 0.5;
-		dg *= rot(a * 4.5);
-		p += dg / z2;
-		bp *= 1.5;
-		z2 *= 0.6;
-		z *= 1.7;
-		p *= 1.2;
-		p *= m2;
-
-		rz += (tri(p.x + tri(p.y)))/ z;
-	}
-
-	return rz;
+	t /= 16.0;
+	return vec2(
+		sin(t * PI) * cos(2.0 * t * TAU),
+		cos(t * TAU) * sin(2.0 * t * PI)
+	);
 }
 
-vec3 ren(vec2 p)
+int f_int(float x, float m, float ml)
 {
-	vec2 p1 = vec2(-1.0, 0.0);
-	vec3 col = vec3(0);
-	float nz = clamp(triangleNoise(p), 0.0, 1.0);
-
-	float a = smoothstep(uFreq, uLastFreq, uDeltaTime);
-
-	for (int i = 0; i < 100; i++)
-	{
-		p1 *= rot(0.05 + pow(uTime * 12.25, 1.5) * 0.0007);
-		vec2 p2 = p1 * rot(0.04 * float(i) - a * 1.575 - uFreq * 1.5) * uSpectrum[i];
-		col += abs(sin(vec3(0.6 + sin(a * 0.05) * 0.4, 1.5, 2.0) + float(i) * 0.011 + uTime * 0.8)) *
-				0.0015 / ((pow(segim(p, p1, p2, nz, float(i)), 1.2)));
-	}
-
-	col *= uFreq;
-	col *= uFreq;
-	return col;
+	return int(floor(mod(x * m, ml)));
 }
-
-#define r res;
-
-const float n = 750.0;			// number of lights
-const float iRad = 0.014;		// radius of lights
-const float oRad = 0.08;		// radius of innermost orbit
-const float rotSpeed = 0.01;	// speed of rotation
-const float colChange = 0.2;	//	rate of color change
-const float avgBright = 0.75;	// average brightness
 
 vec3 col(vec2 p)
 {
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
-	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
+	p.yx *= rot(uTime * 2.0);
 
-	vec3 avgLight = vec3(avgBright);
-	float amp = (1.0 + ff)- avgBright;
+	float x = mod(uFreq * 4.0, 1.0);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	vec3 vf = vec3(
+		uSpectrum[31] / f,
+		uSpectrum[63] - f,
+		uSpectrum[127] * f
+	) + uSpectrum[254];
 
-	float t = uTime * 4.0;
-	vec3 inner = vec3(
-		sin(colChange * t),
-		sin(1.1 * colChange * t + 2.0 / 3.0 * PI) / f,
-		sin(1.2 * colChange * t + 4.0 / 3.0 * PI)
-	) * amp + avgLight;
-	vec3 outer = vec3(
-		sin(1.1 * (colChange / ff) * t + 2.0 / 3.0 * sinc(PI / ff) + uTime),
-		sin(1.2 * (atan(colChange, ff)) * t + 4.0 / 3.0 * PI),
-		sin(colChange * t)
-	) * amp + avgLight;
+	float t0 = uTime;
+	t0 += f * length(p) * uSpectrum[f_int(x + f, 100.0, 255)];
+	t0 += length(p) * max(sin(uTime), f);
+	//t0 += length(vf) * length(p);
 
-	for (float i = 0.0; i < n; i++)
-	{
-		float j = i + 1.0 + f;
-		vec2 q = p + vec2(
-			cos(t * j * rotSpeed),
-			sin(t * j * rotSpeed)
-		) * sqrt(j) * oRad;
+	vec2 m0 = f2(t0);
+	vec2 m = (cos(p * (16.0 * TAU)) * TAU * (m0));
+	m *= smoothstep(0.0, 1.0, dot(m, m)) - (f * uFreq);
+	float t = dot(p, p) * dot(m, m) + t0;
 
-		vec3 mixC = mix(inner, outer, (j + ff) / n);
-
-		c += mixC * pow(iRad / ff, 2.0) / pow(length(q), 2.0);
-	}
+	c = pal(t, f) * hmm(t + f, 1.0 - t);
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
@@ -174,11 +111,8 @@ vec3 col(vec2 p)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy / uRes.xy * 2.0 - 2.0;
-	uv /= 1.5;
+	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) / 2.25;
 
-	float a = smoothstep(uFreq, uLastFreq, uDeltaTime);
-
-	//retColor = vec4(ren(uv * 0.25) * a,mod(a, 1.0));
+	//retColor = vec4(col(uv), 1.0);
 	retColor = vec4(col(uv), 1.0);
 }

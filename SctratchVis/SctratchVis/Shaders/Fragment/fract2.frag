@@ -32,55 +32,84 @@ mat2 rot(float f)
 
 vec3 hsv(float h, float s, float v)
 {
-	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+	return ((clamp(abs(fract(h + vec3(0, 2, 1) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) -1.0) * s + 1.0) * v;
 }
 
-float fNorm(float x)
+float box(vec3 p, vec3 b)
 {
-	if (x < 1.0 && x > 0.01)
-		return x;
-	while (x > 1.0 && x < 0.01)
+	vec3 d = abs(p) - b;
+	return length(max(d, 0.0));
+}
+
+float ifsBox(vec3 p)
+{
+	for (int i = 0; i < 6; i++)
 	{
-		if (x > 1.0)
-			x /= 10.0;
-		else if (x < 0.01)
-			x *= 10.0;
+		p = abs(p) - 1.0;
+		p.xz *= rot(0.7);
+		p.xy *= rot(0.8);
 	}
-	return x;
+
+	return box(p, vec3(0.0, 0.9, 0.2));
+}
+
+float map(vec3 p)
+{
+	float c = 8.0;
+	p.z = mod(p.z, c) - c * 0.5;
+
+	return ifsBox(p);
 }
 
 vec3 col(vec2 p)
 {
-	float ff = mod(fract(uFreq * 100.0), fract(uFreq * 10.0));
-	float f = mix(min(uFreq, uLastFreq), max(uFreq, uLastFreq), sin(uTime));
+	float x = mod(uFreq * 4.0, 1.0);
+	//float f = mix(min(uFreq, uLastFreq), max(uFreq, uLastFreq), sin(uTime));
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float ff = mod(fract(uFreq * 100.0), fract(uFreq * 10.0)) * f;
+	vec3 fcv = cross(vec3(f, ff, f), vec3(uFreq, uLastFreq, f));
+	float fc = length(fcv);
 
-	//p.y *= sin(uTime) * 4.0;// / sin(step(uFreq, f));
-	p.x -= 500.0;
-
-	//float _t = step(uTime, f);
-	float _t = 1.0 / mix(length(p) / uFreq, f, uTime);
-	const float span = 1.5;
-	const float r = span / 2.0;
-	float zt = -9e9;
-	float zb = 9e9;
+	p *= rot(uTime);
 
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	for (float y = -480.0; y < 480.0; y += span)
+	vec3 cPos = vec3(2.5 * sin(0.4 * uTime), 0.5 * cos(1.3 * uTime), - 20.0 * uTime);
+	vec3 cDir = vec3(0.0, 0.0, -1.0);
+	vec3 cUp = vec3(0.0, 1.0, 0.0);
+	vec3 cSide = cross(cDir, cUp);
+
+	vec3 ray = normalize(cSide * p.x + cUp * p.y + cDir * fc);
+
+	float t = 0.0;
+	float acc = 0.0;
+	for (int i = 0; i < 129; i++)
 	{
-		float x = (floor(p.x / span) + 0.5) * span + y / 2.0;
-		float t = radians(length(vec2(x, y))) - fract(uTime * 0.8) * TAU;
-		float z = (cos(t - f) * 100.0 - cos(t * 3.0 + f) * 30.0) + y / 2.0;
-		vec2 q = vec2((x + f) - (y + f / p.x) / 2.0, z + f);
-		float d = distance(p, q) / r - (1.0 + ff);
-		float cd = length(vec2(x, y)) * 0.4 * _t;
-		float o = uTime * -1.5;
-		c += step(d, 0.0) * clamp((step(z, zb) + step(zt, z)), 0.0, 1.0)
-			* vec3(1.0 + sin(cd + o), 1.0 + sin(cd + 2.0 + o), 1.0 + sin(cd - 2.0 + o)) * -d;
-		zt = max(zt, z);
-		zb = max(zb, z);
+		float qf = fc;
+		qf = abs(fc - length(fcv) + sin(f));
+		vec3 q = cPos + ray * t;// + pow(ff, fc);
+		float dist = map(q);// * f * atan(fc, uFreq);
+
+		dist = max(abs(dist), abs(0.02 - (qf / 100.0)));
+		float a = exp(-dist * 3.0 + qf);
+		if (mod(q.z - 60.0 * uTime, 50.0 * q.z) < 8.0)// + (ff * 100.0))
+			a *= 5.0 + f;
+		acc += a;
+
+		t += dist * 0.25;// *+- fc;// / sinc(f);
+
+		if (t > 100.0)
+			break;
 	}
+
+	//c = fcv + min(sinc(ff), sin(fc));
+
+	float hr = fract(0.06 * uTime) / length(fcv);
+	float hg = mod(0.6 - f, 0.6) / fc;
+	float hb = acc * 0.01;
+	hb *= fc;
+	c = hsv(hr, hg, hb) * 0.25;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
@@ -94,9 +123,7 @@ vec3 col(vec2 p)
 void main()
 {
 	vec2 uv;
-	//uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 0.5;
-	uv = (gl_FragCoord.xy * 2.0 - uRes) / uRes.x;
-	uv *= 500.0;
+	uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 0.5;
 	
-	retColor = vec4(col(uv), 1.0);
+	retColor = vec4(col(uv), 0.5);
 }

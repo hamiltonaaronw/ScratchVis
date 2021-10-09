@@ -37,7 +37,7 @@ void EventManager::processEvents()
 		float cTime = gpGraphics->getCurTime();
 		if (pEvent->getScheduledTime() <= cTime)
 		{
-			pEvent->process();
+ 			pEvent->process();
 			delete pEvent;
 		}
 		else

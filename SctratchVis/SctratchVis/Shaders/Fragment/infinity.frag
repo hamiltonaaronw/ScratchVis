@@ -26,160 +26,129 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-float tanc(float x)
-{
-	return tan(x) / x;
-}
-
-mat2 rot(float x)
+mat2 rot(float a)
 {
 	return mat2(
-		cos(x), -sin(x),
-		sin(x), cos(x)
-	);
+		cos(a), sin(a),
+		-sin(a), cos(a)
+		);
 }
 
-float donut(vec3 p, vec2 t)
+vec3 hsv(float h, float s, float v)
 {
-	return length(
-		vec2(
-			length(p.xz) - t.x,
-			p.y
-		)
-	) - t.y;
+	vec3 ret = ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 9.0 - 3.0) -1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+	return ret;
 }
 
-#define MAX_DIST 250.0
-#define STEP 128.0
-
-float g1 = 0.0;
-
-vec2 dist(vec3 p, float f)
+float sdBoxFrame(vec3 p, vec3 b, float e)
 {
-	vec2 a = vec2(donut(p, vec2(1.0, 0.5)), 2.0);
-	vec2 b = vec2(length(p + vec3(0.0, 1.0 - abs(sin(f)) * 3.0, 0.0)) - 0.5, 1.0);
-	
-	g1 += 0.01 / (0.01 + b.x * b.x);
-	b = (b.x < a.x) ? b : a;
-
-	return b;
+	p = abs(p) - b;
+	vec3 q = abs(p + e) - e;
+	return min(min(
+		length(max(vec3(p.x, q.y, q.z), 0.0)) + min(max(p.x, max(q.y, q.z)), 0.0),
+		length(max(vec3(q.x, p.y, q.z), 0.0)) + min(max(q.x, max(p.y, q.z)), 0.0)),
+		length(max(vec3(q.x, q.y, p.z), 0.0)) + min(max(q.x, max(q.y, p.z)), 0.0)
+		);
 }
 
-float invert(float inv, float t, vec2 uv, float cap)
+vec4 map(vec3 p, float f)
 {
-	return mix(
-		inv, 1.0 - inv, step(sin(length(uv) * 0.45 - t) * 0.5 + 0.6, cap)
-	);
-}
-
-vec2 dist2(vec3 p, float f)
-{
-	float t = mod(f, 200.0);
-	t = fract(t) * fract(t) + floor(t);
-	vec3 q = p;
-
-	float modd = 42.0;
-	vec3 id = floor((q + modd * 0.5) / modd);
-	t += id.x * 2.0;
-	t += id.z * 2.0;
-
-	q.yz *= rot(sin(t) * 0.2);
-	q += sin(id.x + t) * 12.0;
-	q = mod(q + modd * 0.5, modd) - modd * 0.5;
-	q.xy *= rot(t * (mod(abs(id.x), 3.0) - 1.0));
-	q.xy *= rot(t * (mod(abs(id.x), 3.0) - 1.0));
-	q.zy *= rot(-t * 0.5 * (mod(abs(id.z), 3.0) - 1.0));
-
-	for (int i = 0; i < 4; i++)
+	float t = uTime + 80.0;
+	float rt = t * 0.1;
+	for (int i = 0; i < 5; i++)
 	{
-		q = abs(q) - vec3(2.0, 1.0, 1.0);
-		q.xy *= rot(0.5);
-		q.zy *= rot(0.5 + sin(t) * 2.0);
-		q.zx *= rot(0.5);
+		p = abs(p) - 0.2;
+		p.xz *= rot(rt);
+		p.yz *= rot(rt);
 	}
 
-	return dist(q, f) * vec2(0.65, 1.0);
+	float d=  sdBoxFrame(p, vec3(1.0), 0.05);
+	p.xz *= rot((PI / 180.0) * 45.0) * sinc(f);
+	p.yz *= rot((PI / 180.0) * 45.0) + f;
+	d = min(d, sdBoxFrame(p, vec3(1.0), 0.05));
+
+	return vec4(p, d);
+}
+
+vec2 rm(vec3 ro, vec3 rd, float f)
+{
+	float dq, ii;
+	for (int i = 0; i < 250; i++)
+	{
+		vec3 p = ro + rd * dq;
+		float ds = map(p, f).w;
+		dq += ds + f;
+		ii += 0.13;
+		if (dq > 1000.0 || ds < 0.001)
+			break;
+	}
+
+	return vec2(dq, ii);
 }
 
 vec3 col(vec2 p)
 {
-	p.yx *= rot(uTime * 0.25);
-	p *= 0.0625;
 	vec3 ret;
 	vec3 c;
+	vec2 q = p;
+	float t = uTime + 80.0;
+
+	float r, g, b;
 
 	float f = cos((sin(cos(uFreq)) - sin(uFreq) + uFreq * uFreq));
-	float t = mod(uTime, 1000.0 * f);
-
-	float ft = smoothstep(sin(uTime), sin(f),  uFreq);
 	float fs = mod(uTime, 1.0 - f);
-	//float fstep = smoothstep(sin(uFreq / f), uFreq + uLastFreq, uTime);
-	//float tf = smoothstep(sin(f), 2.0, uTime);
 
-	p *= f > mod(uTime, 0.5) ? sinc(f) : sin(uTime);;
+	r = abs(f - (f / fs));
+	b = fs;
+	g -= r;
 
-	vec3 ro = vec3(t * 3.0, f, -30.0);
-	vec3 rd = normalize(vec3(p, 1.05));
-	float d0 = f;
-	float shad = 0.0;
+	float x = mod(uFreq * 4.0, 1.0);
+	float ff = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float fft = mod(uTime, 1000.0 * f);
 
+	g += fft;
 
-	vec2 obj;
+	f = mod(max(f, ff), min(f, ff) * uFreq);
+	f /= length(vec2(f, ff) * rot(abs(uFreq - uLastFreq)));
 
-	for (float i = 0.0; i < STEP; i++)
+	c = vec3(r, g, b) * 0.275;
+
+	float ar = uRes.x / uRes.y;
+	q.x *= ar;
+	float rt = t * 0.1;
+	float size = sin(t * 0.1) * 0.5 + 0.5;
+	vec2 q1 = q;
+
+	for (int i = 0; i < 30; i++)
 	{
-		vec3 q = ro + rd * d0 + f;
-		obj = dist2(q, uTime + sinc(f) * (uFreq * 0.25));
-		d0 += obj.x;
-
-		if (obj.x < 0.001 || d0 > MAX_DIST)
-		{
-			shad = i / STEP;
-			break;
-		}
+		q = abs(q) - size * 1.0;
+		q.xy *= rot(rt * 0.4 + 2.1);
 	}
 
-	obj *= rot(fs);
-	obj.yx *= rot(uTime);
+	q = mix(q, q1, sin(t * 0.055) * 0.5 + 0.5);
+	
+	vec3 ro = vec3(0.0, 0.0, -5.0);
+	vec3 rd = normalize(vec3(q, 1.0));
+	
+	ro.xy *= rot(rt);
+	rd.xy *= rot(rt);
+	ro.xz *= rot(rt);
+	rd.xz *= rot(rt);
 
-	float r = 0.2 + ft;
-	float g = 0.5 * fs + atan(r, uFreq);
-	float b = mod(0.8, r * fs);
+	vec2 d = rm(ro, rd, f);
+	c += vec3(d.x * 0.05);
+	c.r += sin(c.r * 100.0) * 0.2;
 
-	if (obj.y >= 1.0 + f)
-	{
-		shad = 1.0 - shad;
-		c = vec3(shad) * vec3(r, g, b);
-	}
-	if (obj.y <= 2.0 + f)
-	{
-		shad = shad;
-		c = vec3(shad) * vec3(r + 0.6, g - 0.3, b + 0.1);
-	}
+	if (d.x > 999.0)
+		c = vec3(sin(d.y + 3.4) * 1.0);
 
-	c += g1 * vec3(0.2, 0.5, 0.8) * 0.2;
-	c = mix(
-		c,
-		vec3(0.235, 0.075, 0.369) * 0.2,
-		clamp(d0 / MAX_DIST, 0.0, 1.0)
-	);
-
-	t /= 0.6 * t - 2.0;
-
-	float inv = 0.0;
-	inv = invert(inv, t, p, 0.05);
-	inv *= invert(inv, t, p, 0.0466);
-	inv = invert(inv, t, p, 0.0433);
-	inv = invert(inv, t, p, 0.04);
-	inv = invert(inv, t, p, 0.0366);
-
-	c = mix(c * 1.6, 1.0 - c * sinc(f), inv);
+	c *= hsv(c.r * c.g, c.g * c.b, c.b * c.r) * 0.125;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.00001 ? min(c, 1.0) : vec3(0.0);
+	ret = uFreq > 0.0001 ? min(c, 1.0) : vec3(0.0);
 
 	return ret;
 }
@@ -188,10 +157,8 @@ void main()
 {
 	vec2 uv;
 	uv = ((gl_FragCoord.xy / uRes.xy) / 2.0 - 0.5);
-	//uv = (gl_FragCoord.xy - 0.5 * uRes.xy) / uRes.y;
 
 	vec4 ret;
-
-	ret = vec4(col(sin(uv) * uTime), 1.0);
+	ret = vec4(col(uv), 1.0);
 	retColor = ret;
 }

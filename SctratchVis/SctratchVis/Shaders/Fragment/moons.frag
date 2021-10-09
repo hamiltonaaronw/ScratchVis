@@ -11,6 +11,9 @@ uniform float uLastFreq;
 uniform float uDeltaFreq;
 uniform vec2 uRes;
 
+#define R(p, a, r) mix(a * dot(p, a), p, cos(r)) + sin(r) * cross(p, a)
+#define H(h) (cos((h) * 6.3 + vec3(0, 23, 21)) * 0.5 + 0.5)
+
 float sinc(float x)
 {
 	return sin(x) / x;
@@ -31,46 +34,76 @@ mat2 rot(float a)
 	return ret;
 }
 
+vec3 hsv2rgb(float h, float s, float v)
+{
+	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
+}
+
 vec3 col(vec2 p)
 {
-	//vec2 po = (gl_FragCoord.xy / uRes.xy);
 	vec3 ret;
-	float c = 0.0;
+	vec3 c = vec3(0.0);
+	vec4 co = vec4(0.0);
 
-	float t = uTime * sin(uFreq);
 	float x = mod(uFreq * 4.0, 1.0);
-	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);//abs(uFreq + uLastFreq * sinc(t)) * 0.5;
-	float ff = fract(f * 10.0);
-	ff = abs(abs(ff - f) - uLastFreq) - (t * 0.2) * 0.05;
-	//float ff = fract(fract(f * 100.0) + fract(f * 10.0)) + (fract(f / f) * 10.0); 
-	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
-	float fstep = smoothstep(sin(uFreq / f), uFreq + uLastFreq, uTime);
-	float tf = smoothstep(sinc(f), 2.0, uTime);
-	t *= sin(cosc(tf));
-	t *= abs(sin(uTime) + ff);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float tm = mod(uTime, PI / 10.0);
+	float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
+	float tf = atan(tm, ff);
+	float fsum = (uFreq - uLastFreq) + f + tm + ff + tf;
+	fsum *= 0.5;
+	fsum *= 0.75;
 
-	c += sin(p.x * cos(t / 15.0) * 40.0 + (fract(uFreq * 100.0) * 10.0)) + cos(p.y * cos(t / 15.0) * 10.0);
-	c += sin(p.y * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
-	c += sin(p.x * sin(t / c) * c) + cos(p.y * sin(uTime / 15.0) * 10.0);
+	vec3 q;
+	vec3 r = vec3(uRes, 1.0 + ff);
+	vec3 d = normalize(vec3((p - 0.5 * r.xy) / r.y, 1.0));
 
-    c *= 1.0 / fract(sinc(uTime / 10.0) * 100.0) * sinc(f);
-    //c *= sinc(uTime / 10.0) * uFreq;
+	float g = 0.0;
+	float e;
+	float s;
 
-	float r = c + f;
-	float g = c * cos(c - t);
-	float b = sinc(c) * c;
-	g *= sin(p.x + uFreq) / f;// + sin(uTime);
-	b += r;
-	r *= 2.0;
+	for (float i = 0.0; i < 59.0; ++i)
+	{
+		q = R(g * d, vec3(0.577), 0.2);
+//q.z += uTime / 14.0;
+		//q.z += uTime / (14.0 / sinc(1.0 - fract(fsum)));
+		q.z += fract(uTime + sin(fsum)) / 7.0;// (14.0 / sinc(1.0 - fract(fsum)));
+		q = fract(q) - 0.5;
 
-	ret = vec3(r, g, b);
+		s = 3.0;
+
+		for (int j = 0; j < 6; ++j)
+		{
+			q = abs(q);
+//q = q.x < q.z ? q.zxy : q.zyx;
+			q = q.x < q.z ? q.zxy : q.zyx;
+//s *= e = 2.0 / min(dot(q, q), 1.0);
+			s *= e = 2.0 / min(dot(q, q), 1.0 - fract(fsum));
+//q = q * e - vec3(0.2, 1.0, 4.0);
+			q = q * e - vec3(0.2 * sinc(fsum), 1.0, 4.0);
+		}
+
+		g += e = length(q) / s;
+//co.rgb += mix(r / r, H(log(s)), 0.4) * 0.02 * exp(-0.5 * i * i * e);
+		co.rgb += mix(r / r, H(log(s * fsum)), abs(1.0 - fract(fsum))) * 0.02 * exp(-0.5 * i * i * e);
+	}
+
+	c = co.xyz;
+
+	//c = vec3(1.0, 0.0, 0.0);
+	//c = vec3(0.0, 1.0, 0.0);
+	//c = vec3(0.0, 0.0, 1.0);
+
+	ret = uFreq > 0.001 ? c : vec3(0.0);
 
 	return ret;
 }
 
 void main() 
 {
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 2.0;
+	vec2 uv = gl_FragCoord.xy * 0.75;
+	uv.x -= 1.75;
+	uv.y -= 100.0;
 	vec4 ret;
 
 	ret = vec4(col(uv), 1.0);
