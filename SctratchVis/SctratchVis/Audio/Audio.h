@@ -45,15 +45,14 @@ struct Song
 	{}
 };
 
-#define LATENCY_MS		(1)
-#define DRIFT_MS		(1)
-#define DEVICE_INDEX	(0)
-
 class Audio
 {
+protected:
+	void FMODErrorCheck(FMOD_RESULT res, std::string call);
+
 private:
 	// functions
-	void FMODErrorCheck(FMOD_RESULT res, std::string call);
+	
 	void genRandQueue();
 
 	// variables

@@ -7,6 +7,10 @@
 //#include "../SDKs/FMOD/FMOD Studio API Windows/api/fsbank/inc/fsbank.h"
 //#include "../SDKs/FMOD/FMOD Studio API Windows/api/studio/inc/fmod_studio.h"
 
+#define LATENCY_MS		(50)
+#define DRIFT_MS		(1)
+#define DEVICE_INDEX	(0)
+
 enum class RecordingState
 {
 	REC_SELECTION,
@@ -19,9 +23,17 @@ class Recording : public Audio
 {
 private:
 
-	FMOD::System* mpFmod;
+	FMOD::System* mpRecSystem;
 	FMOD::Sound* mpRecSound;
 	FMOD::Channel* mpRecChannel;
+
+	void* mExtraDriverData;
+
+	bool mDspEnabled;
+
+	unsigned int mSamplesRecorded;
+	unsigned int mSamplesPlayed;
+	unsigned int mVersion;
 
 	// sound card recording source
 	int mRecordDriver;
@@ -35,22 +47,6 @@ private:
 	// start/stop recording from sound card
 	void startCapture();
 	void stopCapture();
-
-	// FFT sample size
-	int mSampleSize;
-
-	// beat detection params
-	float mBeatThresholdVolume;
-	int mBeatThresholdBar;
-	unsigned int mBeatSustain;
-	unsigned int mBeatPostIgnore;
-
-	int mBeatLastTick;
-	int mBeatIgnoreLastTick;
-
-	// list of how many ms ago the last beats were
-	std::queue<int> mBeatTimes;
-	unsigned int mBeatTrackCutoff;
 
 	// when music was last unpaused
 	int mMusicStartTick;

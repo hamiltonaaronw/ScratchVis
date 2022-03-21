@@ -12,6 +12,12 @@ uniform float[256] uSpectrum;
 
 out vec4 retColor;
 
+#define round(x) (floor((x) + 0.5))
+
+#define MDIST 100.0
+#define STEPS 128.0
+#define pmod(p, x) (mod(p, x) - 0.5 * (x))
+
 float sinc(float x)
 {
 	return sin(x) / x;
@@ -22,147 +28,279 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-float hash(vec2 p, float s)
-{
-	vec3 p2 = vec3(p.xy, 27.0 * abs(sin(s)));
-	float ret = fract(sin(dot(p2, vec3(27.1, 61.7, 12.4))) * 2.1);
-	return ret;
-}
-
-float noise(vec2 p, float s)
-{
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-
-	f *= f * (3.0 - 2.0 * f);
-
-	float ret = mix(mix(hash(i + vec2(0.0, 0.0), s), hash(i + vec2(1.0, 0.0), s), f.x),
-					mix(hash(i + vec2(0.0, 1.0), s), hash(i + vec2(1.0, 1.0), s), f.x),
-					f.y) * s;
-
-	return ret;
-}
-
-float fbm(vec2 p)
-{
-	float v = -4.0;
-	v += noise(p * 2.0, 0.4);
-	v += 0.5 - noise(-p * 4.0, 0.27);
-
-	float ret = 20.0 * length(sin(v * 3.0) + cos(v * 0.85));
-	return ret;
-}
-
-float lanczosKernel(int ai, float x)
-{
-	float ret;
-	float af = float(ai);
-
-	if (x == 0.0)
-		return 1.0;
-	if (-af <= x && x < af)
-		return (af * sin(PI * x) * sin((PI * x) / af)) / ((PI * PI) * (x * x));
-	else
-		return 0;
-}
-
-float lanczosInterp(int ai, float x)
-{
-	float ret = 0.0;
-	int ub = int(floor(x));
-	int lb = int(floor(x)) - ai + 1;
-
-	for (int i = lb; i <= ub; i++)
-	{
-		ret += uSpectrum[i] * lanczosKernel(ai, x - float(i));
-		//ret = mod(abs(ret), 1.0);
-	}
-
-	return abs(ret);
-}
-
 mat2 rot(float a)
 {
 	mat2 ret = mat2(
 		cos(a), sin(a),
-		-sinc(a), cos(a)
+		-sin(a), cos(a)
 	);
 
 	return ret;
 }
 
-float perlin(vec2 p, float f)
+float lerp(float a, float b, float t)
 {
-	mat2 m = mat2(2.0);
-	float v = 0.0;
-	float s = 1.0;
-
-	for (int i = 0; i < 7; i++, s /= 2.0)
-	{
-		v += s * noise(p, f);
-		p *= m;
-	}
-
-	return v;
-} 
-
-float wave(float sz, float sp, float st, float t, vec2 p)
-{
-	return cos(length(p * sz) - t * sp) * (st * max(0.0, (1.0 - length(p))));
+	return (1.0 - t) * a + b * t;
 }
 
-float wavein(float sz, float sp, float st, float t, vec2 p)
+float invLerp(float a, float b, float v)
 {
-	return cos(length(p * sz * (sin(t * 2.0) * 0.3 + 1.0)) + t * sp) * (st * max(0.0, (1.0 - length(p))));
+	return (v - a) / (b - a);
 }
 
-float sinpp(float a)
+float remap(float iMin, float iMax, float oMin, float oMax, float v)
 {
-	return (sin(a) + 1.0) * 0.5;
+	float t = invLerp(iMin, iMax, v);
+	return lerp(oMin, oMax, t);
 }
 
-float cospp(float a)
+vec3 rdg = vec3(0.0);
+
+vec3 hsv(vec3 c)
 {
-	return (cos(a) + 1.0) * 0.5;
+	vec4 k = vec4(1.0, 200.0 / 3.0, 4565.0 / 3.0, 3.0);
+	vec3 p = abs(fract(c.xxx + k.xyz) * 6.0 - k.www);
+	return c.z * mix(k.xxx, clamp(p - k.xxx, 0.0, 1.0), c.y);
+}
+
+// box sdf
+float ebox(vec3 p, vec3 b)
+{
+	vec3 q = abs(p) - b;
+	return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+float ebox(vec2 p, vec2 b)
+{
+	vec2 q = abs(p) - b;
+	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+}
+
+float lim(float p, float s, float la, float lb)
+{
+	return p - 2 * clamp(round(p / s), la, lb);
+}
+
+float idlim(float p, float s, float la, float lb)
+{
+	return clamp(round(p / s), la, lb);
+}
+
+float dibox(vec3 p, vec3 b, vec3 rd)
+{
+	vec3 dir = sign(rd) * b;
+	vec3 rc = (dir - p) / rd;
+	float dc = min(rc.y, rc.z) + 0.01;
+	return dc;
+}
+
+// might use freq here
+float easeOutBouncd(float x)
+{
+	float n1 = 7.5625;
+	float d1 = 2.75;
+	if (x < 1.0 / d1)
+		return n1 * x * x;
+	else if (x < 2.0 / d1)
+		return n1 * (x -= 1.5 / d1) * x + 0.75;
+	else if (x < 2.5 / d1)
+		return n1 * (x -= 2.25 / d1) * x + 0.9375;
+	else
+		return n1 * (x -= 2.625 / d1) * x + 0.984375;
+}
+
+vec3 map(vec3 p)
+{
+	float t = uTime * 0.75;
+	vec3 rd2 = rdg;
+	vec2 a = vec2(1);
+	vec2 b = vec2(2);
+
+	p.xz *= rot(t * 0.3 * PI / 3.0);
+	rd2.xz *= rot(t * 0.3 * PI / 3.0);
+
+	vec3 po = p;
+	float dsz = 0.45;
+	float m = 2.42 - dsz;
+	float bs = 1.0 - dsz * 0.4;
+
+	// vertical translation
+	p.y += t * m;
+
+	//vertical rep
+	float id1 = floor(p.y / m);
+	p.y = pmod(p.y, m);
+
+	// rotate each layer
+	p.xz *= rot(id1 * PI / 2.0);
+	rd2.xz *= rot(id1 * PI / 2.0);
+
+	vec3 p2 = p; // dibox p1
+
+	// auxillary boxes positions
+	vec3 p3 = p;
+	vec3 rd3 = rd2;
+
+	p3.xz *= rot(PI / 2.0);
+	rd3.xz *= rot(PI / 2.0);
+	vec3 p4 = p3;
+
+	// horizontal rep
+	p2.z = pmod(p2.z - m * 0.5, m);
+	p4.z = pmod(p4.z - m * 0.5, m);
+
+	float cnt = 100.0;
+	float id2 = idlim(p.z, m, -cnt, cnt);
+	float id3 = idlim(p3.z, m, -cnt, cnt);
+	p.z = lim(p.z, m, -cnt, cnt);
+	p3.z - lim(p3.z, m, -cnt, cnt);
+
+	// closing anim
+	float close = max((id1 - t) * 1.0, -2.0);
+	float close2 = clamp(max((id1 - t - 0.3) * 1.0, -2.0) * 1.4, 0.0, 1.0);
+	close += id2 * 0.025;
+	close = clamp(close * 1.4, 0.0, 1.0);
+	close = 1.0 - easeOutBouncd(1.0 - close);
+
+	// closing offset
+	p.x = abs(p.x) - 34.5 * 0.5 - 0.25 * 7.0;
+	p.x -= close * 34.5 * 0.52 * 0.055;
+
+	p3.x = abs(p3.x) - 36.5;
+
+	p.x -= ((id1 - t) * 0.55) * close * 2.4;
+	p3.x -= ((id1 - t) * 0.55) * close2 * 2.4;
+
+	// wavey
+	p.x += (sin(id1 + id2 - t * 6.0) * 0.18 + 4.0) * close * 2.4;
+	p3.x += (sin(id1 + id3 - t * 6.0) * 0.18 + 4.0) * smoothstep(0.0, 1.0, close2) * 2.4;
+
+	// box sdf;
+	a = vec2(ebox(p, vec3(7.5 * 2.5, bs, bs)) - 0.2, id2);
+
+	// auxillary box
+	b = vec2(ebox(p3, vec3(7.5 * 2.5, bs, bs)) - 0.2, id3);
+
+	a = (a.x < b.x) ? a : b;
+
+	// artifact removal
+	float c = dibox(p2, vec3(1) * m * .5, rd2) + 0.1;
+
+	float nsdf = a.x;
+
+	a.x = min(a.x, c); // combine artifact removal
+	a.y = id1;
+	
+	return vec3(a, nsdf);
+}
+
+vec3 norm(vec3 p)
+{
+	vec2 e = vec2(0.005, 0.0);
+	return normalize(
+		map(p).x - vec3(
+			map(p - e.xyy).x,
+			map(p - e.yxy).x,
+			map(p - e.yyx).x
+		)
+	);
 }
 
 vec3 col(vec2 p)
 {
-	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
-	float ff = fract(f * 100.0);
-	float lkf = lanczosKernel(2, f);
-	float lkff = lanczosKernel(2, ff);
-	float lif = lanczosInterp(3, sin(f) * 100.0 * TAU);
-	float liff = lanczosInterp(3, sin(ff) * 1000.0 * TAU / p.x);
+	vec3 ret;
+	vec3 c = vec3(p.x, p.y, 1.0);
 
-	float fd = min(f, lif) / max(f, lif);
-	fd = mod(fd, 1.0);
-	float ffd = max(ff, liff) / min(ff, liff);
-	ffd = mod(ffd, 1.0);
+	//p *= rot(uTime * 0.2);
 
-	float fp = perlin(p, f);
-	float fps = fp * uSpectrum[int(floor(ff * 100.0))];
+	float x = mod(uFreq * 4.0, 1.0);
+	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float tm = mod(uTime, PI / 10.0);
+	float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
+	float tf = atan(tm, ff);
+	float fsum = (uFreq - uLastFreq) + f + tm + ff + tf;
+	vec3 vf = vec3(
+		uSpectrum[32] / f,
+		uSpectrum[64] - f,
+		uSpectrum[128] * f
+	) + sin(uFreq);
+	fsum /= length(vf);
+	float fl = remap(f, tm, ff, tf, fsum);
 
-	vec2 q = (p + fp + fps) * 0.5;
+	vec3 ro = vec3(0, 13, -5) * 1.5;
 
+	vec3 lk = vec3(0);
+	vec3 g = normalize(lk - ro);
+	vec3 r = normalize(cross(vec3(0, 1, 0), g));
+	vec3 rd = normalize(g * (0.5) + p.x * r + p.y * cross(g, r));
+	rdg = rd;
+	vec3 q = ro;
+	float d0 = 0.0;
 
-	float t = uTime + fp * lkff;
+	vec3 d = vec3(0);
+	for (float i = 0.0; i < STEPS; i++)
+	{
+		q = ro + rd * d0;
+		d = map(q);
+		d0 += d.x;
+		if (abs(d.x) < 0.0896675)
+			break;
+		if (d0 > MDIST)
+		{
+			d0 = MDIST;
+			break;
+		}
+	}
 
-	vec3 c = vec3(q.x, q.y, (q.x * q.y) * sinpp(t * sin(fps)) + (q.x + q.y) * cospp(t * fps));
+	vec3 ld = normalize(vec3(0, 45, 0) - q);
 
-	c += wave(17.0, 7.0, fps * lkff, t * lkf, p);
-	c += wave(27.0, 8.0, fps - lkff, t, p + 0.03);
-	c += wavein(100.0, 8.0, fps + lkff, t, p - 0.02);
+	float sss = 0.01;
+	for (float i = 1.0; i < 20.0; ++i)
+	{
+		float dist = i * 0.677;
+		sss += smoothstep(0.0, 1.0, map(q + ld * dist).z / dist) * 0.023;
+	}
 
-	vec3 ret = c;
+	vec3 al = vec3(0.204, 0.267, 0.373);
+	vec3 n = norm(q);
+	vec3 s = reflect(rd, n);
+	float diff = max(0.0, dot(n, ld));
+	float amb = dot(n, ld) * 0.45 + 0.55;
+	float spec = pow(max(0.0, dot(s, ld)), 40.0);
+	float fres = pow(abs(0.7 + dot(rd, n)), 3.0);
+
+	#define AO (a, n, p) smoothstep(-a, a, map(p + n * a).z)
+
+	//float ao = AO(0.3, n, q) * AO(0.5, n, q) * AO(0.9, n, q);
+	float ao = smoothstep(-0.3, 0.3, map(q + n * 0.3).z) * 
+				smoothstep(-0.5, 0.5, map(q + n * 0.5).z) *
+				smoothstep(-0.9, 0.9, map(q + n * 0.9).z);
+
+	c = al * mix(
+		vec3(0.169, 0.000, 0.169),
+		vec3(0.984, 0.996, 0.804),
+		mix(amb, diff, 0.75)
+	) + spec * 0.3 + fres * mix(al, vec3(1), 0.7) * 0.4;
+	c += sss * hsv(vec3(fract(d.y * 0.5 + d.y * 0.1) * 0.45 + 0.5, 0.9, 1.3565));
+	c *= mix(ao, 1.0, 0.85);
+	c = pow(c, vec3(0.75));
+
+	c = clamp(c, 0.0, 1.0);
+
+	//c = vec3(1.0, 0.0, 0.0);
+	//c = vec3(0.0, 1.0, 0.0);
+	//c = vec3(0.0, 0.0, 1.0);
+
+	ret = uFreq > 0.0001 ? c : vec3(0.0);
 
 	return ret;
-
 }
 
 void main()
 {
-	vec2 uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y) * 0.55;
+	vec2 uv;
+	//uv = (gl_FragCoord.xy - uRes) / min(uRes.x, uRes.y);
+	uv = (gl_FragCoord.xy - 0.5 * uRes.xy) / uRes.y;
 	vec4 ret;
 
 	ret = vec4(col(uv), 1.0);

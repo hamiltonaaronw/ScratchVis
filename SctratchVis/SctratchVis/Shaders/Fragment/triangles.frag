@@ -91,6 +91,7 @@ vec3 col(vec2 p)
 {
 	vec2 q = p;
 	vec3 ret;
+
 	float f = min(abs(uFreq), abs(uLastFreq)) + abs(uDeltaFreq / 2.0);
 	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
 

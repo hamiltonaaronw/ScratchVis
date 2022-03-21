@@ -31,24 +31,6 @@ mat2 rot(float a)
 	);
 }
 
-float layer (vec2 v)
-{
-	float s = 0.5;
-	for (int i = 0; i < 8; i++)
-	{
-		v = abs(v) - s;
-		v *= 1.25;
-		v = v.yx;
-
-		v *= rot(uTime * 0.1);
-		s *= 0.995;
-	}
-
-	float d = abs(max(abs(v.x), abs(v.y)) - 0.3);
-
-	return 0.01 / d;
-}
-
 vec3 rgb2hsv(vec3 c)
 {
 	vec4 k = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -68,61 +50,59 @@ vec3 rgb2hsv(vec3 c)
 vec3 col(vec2 p)
 {
 	vec3 ret;
-	vec3 c = vec3(0.2, 0.3, 0.4);
+	vec3 c = vec3(0.0);
 
-	//p *= rot(uTime * 0.1);
+	//float x = mod(uFreq * 4.0, 1.0);
+	//float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float tm = mod(uTime, PI / 10.0);
+	//float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
 
-	float x = mod(fract(uFreq * 8.0) * 2.0, 1.0);
-	x = sinc(x);
+	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	float fs = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 14.0);
-	float ft = sin(uTime * f) + f;
-	float t = fract(uTime / f);// uTime +smoothstep(min(ft, fs), min(f, fs), uLastFreq) * uFreq;
-	ft = abs(ft - t) * sinc(f);
-	ft += sinc(uTime * fs) - f;
-	ft *= mod(f, 0.25);
-	ft *= mod(f, 0.25);
-	ft += mod(fs, 0.25);
+	//float f = min(abs(uFreq), abs(uLastFreq)) + abs((abs(uFreq - uLastFreq)) / 2.0);
+	float ff = sin(uTime + uFreq) / abs(sin(uTime - uLastFreq) / 2.0);
+	float tf = atan(tm, ff);
+	float fsum = abs(uFreq - uLastFreq) + f + tm + ff + tf;
+	float t = tm / fsum;
 
-	float s = 0.5;
+	vec2 v = uRes.xy;
+	vec2 q = gl_FragCoord.xy;
 
-	p *= rot((uTime + uFreq) * 0.1);
+	// position
+	q = p / 4.5;
 
-	for (int i = 0; i < 4; i++)
+	// breathing effect
+	float bfx = smoothstep(fsum + sin(uTime * 0.5), tf + cos(uTime * 0.25), fsum) * 100.0;
+	bfx += (atan(tm, 1.0 - fract(ff)) + t) * (f * 300.0);
+	bfx -= (abs(1.0 - fract(bfx * 10.0) * 10.0));
+
+	q += q * sin(dot(q, q) * 20.0 - uTime) * 0.04 * bfx;
+
+	// rotate
+	q *= rot(uTime * 0.75);
+
+	float a = 2.0;
+	float b = 3.0;
+	float d = 1.0;
+
+	// color
+	for (float i = 0.5; i < 8.0; i++)
 	{
-		p = abs(p) - s;
-		p *= 1.25;
-		p *= rot(ft * 0.1);
-		s *= 0.995;
+		// fractal formula and rotation
+		q = abs(2.0 * fract(q - 0.5) - 1.0) * mat2(cos(0.01 * (uTime + q.x * 0.1) * i * i + 0.85 *vec4(1.0, 8.0, 3.0, 1.0)));
+
+		a /= atan(ff, i);
+		b += sinc(i) * mod(ff, tm);
+		d *= abs(0.9 - i);
+
+		// coloration
+//c += exp(-abs(q.y) * 5.0) * (cos(vec3(2.0, 3.0, 1.0) * i) * 0.5 + 0.5);
+		c += exp(-abs(q.y) * 5.0) * (cos(vec3(a, b, d) * i) * 0.5 + 0.5);
 	}
 
-	p *= sin(ft) + (2.0 * uFreq);
-
-	p *= rot(ft * 0.1);
-
-	t -= step(max(t, ft), min(t, ft)) * uFreq;
-
-	for (float i = 0.0; i < 1.0; i += 0.3)
-	{
-		p *= rot(0.8);
-		float t = fract(i + ft * 0.1);
-		float s = smoothstep(1.0, 0.0, t);
-		float r = smoothstep(2.0, 0.1, t);
-		r *= smoothstep(0.0, 1.0, t);
-		c += layer(p * s) * r;
-	}
-
-	c *= vec3(
-		1.0 / f,
-		ft - abs(1.0 - fs) + 0.7,
-		t * c.r * uFreq + 0.3
-	);
-
-	c.r += sin(t) * 0.125;
-	c.g *= sinc(t) * c.r;
-	c.g += sin(t) / c.g;
-
-	c /= rgb2hsv(c * f) / 0.5;
+	c = abs(1.0 - c);
+	//c.g *= 0.25;//(0.5 - uFreq * c.r);
+	//c /= rgb2hsv(c);
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
@@ -135,12 +115,10 @@ vec3 col(vec2 p)
 
 void main()
 {
-	vec4 ret;
 	vec2 uv;
-	//uv = (gl_FragCoord.xy - 0.5 * uRes.xy) / uRes.y;
-	uv = (2.0 * gl_FragCoord.xy - uRes) / uRes.y * 2.0 - 2.0;
-	uv.x -= 1.5;
-	uv /= 5.0;
+	vec4 ret;
+
+	uv = (gl_FragCoord.xy - 0.5 - uRes) / min(uRes.x, uRes.y);
 
 	ret = vec4(col(uv), 1.0);
 	retColor = ret;

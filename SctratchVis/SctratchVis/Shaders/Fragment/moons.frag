@@ -39,56 +39,64 @@ vec3 hsv2rgb(float h, float s, float v)
 	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
 }
 
+vec2 pmod(vec2 p, float r)
+{
+	float a = atan(p.x, p.y) + PI / r;
+	float n = TAU / r;
+	a = floor(a / n) * n;
+	return  p * rot(-a);
+}
+
+float box(vec2 p, vec2 b)
+{
+	vec2 q = abs(p) - b;
+	return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+}
+
 vec3 col(vec2 p)
 {
 	vec3 ret;
 	vec3 c = vec3(0.0);
 	vec4 co = vec4(0.0);
 
+	p *= rot (uTime);
+
 	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
 	float tm = mod(uTime, PI / 10.0);
 	float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
 	float tf = atan(tm, ff);
-	float fsum = (uFreq - uLastFreq) + f + tm + ff + tf;
-	fsum *= 0.5;
-	fsum *= 0.75;
+	float fsum = abs(uFreq - uLastFreq) + f + tm + ff + tf;
+	float t = tm / fsum;
 
-	vec3 q;
-	vec3 r = vec3(uRes, 1.0 + ff);
-	vec3 d = normalize(vec3((p - 0.5 * r.xy) / r.y, 1.0));
+	vec2 q = p;
+//q = pmod(q, abs(sin(uTime) * 16.0));
+	q = pmod(q, abs(sin(uTime / t) * 16.0));
 
-	float g = 0.0;
-	float e;
-	float s;
+	vec3 c1 = vec3(0.0, 0.1, 1.0);
+	vec3 c2 = vec3(1.0, 0.5, 0.1);
+	vec3 c3 = vec3(1.0, 0.1, 0.1);
+	vec3 c4 = vec3(1.0, 1.0, 0.1);
 
-	for (float i = 0.0; i < 59.0; ++i)
+	c4 /= fsum;
+	c3 -= sinc(t);
+
+	c1.x += fsum;
+
+	for (int i = 0; i < 8; i++)
 	{
-		q = R(g * d, vec3(0.577), 0.2);
-//q.z += uTime / 14.0;
-		//q.z += uTime / (14.0 / sinc(1.0 - fract(fsum)));
-		q.z += fract(uTime + sin(fsum)) / 7.0;// (14.0 / sinc(1.0 - fract(fsum)));
-		q = fract(q) - 0.5;
+		q = abs(q) - 0.05;
+//q *= rot(uTime);
+		q *= rot(t - ff);
+		float box = box(q, vec2(0.5 - q) * fsum);
 
-		s = 3.0;
+//float w = abs(sin(uTime * 128.0 / 4.0) / 4.0 + 0.8);
+		float w = abs(sin(t * 128.0 / 4.0) / 4.0 + 0.8);
+		vec3 x = c1 * (0.05 * w) / length(box) * t;
+		vec3 xc = c2 * (0.001) / length(q.x) + c3 * (0.001) / length(q.y) + c4 * (0.0015) / length(q);
 
-		for (int j = 0; j < 6; ++j)
-		{
-			q = abs(q);
-//q = q.x < q.z ? q.zxy : q.zyx;
-			q = q.x < q.z ? q.zxy : q.zyx;
-//s *= e = 2.0 / min(dot(q, q), 1.0);
-			s *= e = 2.0 / min(dot(q, q), 1.0 - fract(fsum));
-//q = q * e - vec3(0.2, 1.0, 4.0);
-			q = q * e - vec3(0.2 * sinc(fsum), 1.0, 4.0);
-		}
-
-		g += e = length(q) / s;
-//co.rgb += mix(r / r, H(log(s)), 0.4) * 0.02 * exp(-0.5 * i * i * e);
-		co.rgb += mix(r / r, H(log(s * fsum)), abs(1.0 - fract(fsum))) * 0.02 * exp(-0.5 * i * i * e);
+		c += x + xc;
 	}
-
-	c = co.xyz;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
@@ -101,9 +109,8 @@ vec3 col(vec2 p)
 
 void main() 
 {
-	vec2 uv = gl_FragCoord.xy * 0.75;
-	uv.x -= 1.75;
-	uv.y -= 100.0;
+	vec2 uv;
+	uv = (gl_FragCoord.xy - 0.5 - uRes) / min(uRes.x, uRes.y);
 	vec4 ret;
 
 	ret = vec4(col(uv), 1.0);
