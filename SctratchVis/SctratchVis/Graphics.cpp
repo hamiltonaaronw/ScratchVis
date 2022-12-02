@@ -210,7 +210,6 @@ void Graphics::initGraphics()
 		return;
 	}
 
-
 	this->mGraphicsInit = true;
 }
 
