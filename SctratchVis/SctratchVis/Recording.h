@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Audio/Audio.h"
-#include <queue>>
+#include <queue>
 
 //#include "../SDKs/FMOD/FMOD Studio API Windows/api/fsbank/inc/fsbank_errors.h"
 //#include "../SDKs/FMOD/FMOD Studio API Windows/api/fsbank/inc/fsbank.h"
@@ -23,9 +23,11 @@ class Recording : public Audio
 {
 private:
 
-	FMOD::System* mpRecSystem;
-	FMOD::Sound* mpRecSound;
-	FMOD::Channel* mpRecChannel;
+	FMOD::System		*mpRecSystem;
+	FMOD::Sound			*mpRecSound;
+	FMOD::Channel		*mpRecChannel;
+	FMOD::DSP			*mpRecDSP;
+	FMOD::ChannelGroup	*mpRecCGroup;
 
 	void* mExtraDriverData;
 
@@ -35,6 +37,14 @@ private:
 	unsigned int mSamplesPlayed;
 	unsigned int mVersion;
 
+	bool mIsRecording;
+	bool mIsPlaying;
+
+	float mRecFreq;
+	float mRecSpec[256];
+
+	FMOD_CREATESOUNDEXINFO exinfo;
+
 	// sound card recording source
 	int mRecordDriver;
 	// number of recording sources available  
@@ -43,6 +53,9 @@ private:
 
 	// create sound buffer
 	void createSoundBuffer();
+
+	// initialize everything
+	void init();
 
 	// start/stop recording from sound card
 	void startCapture();
@@ -62,5 +75,10 @@ public:
 	// number of channels to sample
 	static int const CHANNELS = 2;
 
-	void update();
+	virtual void playSong();
+	virtual void togglePause();
+	virtual bool update();
+
+	virtual float getFreq() { return mRecFreq; };
+	virtual float* getSpectrumData() { return mRecSpec; };
 };

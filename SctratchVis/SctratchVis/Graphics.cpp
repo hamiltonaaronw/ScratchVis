@@ -123,6 +123,7 @@ void Graphics::initAll()
 {
 	int n = 0;
 	std::string songDir = "";
+	mAudioMode = 1;
 	this->userSetup(SetupStage::MUSIC_DIR, n, songDir);
 	this->userSetup(SetupStage::WINDOW, n, songDir);
 
@@ -157,9 +158,16 @@ void Graphics::initAll()
 
 void Graphics::initAudio(std::string s)
 {
-	mpAudio = new Audio();
-	mpAudio->setMusicDir(s);
-	mpAudio->loadSongs();
+	if (mAudioMode == 1)
+	{
+		mpAudio = new Audio();
+		mpAudio->setMusicDir(s);
+		mpAudio->loadSongs();
+	}
+	else
+	{
+		mpAudio = new Recording();
+	}
 
 	if (mpAudio)
 		this->mAudioInit = true;
@@ -388,6 +396,7 @@ void Graphics::render()
 
 	Uniforms* pUni = new Uniforms();
 	pUni->mLastTime = this->getCurTime();
+	//pUni->mLastFreq = mpAudio->getFreq();
 	pUni->mLastFreq = mpAudio->getFreq();
 
 	// render loop
@@ -670,8 +679,10 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 		break;
 
 	case SetupStage::MUSIC_DIR: 
-		std::cout << "Would you like to\n" << "1) Specify Music Directory\n" <<
+		std::cout << "Would you like to\n" << 
+			"1) Specify Music Directory\n" <<
 			"2) Use Default Music Directory\n" <<
+			"3) Record audio from device\n"
 			"Selection: ";
 		std::cin >> sel;
 
@@ -688,14 +699,18 @@ void Graphics::userSetup(SetupStage stage, int &n, std::string &s)
 			s = dir;
 			//mpAudio->setMusicDir(dir);
 		}
-		else
+		else if (sel == 2)
 		{
-			if (sel != 2)
-				std::cout << "Invalid input. ";
 			std::cout << "Using default music directory\n";
 
 			s = "Music/";
-			//mpAudio->setMusicDir("Music/");
+		}
+		else
+		{
+			if (sel != 3)
+				std::cout << "Invalid input. ";
+
+			mAudioMode = 2;
 		}
 		break;
 

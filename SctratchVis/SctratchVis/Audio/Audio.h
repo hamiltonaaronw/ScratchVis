@@ -24,14 +24,6 @@ struct RECORD_STATE
 	FMOD::Channel* channel;
 };
 
-//FMOD_RESULT F_CALLBACK SystemCallback2(FMOD_SYSTEM* /*system*/, FMOD_SYSTEM_CALLBACK_TYPE /*type*/, void*, void*, void* userData)
-//{
-//	int* recordListChangedCount = (int*)userData;
-//	*recordListChangedCount = *recordListChangedCount + 1;
-//
-//	return FMOD_OK;
-//}
-
 struct Song
 {
 	FMOD::Sound *mSound;
@@ -69,6 +61,7 @@ private:
 
 	char mDriverName;
 	int mNumDrivers;
+	int mNumRecDrivers;
 	int mSongCount;
 
 	const int SPEC_SIZE = 256;
@@ -107,19 +100,18 @@ public:
 	void checkEndSong();
 	void initAudio();
 	void loadSongs();
-	void playSong();
 	void selectSong(int i);
-	void togglePause();
 	void toggleRand();
 	void toggleSong(int prevNext);
 	void unloadAudio();
-	bool update();
-	void updateRecord();
-	void updateRecord2();
+
+	virtual void playSong();
+	virtual void togglePause();
+	virtual bool update();
 
 	// getters/setters
-	float getFreq() { return mFreq; };
-	float* getSpectrumData() { return mSpectrum; };
+	virtual float getFreq() { return mFreq; };
+	virtual float* getSpectrumData() { return mSpectrum; };
 
 	int getNumSongs() { return mSongCount; };
 	int getSpecSize() { return SPEC_SIZE; };

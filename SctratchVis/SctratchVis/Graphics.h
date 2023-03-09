@@ -99,7 +99,8 @@ private:
 						mGraphicsInit,
 						mShadersInit;
 
-	int					mNumShaders;
+	int					mNumShaders,
+						mAudioMode;
 	unsigned int		msWidth,
 						msHeight,
 						mVBO,

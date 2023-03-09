@@ -2,14 +2,75 @@
 
 Recording::Recording()
 {
+	init();
+}
+
+void Recording::clean()
+{
+	FMOD_RESULT res;
+	mIsRecording = false;
+	mIsPlaying = false;
+
+	// release DSP
+	if (mpRecDSP)
+	{
+		//remove DSP from channel
+		res = mpRecChannel->removeDSP(mpRecDSP);
+		FMODErrorCheck(res, "remove dsp in clean()");
+
+		// release DSP
+		res = mpRecDSP->release();
+		FMODErrorCheck(res, "release dsp in clean()");
+	}
+
+	// stop playing, release channel
+	if (mpRecChannel)
+	{
+		res = mpRecChannel->stop();
+		FMODErrorCheck(res, "stop channel in clean()");
+	}
+
+	// releas esound
+	if (mpRecSound)
+	{
+		res = mpRecSound->release();
+		FMODErrorCheck(res, "release recording sound in clean()");
+	}
+
+	// release channel group
+	if (mpRecCGroup)
+	{
+		res = mpRecCGroup->release();
+		FMODErrorCheck(res, "release channel group in clean()");
+	}
+
+	// release and close system
+	if (mpRecSystem)
+	{
+		// release
+		res = mpRecSystem->release();
+		FMODErrorCheck(res, "release system in clean()");
+
+		//close
+		res = mpRecSystem->close();
+		FMODErrorCheck(res, "close system in clean()");
+	}
+}
+
+void Recording::init()
+{
 	FMOD_RESULT res;
 	mpRecChannel = NULL;
+
 	mSamplesRecorded = 0;
 	mSamplesPlayed = 0;
-	mDspEnabled = false;
+	mRecFreq = 0;
+
+	mIsRecording = false;
+	mIsPlaying = false;
 
 	mExtraDriverData = NULL;
-	
+
 	// create system objet and initialize
 	mpRecSystem = NULL;
 	res = FMOD::System_Create(&mpRecSystem);
@@ -26,48 +87,91 @@ Recording::Recording()
 	FMODErrorCheck(res, "Record::Record()");
 
 	mNumDrivers = 0;
-	res = mpRecSystem->getRecordNumDrivers(NULL, &mNumDrivers);
-	FMODErrorCheck(res, "Record::Record()");
+	// check input devices
+	res = mpRecSystem->getRecordNumDrivers(&mRecordingSources, &mNumDrivers);
+	FMODErrorCheck(res, "get num record drivers in initAudio()");
 
-	if (mNumDrivers = 0)
-		std::cout << "No recording devices found/plugged in!" << std::endl;
+	std::cout << "Num Rec drivers: " << mRecordingSources << std::endl;
 
-}
+	for (int i = 0; i < mRecordingSources; i++)
+	{
+		char devName[256];
+		res = mpRecSystem->getRecordDriverInfo(i, devName, 256, 0, 0, 0, 0, 0);
+		std::cout << i << ") " << devName << std::endl;
+		FMODErrorCheck(res, "output record driver name in initAudio()");
+	}
 
-void Recording::clean()
-{
-	FMOD_RESULT res;
+	mRecordDriver = -1;
+	while (mRecordDriver == -1)
+	{
+		std::cout << "Select input device from list above: ";
+		std::cin >> mRecordDriver;
 
-	res = mpRecSound->release();
+		if (mRecordDriver > mRecordingSources)
+		{
+			std::cout << "Invalid selection, please try again";
+			mRecordDriver = -1;
+		}
+	}
+
+	char devName[256];
+	res = mpRecSystem->getRecordDriverInfo(mRecordDriver, devName, 256, 0, 0, 0, 0, 0);
+	FMODErrorCheck(res, "retrieve info from specified recording device in Recording class constructor");
+	std::cout << "Recording from device " << devName << std::endl;
+
+	exinfo = { 0 };
+	exinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
+	exinfo.numchannels = 2;
+	exinfo.format = FMOD_SOUND_FORMAT_PCM16;
+	exinfo.defaultfrequency = 44100;
+	exinfo.length = exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 5;
+	mpRecSystem->createSound(nullptr, FMOD_LOOP_NORMAL | FMOD_OPENUSER, nullptr, &mpRecSound);
+
+	// init DSP
+	res = mpRecSystem->createDSPByType(FMOD_DSP_TYPE_FFT, &mpRecDSP);
+	FMODErrorCheck(res, "init dsp in init()");
+
+	// set window size for DSP
+	res = mpRecDSP->setParameterInt((int)FMOD_DSP_FFT_WINDOWSIZE, 256);
+	FMODErrorCheck(res, "set dsp window size in init()");
+
+	// set window type for DSP
+	res = mpRecDSP->setParameterInt((int)FMOD_DSP_FFT_WINDOWTYPE, (int)FMOD_DSP_FFT_WINDOW_BLACKMANHARRIS);
+	FMODErrorCheck(res, "set dsp window type in init()");
+
+	// create channel group
+	res = mpRecSystem->createChannelGroup("Channel group", &mpRecCGroup);
+	FMODErrorCheck(res, "create channel group in init()");
+
+	// add DSP to channel group
+	res = mpRecCGroup->addDSP(FMOD_CHANNELCONTROL_DSP_TAIL, mpRecDSP);
+	FMODErrorCheck(res, "add dsp to channel group in init()");
 }
 
 void Recording::startCapture()
 {
-	// create sound recording buffer
-	createSoundBuffer();
+	FMOD_RESULT res;
+	mpRecSystem->recordStart(0, mpRecSound, true);
+	mpRecSystem->update();
+	mpRecSound->getLength(&exinfo.length, FMOD_TIMEUNIT_PCM);
 
-	// wait so something is recording
-	Sleep(60);
+	if (exinfo.length >= exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 5)
+		mIsRecording = false;
 
-	// start playing recorded sound back, silently, so we can
-	// use its channel to get the FFT data. The frequency analysis
-	// volume is adjusted so it doesn't matter what we are playing back
-	mpRecSystem->recordStart(mRecordDriver, mpRecSound, true);
-	mpRecChannel->setVolume(0);
-
-	//reset beat detection data
-	//mMusicStartTick = GetTickCount64();
-	//mBeatTimes.empty();
+	// stop recording
+	res = mpRecSystem->recordStop(0);
+	FMODErrorCheck(res, "stop recording in Recording::startCapture()");
+	
+	//play back recorded audio
+	res = mpRecSystem->playSound(mpRecSound, nullptr, false, &mpRecChannel);
+	FMODErrorCheck(res, "play back recorded audio in Recording::startCapture()");
 }
 
 void Recording::stopCapture()
 {
 	mpRecChannel->stop();
 
-	mpRecSystem->recordStop(mRecordDriver);
-
-	mpRecSound->release();
-	mpRecSound = NULL;
+	mpRecSystem->recordStop(0);
 }
 
 void Recording::createSoundBuffer()
@@ -84,7 +188,8 @@ void Recording::createSoundBuffer()
 
 	// length of entire sample in bytes, calculated as
 	// sample rate * num channels * bits per sample per channel * seconds
-	soundInfo.length = SAMPLE_RATE * CHANNELS * sizeof(unsigned short) * 0.5;
+	//soundInfo.length = SAMPLE_RATE * CHANNELS * sizeof(unsigned short) * 0.5;
+	soundInfo.length = SAMPLE_RATE * CHANNELS * sizeof(unsigned short) / 2;
 
 	// number of channels and sample rate
 	soundInfo.numchannels = CHANNELS;
@@ -96,129 +201,47 @@ void Recording::createSoundBuffer()
 	mpRecSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &soundInfo, &mpRecSound);
 }
 
-void Recording::update()
+void Recording::playSong()
+{
+	std::cout << "Recording::playSong()" << std::endl;
+}
+
+void Recording::togglePause()
+{
+	std::cout << "Recording::togglePause()" << std::endl;
+}
+
+bool Recording::update()
 {
 	FMOD_RESULT res;
+	float freq = 0;
+	std::cout << "Recording::update()" << std::endl;
 
-	// Detect latency in samples
-	int nativeRate = 0;
-	int nativeChannels = 0;
+	startCapture();
 
-	res = mpRecSystem->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL, &nativeRate, NULL, &nativeChannels, NULL);
-	FMODErrorCheck(res, "Recording::Update()");
+	res = mpRecDSP->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
+	FMODErrorCheck(res, "get dominant freq in update()");
 
-	// The point where we start compensating for drift 
-	unsigned int driftThreshold = (nativeRate * DRIFT_MS) / 1000;
-	// User specified latency 
-	unsigned int desiredLatency = (nativeRate * LATENCY_MS) / 1000;
-	// User specified latency adjusted for driver update granularity     
-	unsigned int adjustedLatency = desiredLatency;
-	// Latency measured once playback begins (smoothened for jitter)                              
-	int actualLatency = desiredLatency;
+	void* specData;
+	res = mpRecDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, (void**)&specData, 0, 0, 0);
+	FMODErrorCheck(res, "get spectrum data in update()");
 
-	// create user sound to record into, then start recording
-	FMOD_CREATESOUNDEXINFO exinfo = { 0 };
-	exinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
-	exinfo.numchannels = nativeChannels;
-	exinfo.format = FMOD_SOUND_FORMAT_PCM16;
-	exinfo.defaultfrequency = nativeRate;
-	// 1 second buffer, size here doesn't change latency
-	exinfo.length = nativeRate * sizeof(short) * nativeChannels;
+	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT*)specData;
+	if (fft)
+		*mRecSpec = (float&)fft->spectrum;
 
-	FMOD::Sound* pSound = NULL;
-	res = mpRecSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &exinfo, &pSound);
-	FMODErrorCheck(res, "Record::Update()");
+	freq /= 10000;
+	mRecFreq = freq;
 
-	res = mpRecSystem->recordStart(DEVICE_INDEX, pSound, true);
-	FMODErrorCheck(res, "Record::Update()");
+	res = mpRecSystem->update();
+	FMODErrorCheck(res, "update system in update()");
 
-	unsigned int soundLength = 0;
-	res = pSound->getLength(&soundLength, FMOD_TIMEUNIT_PCM);
-	FMODErrorCheck(res, "Record::Update()");
+	mpRecChannel->isPlaying(&mIsPlaying);
 
-	// main loop
-	do
-	{
-		res = mpRecSystem->update();
-		FMODErrorCheck(res, "Record::Update()");
-
-		// determine how much has been recorded since last check
-		unsigned int recordPos = 0;
-		res = mpRecSystem->getRecordPosition(DEVICE_INDEX, &recordPos);
-		
-		if (res != FMOD_ERR_RECORD_DISCONNECTED)
-			FMODErrorCheck(res, "Record::Update()");
-
-		static unsigned int lastRecPos = 0;
-		unsigned int recordDelta = (recordPos >= lastRecPos) ? (recordPos - lastRecPos) : (recordPos + soundLength - lastRecPos);
-		lastRecPos = recordPos;
-		mSamplesRecorded += recordDelta;
-
-		static unsigned int minRecordDelta = (unsigned int)-1;
-		if (recordDelta && (recordDelta < minRecordDelta))
-		{
-			// smallest driver granularity seen so far
-			minRecordDelta = recordDelta;
-			// adjust latency if driver granularity is high
-			adjustedLatency = (recordDelta <= desiredLatency) ? desiredLatency : recordDelta; 
-		}
-
-		// delay playback until desired latency is reached
-		if (!mpRecChannel && mSamplesRecorded >= adjustedLatency)
-		{
-			res = mpRecSystem->playSound(pSound, 0, false, &mpRecChannel);
-			FMODErrorCheck(res, "Record::Update()");
-		}
-
-		if (mpRecChannel)
-		{
-			// stop playback if recording stops
-			bool isRecording = false;
-			res = mpRecSystem->isRecording(DEVICE_INDEX, &isRecording);
-			if (res != FMOD_ERR_RECORD_DISCONNECTED)
-				FMODErrorCheck(res, "Record::Update()");
-
-			if (!isRecording)
-			{
-				res = mpRecChannel->setPaused(true);
-				FMODErrorCheck(res, "Record::Update()");
-			}
-
-			// determine how much has been played since last check
-			unsigned int playPos = 0;
-			res = mpRecChannel->getPosition(&playPos, FMOD_TIMEUNIT_PCM);
-			FMODErrorCheck(res, "Record::Update()");
-
-			static unsigned int lastPlayPos = 0;
-			unsigned int playDelta = (playPos >= lastPlayPos) ? (playPos - lastPlayPos) : (playPos + soundLength - lastPlayPos);
-			lastPlayPos = playPos;
-			mSamplesPlayed += playDelta;
-
-			// compensate for any drift
-			int latency = mSamplesRecorded - mSamplesPlayed;
-			actualLatency = (int)((0.97f * actualLatency) + (0.03f * latency));
-
-			int playbackRate = nativeRate;
-			if (actualLatency < (int)(adjustedLatency - driftThreshold))
-			{
-				// play position is catching up to the record position, slow playback down by 2%
-				playbackRate = nativeRate - (nativeRate / 50);
-			}
-			else if (actualLatency > (int)(adjustedLatency + driftThreshold))
-			{
-				// play position falling behind record position, speed playback up by 2%
-				playbackRate = nativeRate + (nativeRate / 50);
-			}
-
-			res = mpRecChannel->setFrequency((float)playbackRate);
-			FMODErrorCheck(res, "Record::Update()");
-
-		}
-
-	} while (1);
+	return mIsPlaying;
 }
 
 Recording::~Recording()
 {
-	clean();
+	this->clean();
 }

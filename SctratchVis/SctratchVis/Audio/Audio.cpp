@@ -98,37 +98,6 @@ void Audio::initAudio()
 
 	mFreq = 0.0f;
 	mIsRandom = false;
-
-	/*
-	mCursor = 0;
-	mScroll = 0;
-	mNativeRate = 0;
-	mNativeChannels = 0;
-	res = mpSystem->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL, &mNativeRate, NULL, &mNativeChannels, NULL);
-	FMODErrorCheck(res, "get record driver info");
-
-	mDriftThreshold = (mNativeRate * DRIFT_MS) / 1000;       // The point where we start compensating for drift 
-	mDesiredLatency = (mNativeRate * LATENCY_MS) / 1000;     // User specified latency 
-	mAdjustedLatency = mDesiredLatency;                      // User specified latency adjusted for driver update granularity 
-	mActualLatency = mDesiredLatency;                                 // Latency measured once playback begins (smoothened for jitter) 
-
-	mExinfo = { 0 };
-	mExinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
-	mExinfo.numchannels = mNativeChannels;
-	mExinfo.format = FMOD_SOUND_FORMAT_PCM16;
-	mExinfo.defaultfrequency = mNativeRate;
-	mExinfo.length = mNativeRate * sizeof(short) * mNativeChannels;
-
-	res = mpSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &mExinfo, &mpSound);
-	FMODErrorCheck(res, "create sound");
-
-	res = mpSystem->recordStart(DEVICE_INDEX, mpSound, true);
-	FMODErrorCheck(res, "record start");
-
-	mSoundLength = 0;
-	res = mpSound->getLength(&mSoundLength, FMOD_TIMEUNIT_PCM);
-	FMODErrorCheck(res, "sound length");
-	*/
 }
 
 void Audio::loadSongs()
@@ -406,97 +375,6 @@ bool Audio::update()
 	FMODErrorCheck(res, "update system in update()");
 
 	return true;
-}
-
-void Audio::updateRecord()
-{
-	FMOD_RESULT res;
-	FMOD::Channel* channel = NULL;
-	unsigned int samplesRecorded = 0;
-	unsigned int samplesPlayed = 0;
-	bool dspEnabled = true;
-
-	void* extraDriverData = NULL;
-
-
-}
-
-void Audio::updateRecord2()
-{
-	FMOD_RESULT res;
-
-	res = mpSystem->getRecordNumDrivers(&mNumDrivers, &mNumConnectedDrivers);
-	FMODErrorCheck(res, "get record num drivers");
-
-	mNumDrivers = mNumDrivers < MAX_DRIVERS ? mNumDrivers : MAX_DRIVERS;
-
-	int tmp = 1;
-	// btnAction1
-	if (tmp == 1)
-	{
-		bool isRecording = false;
-		mpSystem->isRecording(mCursor, &isRecording);
-
-		if (isRecording)
-			mpSystem->recordStop(mCursor);
-		else
-		{
-			// clean up previous record sound
-			if (record[mCursor].sound)
-			{
-				res = record[mCursor].sound->release();
-				FMODErrorCheck(res, "clear previous record sound");
-			}
-
-			// query device native settions and start a recording
-			mNativeRate = 0;
-			mNativeChannels = 0;
-			res = mpSystem->getRecordDriverInfo(mCursor, NULL, 0, NULL, &mNativeRate, NULL, &mNativeChannels, NULL);
-			FMODErrorCheck(res, "query native settings");
-
-			mExinfo = { 0 };
-			mExinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
-			mExinfo.numchannels = mNativeChannels;
-			mExinfo.format = FMOD_SOUND_FORMAT_PCM16;
-			mExinfo.defaultfrequency = mNativeRate;
-			mExinfo.length = mNativeRate * sizeof(short) * mNativeChannels;
-
-			res = mpSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &mExinfo, &record[mCursor].sound);
-			FMODErrorCheck(res, "create sound");
-
-			res = mpSystem->recordStart(mCursor, record[mCursor].sound, true);
-			if (res != FMOD_ERR_RECORD_DISCONNECTED)
-				FMODErrorCheck(res, "record start");
-		} // end btn_1
-	}
-	else if (tmp == 2)
-	{
-		bool isPlaying = false;
-		record[mCursor].channel->isPlaying(&isPlaying);
-
-		if (isPlaying)
-			record[mCursor].channel->stop();
-		else if (record[mCursor].sound)
-		{
-			res = mpSystem->playSound(record[mCursor].sound, NULL, false, &record[mCursor].channel);
-			FMODErrorCheck(res, "play sound");
-		}
-	}
-	else if (tmp == 3) // button up
-	{
-		mCursor = mCursor - 1 > 0 ? mCursor : 0;
-		mScroll = mScroll - 1 > 0 ? mScroll : 0;
-	}
-	else if (tmp == 4) // btn down
-	{
-		if (mNumDrivers)
-			mCursor = (mCursor + 1 < mNumDrivers - 1) ? (mCursor - 1) : (mNumDrivers - 1);
-		if (mNumDrivers > MAX_DRIVERS_IN_VIEW)
-			mScroll = (mScroll + 1 < mNumDrivers - MAX_DRIVERS_IN_VIEW) ? (mScroll + 1) : (mNumDrivers - MAX_DRIVERS_IN_VIEW);
-	}
-
-	res = mpSystem->update();
-	FMODErrorCheck(res, "system update");
 }
 
 Audio::~Audio()
