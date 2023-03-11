@@ -58,13 +58,18 @@ int FMOD_Main()
     */
     int nativeRate = 0;
     int nativeChannels = 0;
-    result = system->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, NULL, &nativeRate, NULL, &nativeChannels, NULL);
+    result = system->getRecordDriverInfo(DEVICE_INDEX, NULL, 0, 
+        NULL, &nativeRate, NULL, &nativeChannels, NULL);
     ERRCHECK(result);
 
-    unsigned int driftThreshold = (nativeRate * DRIFT_MS) / 1000;       /* The point where we start compensating for drift */
-    unsigned int desiredLatency = (nativeRate * LATENCY_MS) / 1000;     /* User specified latency */
-    unsigned int adjustedLatency = desiredLatency;                      /* User specified latency adjusted for driver update granularity */
-    int actualLatency = desiredLatency;                                 /* Latency measured once playback begins (smoothened for jitter) */
+    unsigned int driftThreshold = (nativeRate * DRIFT_MS) / 1000;       
+    /* The point where we start compensating for drift */
+    unsigned int desiredLatency = (nativeRate * LATENCY_MS) / 1000;     
+    /* User specified latency */
+    unsigned int adjustedLatency = desiredLatency;                     
+    /* User specified latency adjusted for driver update granularity */
+    int actualLatency = desiredLatency;                                 
+    /* Latency measured once playback begins (smoothened for jitter) */
 
     /*
         Create user sound to record into, then start recording.
@@ -74,10 +79,12 @@ int FMOD_Main()
     exinfo.numchannels      = nativeChannels;
     exinfo.format           = FMOD_SOUND_FORMAT_PCM16;
     exinfo.defaultfrequency = nativeRate;
-    exinfo.length           = nativeRate * sizeof(short) * nativeChannels; /* 1 second buffer, size here doesn't change latency */
+    exinfo.length           = nativeRate * sizeof(short) 
+        * nativeChannels; /* 1 second buffer, size here doesn't change latency */
     
     FMOD::Sound *sound = NULL;
-    result = system->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &exinfo, &sound);
+    result = system->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, 
+        &exinfo, &sound);
     ERRCHECK(result);
 
     result = system->recordStart(DEVICE_INDEX, sound, true);
@@ -122,15 +129,19 @@ int FMOD_Main()
         }
 
         static unsigned int lastRecordPos = 0;
-        unsigned int recordDelta = (recordPos >= lastRecordPos) ? (recordPos - lastRecordPos) : (recordPos + soundLength - lastRecordPos);
+        unsigned int recordDelta = (recordPos >= lastRecordPos) ?
+            (recordPos - lastRecordPos) : (recordPos + soundLength - lastRecordPos);
         lastRecordPos = recordPos;
         samplesRecorded += recordDelta;
 
         static unsigned int minRecordDelta = (unsigned int)-1;
         if (recordDelta && (recordDelta < minRecordDelta))
         {
-            minRecordDelta = recordDelta; /* Smallest driver granularity seen so far */
-            adjustedLatency = (recordDelta <= desiredLatency) ? desiredLatency : recordDelta; /* Adjust our latency if driver granularity is high */
+            minRecordDelta = recordDelta;
+            /* Smallest driver granularity seen so far */
+            adjustedLatency = (recordDelta <= desiredLatency) ? 
+                desiredLatency : recordDelta; 
+            /* Adjust our latency if driver granularity is high */
         }
         
         /*
@@ -168,7 +179,8 @@ int FMOD_Main()
             ERRCHECK(result);
 
             static unsigned int lastPlayPos = 0;
-            unsigned int playDelta = (playPos >= lastPlayPos) ? (playPos - lastPlayPos) : (playPos + soundLength - lastPlayPos);
+            unsigned int playDelta = (playPos >= lastPlayPos) ? 
+                (playPos - lastPlayPos) : (playPos + soundLength - lastPlayPos);
             lastPlayPos = playPos;
             samplesPlayed += playDelta;
             
