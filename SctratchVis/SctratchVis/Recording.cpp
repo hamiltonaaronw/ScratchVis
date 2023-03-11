@@ -160,10 +160,6 @@ void Recording::playRecording()
 	// play back recording
 	res = mpRecSystem->playSound(mpRecSound, 0, false, &mpRecChannel);
 	FMODErrorCheck(res, "play back recording in Recording::playRecording()");
-
-	// set channel mode
-	res = mpRecChannel->setMode(FMOD_LOOP_OFF);
-	FMODErrorCheck(res, "set channel mode in Recording::playRecording()");
 }
 
 void Recording::processRecording()
@@ -193,11 +189,10 @@ void Recording::processRecording()
 
 		freq /= 10000;
 		mRecFreq = freq;
-
-		// process audio data here
-		res = mpRecSound->unlock(buffer, NULL, length, 0);
-		FMODErrorCheck(res, "process audio data in Recording::processRecording()");
 	}
+	// process audio data here
+	res = mpRecSound->unlock(buffer, NULL, length, 0);
+	FMODErrorCheck(res, "unlock audio data in Recording::processRecording()");
 }
 
 void Recording::startCapture()
@@ -211,6 +206,16 @@ void Recording::startCapture()
 	// start recording
 	res = mpRecSystem->recordStart(mRecordDriver, mpRecSound, true);
 	FMODErrorCheck(res, "start recording in Recording::startCapture()");
+
+	// check if it is recording
+	res = mpRecSystem->isRecording(0, &mIsRecording);
+	FMODErrorCheck(res, "check if recording in Recording::startCapture()");
+
+	std::cout << "Is recording: " << mIsRecording << std::endl;
+
+	// stop pause
+	res = mpRecChannel->setPaused(true);
+	FMODErrorCheck(res, "Stop recording in Recording::startCapture()");
 
 	// check if it is recording
 	res = mpRecSystem->isRecording(0, &mIsRecording);
