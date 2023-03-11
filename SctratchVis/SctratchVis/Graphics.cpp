@@ -165,9 +165,7 @@ void Graphics::initAudio(std::string s)
 		mpAudio->loadSongs();
 	}
 	else
-	{
 		mpAudio = new Recording();
-	}
 
 	if (mpAudio)
 		this->mAudioInit = true;
@@ -391,12 +389,13 @@ void Graphics::render()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	mpAudio->playSong();
+	std::cout << mAudioMode << std::endl;
+	if (mAudioMode == 1)
+		mpAudio->playSong();
 	mpAudio->update();
 
 	Uniforms* pUni = new Uniforms();
 	pUni->mLastTime = this->getCurTime();
-	//pUni->mLastFreq = mpAudio->getFreq();
 	pUni->mLastFreq = mpAudio->getFreq();
 
 	// render loop

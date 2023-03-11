@@ -51,9 +51,6 @@ private:
 	int mRecordingSources;
 	int mNumDrivers;
 
-	// create sound buffer
-	void createSoundBuffer();
-
 	// initialize everything
 	void init();
 

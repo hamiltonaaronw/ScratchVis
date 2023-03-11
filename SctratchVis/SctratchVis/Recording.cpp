@@ -74,22 +74,24 @@ void Recording::init()
 	// create system objet and initialize
 	mpRecSystem = NULL;
 	res = FMOD::System_Create(&mpRecSystem);
-	FMODErrorCheck(res, "Recording::Recording()");
+	FMODErrorCheck(res, "creating system in Recording::init()");
 
+	// get system version
 	mVersion = 0;
 	res = mpRecSystem->getVersion(&mVersion);
-	FMODErrorCheck(res, "Recording::Recording()");
+	FMODErrorCheck(res, "getting system version in Recording::init()");
 
 	if (mVersion < FMOD_VERSION)
 		std::cout << "FMOD lib version " << mVersion << "doesn't match header version " << FMOD_VERSION << std::endl;
 
+	// initialize system
 	res = mpRecSystem->init(100, FMOD_INIT_NORMAL, mExtraDriverData);
-	FMODErrorCheck(res, "Record::Record()");
+	FMODErrorCheck(res, "initialize system in Recording::init()");
 
 	mNumDrivers = 0;
 	// check input devices
 	res = mpRecSystem->getRecordNumDrivers(&mRecordingSources, &mNumDrivers);
-	FMODErrorCheck(res, "get num record drivers in initAudio()");
+	FMODErrorCheck(res, "get num record drivers in Recording::init()");
 
 	std::cout << "Num Rec drivers: " << mRecordingSources << std::endl;
 
@@ -98,7 +100,7 @@ void Recording::init()
 		char devName[256];
 		res = mpRecSystem->getRecordDriverInfo(i, devName, 256, 0, 0, 0, 0, 0);
 		std::cout << i << ") " << devName << std::endl;
-		FMODErrorCheck(res, "output record driver name in initAudio()");
+		FMODErrorCheck(res, "output record driver name in Recording::init()");
 	}
 
 	mRecordDriver = -1;
@@ -148,6 +150,12 @@ void Recording::init()
 	FMODErrorCheck(res, "add dsp to channel group in init()");
 }
 
+void Recording::playSong()
+{
+	std::cout << "Recording::playSong()" << std::endl;
+	this->startCapture();
+}
+
 void Recording::startCapture()
 {
 	FMOD_RESULT res;
@@ -172,38 +180,6 @@ void Recording::stopCapture()
 	mpRecChannel->stop();
 
 	mpRecSystem->recordStop(0);
-}
-
-void Recording::createSoundBuffer()
-{
-	// releases previous buffer if there is one
-	if (mpRecSound != NULL)
-		mpRecSound->release();
-
-	FMOD_CREATESOUNDEXINFO soundInfo;
-
-	memset(&soundInfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
-
-	soundInfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
-
-	// length of entire sample in bytes, calculated as
-	// sample rate * num channels * bits per sample per channel * seconds
-	//soundInfo.length = SAMPLE_RATE * CHANNELS * sizeof(unsigned short) * 0.5;
-	soundInfo.length = SAMPLE_RATE * CHANNELS * sizeof(unsigned short) / 2;
-
-	// number of channels and sample rate
-	soundInfo.numchannels = CHANNELS;
-	soundInfo.defaultfrequency = SAMPLE_RATE;
-
-	// sound format
-	soundInfo.format = FMOD_SOUND_FORMAT_PCM16;
-
-	mpRecSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &soundInfo, &mpRecSound);
-}
-
-void Recording::playSong()
-{
-	std::cout << "Recording::playSong()" << std::endl;
 }
 
 void Recording::togglePause()
