@@ -90,10 +90,9 @@ void Recording::init()
 
 	mNumDrivers = 0;
 	// check input devices
-	res = mpRecSystem->getRecordNumDrivers(&mRecordingSources, &mNumDrivers);
+	//res = mpRecSystem->getRecordNumDrivers(&mRecordingSources, &mNumDrivers);
+	res = mpRecSystem->getRecordNumDrivers(&mNumDrivers, &mRecordingSources);
 	FMODErrorCheck(res, "get num record drivers in Recording::init()");
-
-	std::cout << "Num Rec drivers: " << mRecordingSources << std::endl;
 
 	for (int i = 0; i < mRecordingSources; i++)
 	{
@@ -117,17 +116,21 @@ void Recording::init()
 	}
 
 	char devName[256];
-	res = mpRecSystem->getRecordDriverInfo(mRecordDriver, devName, 256, 0, 0, 0, 0, 0);
+	res = mpRecSystem->getRecordDriverInfo(mRecordDriver, devName, 256, NULL, &mNativeRate, NULL, &mNativeChannels, NULL);
 	FMODErrorCheck(res, "retrieve info from specified recording device in Recording class constructor");
 	std::cout << "Recording from device " << devName << std::endl;
+	std::cout << "mNativeRate: " << mNativeRate << std::endl;
+	std::cout << "mNativeChannels: " << mNativeChannels << std::endl;
 
-	exinfo = { 0 };
 	exinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
-	exinfo.numchannels = 2;
+	exinfo.numchannels = mNativeChannels;
 	exinfo.format = FMOD_SOUND_FORMAT_PCM16;
-	exinfo.defaultfrequency = 44100;
-	exinfo.length = exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 5;
-	mpRecSystem->createSound(nullptr, FMOD_LOOP_NORMAL | FMOD_OPENUSER, nullptr, &mpRecSound);
+	exinfo.defaultfrequency = mNativeRate;
+	exinfo.length = mNativeRate * sizeof(short) * mNativeChannels;
+
+	// create sound
+	res = mpRecSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &exinfo, &mpRecSound);
+	FMODErrorCheck(res, "create sound in Recording::init()");
 
 	// init DSP
 	res = mpRecSystem->createDSPByType(FMOD_DSP_TYPE_FFT, &mpRecDSP);
@@ -150,29 +153,70 @@ void Recording::init()
 	FMODErrorCheck(res, "add dsp to channel group in init()");
 }
 
-void Recording::playSong()
+void Recording::playRecording()
 {
-	std::cout << "Recording::playSong()" << std::endl;
-	this->startCapture();
+	FMOD_RESULT res;
+
+	// play back recording
+	res = mpRecSystem->playSound(mpRecSound, 0, false, &mpRecChannel);
+	FMODErrorCheck(res, "play back recording in Recording::playRecording()");
+
+	// set channel mode
+	res = mpRecChannel->setMode(FMOD_LOOP_OFF);
+	FMODErrorCheck(res, "set channel mode in Recording::playRecording()");
+}
+
+void Recording::processRecording()
+{
+	FMOD_RESULT res;
+
+	void* buffer;
+	unsigned int length;
+
+	// lock sound
+	res = mpRecSound->lock(0, 256, &buffer, nullptr, &length, 0);
+	FMODErrorCheck(res, "lock sound in Recording::processRecording()");
+	if (res == FMOD_OK)
+	{
+		float freq;
+
+		res = mpRecDSP->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
+		FMODErrorCheck(res, "get dominant freq in Recording::processRecording()");
+
+		void* specData;
+		res = mpRecDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, (void**)&specData, 0, 0, 0);
+		FMODErrorCheck(res, "get spectrum data in Recording::processRecording()");
+
+		FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT*)specData;
+		if (fft)
+			*mRecSpec = (float&)fft->spectrum;
+
+		freq /= 10000;
+		mRecFreq = freq;
+
+		// process audio data here
+		res = mpRecSound->unlock(buffer, NULL, length, 0);
+		FMODErrorCheck(res, "process audio data in Recording::processRecording()");
+	}
 }
 
 void Recording::startCapture()
 {
 	FMOD_RESULT res;
-	mpRecSystem->recordStart(0, mpRecSound, true);
-	mpRecSystem->update();
-	mpRecSound->getLength(&exinfo.length, FMOD_TIMEUNIT_PCM);
 
-	if (exinfo.length >= exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 5)
-		mIsRecording = false;
+	// create sound
+	res = mpRecSystem->createSound(0, FMOD_LOOP_NORMAL | FMOD_OPENUSER, &exinfo, &mpRecSound);
+	FMODErrorCheck(res, "create sound in Recording::starCapture()");
 
-	// stop recording
-	res = mpRecSystem->recordStop(0);
-	FMODErrorCheck(res, "stop recording in Recording::startCapture()");
-	
-	//play back recorded audio
-	res = mpRecSystem->playSound(mpRecSound, nullptr, false, &mpRecChannel);
-	FMODErrorCheck(res, "play back recorded audio in Recording::startCapture()");
+	// start recording
+	res = mpRecSystem->recordStart(mRecordDriver, mpRecSound, true);
+	FMODErrorCheck(res, "start recording in Recording::startCapture()");
+
+	// check if it is recording
+	res = mpRecSystem->isRecording(0, &mIsRecording);
+	FMODErrorCheck(res, "check if recording in Recording::startCapture()");
+
+	std::cout << "Is recording: " << mIsRecording << std::endl;
 }
 
 void Recording::stopCapture()
@@ -190,27 +234,13 @@ void Recording::togglePause()
 bool Recording::update()
 {
 	FMOD_RESULT res;
-	float freq = 0;
-	std::cout << "Recording::update()" << std::endl;
-
-	startCapture();
-
-	res = mpRecDSP->getParameterFloat(FMOD_DSP_FFT_DOMINANT_FREQ, &freq, 0, 0);
-	FMODErrorCheck(res, "get dominant freq in update()");
-
-	void* specData;
-	res = mpRecDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, (void**)&specData, 0, 0, 0);
-	FMODErrorCheck(res, "get spectrum data in update()");
-
-	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT*)specData;
-	if (fft)
-		*mRecSpec = (float&)fft->spectrum;
-
-	freq /= 10000;
-	mRecFreq = freq;
 
 	res = mpRecSystem->update();
 	FMODErrorCheck(res, "update system in update()");
+
+	startCapture();
+	processRecording();
+	playRecording();
 
 	mpRecChannel->isPlaying(&mIsPlaying);
 

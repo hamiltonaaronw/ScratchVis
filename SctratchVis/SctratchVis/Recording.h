@@ -33,6 +33,8 @@ private:
 
 	bool mDspEnabled;
 
+	int mNativeRate;
+	int mNativeChannels;
 	unsigned int mSamplesRecorded;
 	unsigned int mSamplesPlayed;
 	unsigned int mVersion;
@@ -43,7 +45,7 @@ private:
 	float mRecFreq;
 	float mRecSpec[256];
 
-	FMOD_CREATESOUNDEXINFO exinfo;
+	FMOD_CREATESOUNDEXINFO exinfo { 0 };
 
 	// sound card recording source
 	int mRecordDriver;
@@ -55,6 +57,8 @@ private:
 	void init();
 
 	// start/stop recording from sound card
+	void playRecording();
+	void processRecording();
 	void startCapture();
 	void stopCapture();
 
@@ -72,7 +76,6 @@ public:
 	// number of channels to sample
 	static int const CHANNELS = 2;
 
-	virtual void playSong();
 	virtual void togglePause();
 	virtual bool update();
 

@@ -56,13 +56,6 @@ void Audio::initAudio()
 	res = mpSystem->getNumDrivers(&mNumDrivers);
 	FMODErrorCheck(res, "get num drivers in initAudio()");
 
-	//set a callback so we can be notified if record list has changed
-	int recordListChangedCount = 0;
-	res = mpSystem->setUserData(&recordListChangedCount);
-	FMODErrorCheck(res, "record list changed count");
-	//res = mpSystem->setCallback(&SystemCallback2, FMOD_SYSTEM_CALLBACK_RECORDLISTCHANGED);
-	//FMODErrorCheck(res, "set system callback");
-
 	// no sound cards (disable sound)
 	if (mNumDrivers == 0)
 	{ 
@@ -174,7 +167,7 @@ void Audio::playSong()
 
 	//res = FMOD_Channel_SetMode(mpChannel, FMOD_LOOP_OFF);
 	res = mpChannel->setMode(FMOD_LOOP_OFF);
-	FMODErrorCheck(res, "set channe lmode in playSong()");
+	FMODErrorCheck(res, "set channel mode in playSong()");
 
 	mIsPlaying = true;
 }
