@@ -389,8 +389,7 @@ void Graphics::render()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	if (mAudioMode == 1)
-		mpAudio->playSong();
+	mpAudio->playSong();
 	mpAudio->update();
 
 	Uniforms* pUni = new Uniforms();
@@ -405,9 +404,6 @@ void Graphics::render()
 
 		if (!mpAudio->update())
 			mpEventMan->addEvent(new SongEndEvent(), 1);
-
-		//mpAudio->updateRecord();
-		//mpAudio->updateRecord2();
 
 		sendUniforms(pUni);
 
@@ -622,10 +618,13 @@ void Graphics::toggleShader(int prevNext)
 
 void Graphics::toggleSong(int prevNext)
 {
-	mpAudio->toggleSong(prevNext);
-	glfwSetTime(0.0);
-	this->debugOutput(DebugOutputType::CURRENT_SONG, false);
-	this->debugOutput(DebugOutputType::SPACE, false);
+	if (mAudioMode == 1)
+	{
+		mpAudio->toggleSong(prevNext);
+		glfwSetTime(0.0);
+		this->debugOutput(DebugOutputType::CURRENT_SONG, false);
+		this->debugOutput(DebugOutputType::SPACE, false);
+	}
 }
 
 void Graphics::userSetup(SetupStage stage, int &n, std::string &s)

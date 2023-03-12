@@ -22,45 +22,43 @@ enum class RecordingState
 class Recording : public Audio
 {
 private:
-
-	FMOD::System		*mpRecSystem;
-	FMOD::Sound			*mpRecSound;
+	
 	FMOD::Channel		*mpRecChannel;
-	FMOD::DSP			*mpRecDSP;
 	FMOD::ChannelGroup	*mpRecCGroup;
+	FMOD::DSP			*mpRecDSP;
+	FMOD::Sound			*mpRecSound;
+	FMOD::System		*mpRecSystem;
 
 	void* mExtraDriverData;
 
-	bool mDspEnabled;
+	const int SPEC_SIZE = 256;
 
-	int mNativeRate;
+	int mActualLatency;
 	int mNativeChannels;
-	unsigned int mSamplesRecorded;
-	unsigned int mSamplesPlayed;
-	unsigned int mVersion;
+	int mNativeRate;
+	int mNumDrivers;
+	int mRecordDriver;
 
-	bool mIsRecording;
+	unsigned int mAdjustedLatency;
+	unsigned int mDesiredLatency;
+	unsigned int mDriftThreshold;
+
+	unsigned int mSamplesPlayed;
+	unsigned int mSamplesRecorded;
+	unsigned int mSoundLen;
+	unsigned int mVersion;
+	
 	bool mIsPlaying;
+	bool mIsRecording;
 
 	float mRecFreq;
 	float mRecSpec[256];
 
 	FMOD_CREATESOUNDEXINFO exinfo { 0 };
 
-	// sound card recording source
-	int mRecordDriver;
-	// number of recording sources available  
-	int mRecordingSources;
-	int mNumDrivers;
-
 	// initialize everything
 	void init();
-
-	// start/stop recording from sound card
-	void playRecording();
-	void processRecording();
-	void startCapture();
-	void stopCapture();
+	void processAudio();
 
 	// when music was last unpaused
 	int mMusicStartTick;
@@ -76,9 +74,12 @@ public:
 	// number of channels to sample
 	static int const CHANNELS = 2;
 
+	virtual void playSong();
 	virtual void togglePause();
+	virtual void toggleSong(int prevNext) {};
 	virtual bool update();
 
+	virtual int getSpecSize() { return SPEC_SIZE; };
 	virtual float getFreq() { return mRecFreq; };
 	virtual float* getSpectrumData() { return mRecSpec; };
 };

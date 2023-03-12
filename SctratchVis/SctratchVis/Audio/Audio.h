@@ -67,22 +67,6 @@ private:
 	const int SPEC_SIZE = 256;
 	int mCurSong;
 
-	unsigned int mSamplesRecorded = 0;
-	unsigned int mSamplesPlayed = 0;
-	void* mExtraDriverData;
-	int mNativeRate;
-	int mNativeChannels;
-	unsigned int mDriftThreshold;
-	unsigned int mDesiredLatency;
-	unsigned int mAdjustedLatency;
-	int mActualLatency;
-	FMOD_CREATESOUNDEXINFO mExinfo;
-	unsigned int mSoundLength;
-	RECORD_STATE record[MAX_DRIVERS] = {};
-	int mNumConnectedDrivers;
-	int mCursor;
-	int mScroll;
-
 	float mFreq;
 	float mSpectrum[256];
 
@@ -102,19 +86,20 @@ public:
 	void loadSongs();
 	void selectSong(int i);
 	void toggleRand();
-	void toggleSong(int prevNext);
 	void unloadAudio();
 
 	virtual void playSong();
 	virtual void togglePause();
+	virtual void toggleSong(int prevNext);
 	virtual bool update();
 
 	// getters/setters
+	virtual int getSpecSize() { return SPEC_SIZE; };
 	virtual float getFreq() { return mFreq; };
 	virtual float* getSpectrumData() { return mSpectrum; };
 
 	int getNumSongs() { return mSongCount; };
-	int getSpecSize() { return SPEC_SIZE; };
+	
 
 	void setIsPlaying(bool b) { mIsPlaying = b; };
 	bool getIsPlaying() { return mIsPlaying; };

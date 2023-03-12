@@ -38,9 +38,6 @@ void Audio::initAudio()
 	mIsPaused = false;
 	FMOD_RESULT res;
 
-	mExtraDriverData = NULL;
-	//res = FMOD::
-
 	// create system
 	//res = FMOD_System_Create(&mpSystem);
 	res = FMOD::System_Create(&mpSystem);
@@ -48,7 +45,7 @@ void Audio::initAudio()
 
 	//initialize the system
 	//res = FMOD_System_Init(mpSystem, 2, FMOD_INIT_NORMAL, 0);
-	res = mpSystem->init(100, FMOD_INIT_NORMAL, mExtraDriverData);
+	res = mpSystem->init(32, FMOD_INIT_NORMAL, 0);
 	FMODErrorCheck(res, "system init in initAudio()");
 
 	// get number of sound cards
@@ -349,7 +346,8 @@ bool Audio::update()
 
 	void *specData;
 	//res = FMOD_DSP_GetParameterData(mpDSP, (int)FMOD_DSP_FFT_SPECTRUMDATA, (void **)&specData, 0, 0, 0);
-	res = mpDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, (void**)&specData, 0, 0, 0);
+	res = mpDSP->getParameterData((int)FMOD_DSP_FFT_SPECTRUMDATA, 
+		(void**)&specData, 0, 0, 0);
 	FMODErrorCheck(res, "get spectrum data in update()");
 
 	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT *)specData;
