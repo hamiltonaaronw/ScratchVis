@@ -35,44 +35,6 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-vec3 pal(in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d)
-{
-	return (a + b * cos(TAU * (c * t + d)));
-}
-
-vec3 pal(float t, float f)
-{
-	return pal(t, 
-			vec3(0.15), 
-			vec3(0.5, 0.25, 0.5), 
-			vec3(2.0 + f, 1.0, f), 
-			vec3(0.5 - f, 0.5, 0.25)
-		);
-}
-
-vec3 hmm(float a, float t)
-{
-	return cos(vec3(
-		cos(a) * cos(t),
-		cos(a) * sin(t),
-		sin(t) * sin(a)
-	) * (sin(t) * cos(t)));
-}
-
-vec2 f2(float t)
-{
-	t /= 16.0;
-	return vec2(
-		sin(t * PI) * cos(2.0 * t * TAU),
-		cos(t * TAU) * sin(2.0 * t * PI)
-	);
-}
-
-int f_int(float x, float m, float ml)
-{
-	return int(floor(mod(x * m, ml)));
-}
-
 vec3 col(vec2 p)
 {
 	vec3 ret;
@@ -88,19 +50,7 @@ vec3 col(vec2 p)
 		uSpectrum[127] * f
 	) + uSpectrum[254];
 
-	float t0 = uTime;
-	t0 += f * length(p) * uSpectrum[f_int(x + f, 100.0, 255)];
-	t0 += length(p) * max(sin(uTime), f);
-	//t0 += length(vf) * length(p);
-
-	vec2 m0 = f2(t0);
-	vec2 m = (cos(p * (16.0 * TAU)) * TAU * (m0));
-	m *= smoothstep(0.0, 1.0, dot(m, m)) - (f * uFreq);
-	float t = dot(p, p) * dot(m, m) + t0;
-
-	c = pal(t, f) * hmm(t + f, 1.0 - t);
-
-	//c = vec3(1.0, 0.0, 0.0);
+	c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
