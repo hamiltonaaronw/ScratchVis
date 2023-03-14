@@ -85,11 +85,11 @@ public:
 	void initAudio();
 	void loadSongs();
 	void selectSong(int i);
-	void toggleRand();
 	void unloadAudio();
 
 	virtual void playSong();
 	virtual void togglePause();
+	virtual void toggleRand();
 	virtual void toggleSong(int prevNext);
 	virtual bool update();
 
@@ -99,7 +99,6 @@ public:
 	virtual float* getSpectrumData() { return mSpectrum; };
 
 	int getNumSongs() { return mSongCount; };
-	
 
 	void setIsPlaying(bool b) { mIsPlaying = b; };
 	bool getIsPlaying() { return mIsPlaying; };
@@ -110,10 +109,10 @@ public:
 	void setIsPaused(bool b) { mIsPaused = b; };
 	bool getIsPaused() { return mIsPaused; };
 
-	std::string getCurrentSongName() { return mSongs[mCurSong]->mSongName; };
-	std::string getSongName(int i) { return mSongs[i]->mSongName; };
+	virtual std::string getCurrentSongName() { return mSongs[mCurSong]->mSongName; };
+	virtual std::string getSongName(int i) { return mSongs[i]->mSongName; };
 
-	void setMusicDir(std::string s) { mMusicDir = s; };
+	virtual void setMusicDir(std::string s) { mMusicDir = s; };
 	std::string getMusicDir() { return mMusicDir; };
 };
 

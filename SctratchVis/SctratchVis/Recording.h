@@ -76,10 +76,16 @@ public:
 
 	virtual void playSong();
 	virtual void togglePause();
-	virtual void toggleSong(int prevNext) {};
 	virtual bool update();
 
 	virtual int getSpecSize() { return SPEC_SIZE; };
 	virtual float getFreq() { return mRecFreq; };
 	virtual float* getSpectrumData() { return mRecSpec; };
+
+	// empty virtual functions
+	virtual std::string getCurrentSongName() { return "Recording"; }
+	virtual std::string getSongName(int i) { return "Recording"; }
+	virtual void setMusicDir(std::string s) {};
+	virtual void toggleRand() {};
+	virtual void toggleSong(int prevNext) {};
 };

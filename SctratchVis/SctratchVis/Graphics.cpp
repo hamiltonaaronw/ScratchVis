@@ -102,21 +102,24 @@ void Graphics::framebuffer_size_callback(GLFWwindow* window, int width, int heig
 
 void Graphics::hotReloadAudio(bool changeDir)
 {
-	int iJunk = 0;
-	std::string sJunk = "";
-	std::string d = mpAudio->getMusicDir();
-	mpAudio->unloadAudio();
-	mpAudio = NULL;
-	delete mpAudio;
+	if (mAudioMode == 1)
+	{
+		int iJunk = 0;
+		std::string sJunk = "";
+		std::string d = mpAudio->getMusicDir();
+		mpAudio->unloadAudio();
+		mpAudio = NULL;
+		delete mpAudio;
 
-	mpAudio = new Audio();
-	if (changeDir)
-		userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
-	else
-		mpAudio->setMusicDir(d);
-	mpAudio->loadSongs();
+		mpAudio = new Audio();
+		if (changeDir)
+			userSetup(SetupStage::MUSIC_DIR, iJunk, sJunk);
+		else
+			mpAudio->setMusicDir(d);
+		mpAudio->loadSongs();
 
-	mpAudio->playSong();
+		mpAudio->playSong();
+	}
 }
 
 void Graphics::initAll()
@@ -618,10 +621,10 @@ void Graphics::toggleShader(int prevNext)
 
 void Graphics::toggleSong(int prevNext)
 {
+	glfwSetTime(0.0);
 	if (mAudioMode == 1)
 	{
 		mpAudio->toggleSong(prevNext);
-		glfwSetTime(0.0);
 		this->debugOutput(DebugOutputType::CURRENT_SONG, false);
 		this->debugOutput(DebugOutputType::SPACE, false);
 	}
