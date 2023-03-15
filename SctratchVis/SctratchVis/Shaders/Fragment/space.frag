@@ -1,5 +1,7 @@
 #version 410
 
+// based on https://glslsandbox.com/e#82686.0
+
 in vec2 oTexCoord;
 
 float scale;
