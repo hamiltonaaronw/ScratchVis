@@ -512,16 +512,15 @@ vec3 col(vec2 p, vec2 q)
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	float t = (uTime + step(51.0, uTime) * 11.0);
-	
 	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	float tm = mod(uTime, PI / 10.0);
-	float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
-	float tf = atan(tm, ff);
-	float fsum = (uFreq - uLastFreq) + f + tm + ff + tf;
-
-	t *= cosc(fsum);
+	vec3 vf = vec3(
+		uSpectrum[31] / f,
+		uSpectrum[63] - f,
+		uSpectrum[127] * f
+	) + uSpectrum[254];
+	float t = uTime * 0.25;
+	float tf = t * atan(f, length(vf));
 
 	compute_globals();
 

@@ -11,6 +11,7 @@ uniform float uFreq;
 uniform float uTime;
 uniform float uLastFreq;
 uniform float uDeltaFreq;
+uniform float[256] uSpectrum;
 uniform vec2 uRes;
 
 #define saturate(x) clamp(x, 0.0, 1.0)
@@ -61,6 +62,7 @@ vec4 map(vec3 p, float f)
 	vec3 q = p;
 	p = mod(p, 1.0) - 0.5;
 	vec4 m = vec4(1.0);
+	float af = atan(uFreq, f);
 
 	float s = 1.0;
 	for (int i = 0; i < 5; i++)
@@ -68,9 +70,10 @@ vec4 map(vec3 p, float f)
 		p = abs(p) - 0.5;
 		p.xy *= rot(-0.5);
 //p = abs(p) - 0.4 + 0.0 * cos(TAU * uTime / 4.0);
-		p = abs(p) - 0.4 + 0.075 * cos(TAU * (uTime * f * 0.125) / 8.0);
+		p = abs(p) - 0.4 + 0.0 * cos(TAU / af);
+
 //p.yz *= rot(-0.1);
-		p.yz *= rot(-0.1 * (uTime * f * 0.125) * 0.25);
+		p.yz *= rot(-0.05 * af * cos(uTime * 0.025));
 
 		p *= 1.4;
 		s *= 1.4;
@@ -81,26 +84,26 @@ vec4 map(vec3 p, float f)
 	float c = 0.05;
 
 	a = 0.85;
-	c = mod(uDeltaFreq, 0.05) + 0.5;
+	c = mod(uDeltaFreq, f) + min(af, 0.5);
 
 //U(m, sdBox(p, vec3(0.5, 0.05, 0.05)) / s, 1.0, 1.0, 0.0);
 	U(m, sdBox(p, vec3(a, b, c)) / s, 1.0, 1.0, 0.0);
 
-	a = 0.5 + 0.5 * cosc(TAU * (uTime / f) / 4.0);
-	b = 0.06;
-	c = 0.05;
+	a = 0.5 + 0.5 * cosc(TAU * uTime / 4.0);
+	b = 0.08 * sin(af);
+	c = 0.05 + sinc(af);
 
 //U(m, sdBox(p, vec3(0.5 + 0.5 * (cos(TAU * uTime / 4.0)), 0.06, 0.05)) / s, 0.0, 0.1, 0.5);
 	U(m, sdBox(p, vec3(a, b, c)) / s, 0.0, 0.1, abs(0.5 - f));
 
-	a = 0.2;
-	b = 0.6;
-	c - 0.05 * noise(p.yz * f);
+	a = 0.9;
+	b = 0.3;
+	c = 0.5 * noise(p.yz * af);
 
 	float sd = cos(TAU * ((uTime / f) + q.z / 8.0));
 
-//U(m, sdBox(p, vec3(0.2, 0.6, 0.1)) / s, 0.0, saturate(cos(TAU * (uTime + q.z / 8.0))), -0.5);
-	U(m, sdBox(p, vec3(a, b, c)) / s, 0.0, saturate(sd), -0.5);
+U(m, sdBox(p, vec3(0.2, 0.6, 0.1)) / s, 0.0, saturate(cos(TAU * (uTime + q.z / 8.0))), -0.5);
+//	U(m, sdBox(p, vec3(a, b, c)) / s, 0.0, saturate(sd), -0.5);
 
 	return m;
 }
@@ -119,11 +122,13 @@ vec3 col(vec2 p)
 
 	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	float tm = mod(uTime, PI / 10.0);
-	float ff = smoothstep(min(f, tm), max(uFreq, tm) * uFreq, cosc(TAU) + uLastFreq);
-	float tf = atan(tm, ff);
-	float fsum = abs(uFreq - uLastFreq) + f + tm + ff + tf;
-	float t = tm / fsum;
+	vec3 vf = vec3(
+		uSpectrum[31] / f,
+		uSpectrum[63] - f,
+		uSpectrum[127] * f
+	) + uSpectrum[254];
+	float t = uTime * 0.25;
+	float tf = t * atan(f, length(vf));
 
 	vec2 m;
 	m.x = atan(p.x / p.y) / PI;
@@ -132,7 +137,7 @@ vec3 col(vec2 p)
 //vec3 ro = vec3(0.0, 0.0, uTime);
 	vec3 ro = vec3(0.0, 0.0, (uTime * 0.2));
 //vec3 ray = vec3(p, 1.1 + cos(TAU * uTime / 8.0));
-	vec3 ray = vec3(p, 1.1 + cos(TAU * (uTime * 0.2) / 8.0));
+	vec3 ray = vec3(p, 1.1 + cos(TAU * (tf) / 64.0));
 //ray += 0.1 * fbm(vec3(1.0, 2.0, 3.0) + TAU * uTime / 4.0);
 	ray += 0.1 * fbm(vec3(1.0, 2.0, 3.0) + TAU * (uTime * 0.2) / 4.0);
 	ray = normalize(ray);
@@ -142,15 +147,15 @@ vec3 col(vec2 p)
 	{
 		vec3 q = ro + ray * u;
 //vec4 m = map(q, 1.0);
-		//vec4 m = uFreq > 0.0001 ? map(q, atan(t * 1.25, -fsum)) : map(q, 1.0);
-		vec4 m = map(q, atan(t * 1.125, -fsum));
+		vec4 m = map(q, sin(length(cross(c, vf))));
 		float d = m.x;
 		if (m.y == 1.0)
 		{
 			u += d;
 			if (d < 0.001)
 			{
-				c += 0.005 * float(i);
+//c += 0.005 * float(i);
+				c += 0.05 * float(i) * atan(f, length(vf)) - cross(vf, c);
 				break;
 			}
 		}
@@ -162,8 +167,6 @@ vec3 col(vec2 p)
 	}
 
 	c = mix(vec3(0.0), c, exp(-0.7 * u));
-
-	//c.g -= hsv2rgb(c.r, c.g, c.b).g;
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
