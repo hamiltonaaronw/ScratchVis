@@ -3,18 +3,6 @@
 #include "Audio/Audio.h"
 #include <queue>
 
-#define LATENCY_MS		(50)
-#define DRIFT_MS		(1)
-#define DEVICE_INDEX	(0)
-
-enum class RecordingState
-{
-	REC_SELECTION,
-	REC_RECORD,
-	REC_PLAYBACK,
-	REC_QUIT
-};
-
 class Recording : public Audio
 {
 private:
@@ -47,28 +35,20 @@ private:
 	bool mIsPlaying;
 	bool mIsRecording;
 
+	float mBaseDrift;
+	float mBaseLatency;
 	float mRecFreq;
 	float mRecSpec[256];
 
 	FMOD_CREATESOUNDEXINFO exinfo { 0 };
 
-	// initialize everything
 	void init();
 	void processAudio();
-
-	// when music was last unpaused
-	int mMusicStartTick;
-
 	void clean();
 
 public:
 	Recording();
 	~Recording();
-
-	// sample rate
-	static int const SAMPLE_RATE = 44100;
-	// number of channels to sample
-	static int const CHANNELS = 2;
 
 	virtual void playSong();
 	virtual void togglePause();

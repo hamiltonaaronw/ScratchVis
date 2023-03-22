@@ -85,7 +85,9 @@ void Recording::init()
 	mIsPlaying		= false;
 	mIsRecording	= false;
 
-	mRecFreq = 0.0f;
+	mBaseDrift		= 1.0f;
+	mBaseLatency	= 50.0f;
+	mRecFreq		= 0.0f;
 
 	// create system object and init
 	res = FMOD::System_Create(&mpRecSystem);
@@ -132,8 +134,8 @@ void Recording::init()
 	FMODErrorCheck(res, "retrieve info from specified recording device in Recording class constructor");
 	std::cout << "Recording from device " << devName << std::endl;
 
-	mDriftThreshold = (mNativeRate * DRIFT_MS) / 1000; // where to start compensating for drift
-	mDesiredLatency = (mNativeRate * LATENCY_MS) / 1000; // user specified latency
+	mDriftThreshold = (mNativeRate * mBaseDrift) / 1000; // where to start compensating for drift
+	mDesiredLatency = (mNativeRate * mBaseLatency) / 1000; // user specified latency
 	mAdjustedLatency = mDesiredLatency; // user spec adjusted for driver update granularity
 	mActualLatency = mDesiredLatency; // latency measured once playback begins (smoothend for jitter)
 

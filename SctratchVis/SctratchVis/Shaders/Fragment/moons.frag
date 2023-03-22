@@ -134,15 +134,17 @@ vec3 col(vec2 p)
 	m.x = atan(p.x / p.y) / PI;
 	m.y = 1.0 / length(p) * 0.2;
 
+
+
 //vec3 ro = vec3(0.0, 0.0, uTime);
 	vec3 ro = vec3(0.0, 0.0, (uTime * 0.2));
 //vec3 ray = vec3(p, 1.1 + cos(TAU * uTime / 8.0));
 	vec3 ray = vec3(p, 1.1 + cos(TAU * (tf) / 64.0));
 //ray += 0.1 * fbm(vec3(1.0, 2.0, 3.0) + TAU * uTime / 4.0);
-	ray += 0.1 * fbm(vec3(1.0, 2.0, 3.0) + TAU * (uTime * 0.2) / 4.0);
+	ray += 0.1 * fbm(vec3(1.0, 2.0, 3.0) + TAU * (uTime * 0.1) / 4.0);
 	ray = normalize(ray);
 
-	float u = 0.0;
+	float u = uFreq;
 	for (int i = 0; i < 100; i++)
 	{
 		vec3 q = ro + ray * u;
@@ -161,18 +163,39 @@ vec3 col(vec2 p)
 		}
 		else
 		{
-			u += abs(d) * 0.5 + 0.01;
+//u += abs(d) * 0.5 + 0.01;
+			u += abs(d) * 0.5 + 0.01 * length(vf);
 			c += saturate(0.001 * vec3(1.0 + m.w, 1.0, 1.0 - m.w) * m.z / abs(d));
 		}
 	}
 
 	c = mix(vec3(0.0), c, exp(-0.7 * u));
 
+	/*
+	float a1 = 1.0;
+	float a2 = cosc(tf);
+	float a3 = -sin(uFreq);
+
+	float b1 = -sinc(tf);
+	float b2 = 1.0;
+	float b3 = cos(tf);
+
+	float c1 = sin(tf);
+	float c2 = -cosc(tf);
+	float c3 = 1.0;
+
+	c *= mat3(
+		a1, a2, a3,
+		b1, b2, b3,
+		c1, c2, c3
+	);
+	*/
+
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.001 ? c : vec3(0.0);
+	ret = uFreq > 0.0005 ? c : vec3(0.0);
 
 	return ret;
 }

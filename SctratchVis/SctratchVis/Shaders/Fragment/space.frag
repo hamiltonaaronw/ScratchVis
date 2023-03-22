@@ -525,7 +525,6 @@ vec3 col(vec2 p, vec2 q)
 	compute_globals();
 
 	float ttm = uTime * 0.1 * BPM / 60.0;
-	//float ttm = t * 0.1 * BPM / 60.0;
 	vec3 ro = offset(ttm);
 	vec3 dro = doffset(ttm);
 	vec3 ddro = ddoffset(ttm);
