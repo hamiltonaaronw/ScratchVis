@@ -134,12 +134,12 @@ void Recording::init()
 	FMODErrorCheck(res, "retrieve info from specified recording device in Recording class constructor");
 	std::cout << "Recording from device " << devName << std::endl;
 
-	mDriftThreshold = (mNativeRate * mBaseDrift) / 1000; // where to start compensating for drift
-	mDesiredLatency = (mNativeRate * mBaseLatency) / 1000; // user specified latency
+	mDriftThreshold = (unsigned int)((mNativeRate * mBaseDrift) / 1000); // where to start compensating for drift
+	mDesiredLatency = (unsigned int)((mNativeRate * mBaseLatency) / 1000); // user specified latency
 	mAdjustedLatency = mDesiredLatency; // user spec adjusted for driver update granularity
 	mActualLatency = mDesiredLatency; // latency measured once playback begins (smoothend for jitter)
 
-	// create iser sound to record into, then start recording
+	// create user sound to record into, then start recording
 	exinfo = { 0 };
 	exinfo.cbsize = sizeof(FMOD_CREATESOUNDEXINFO);
 	exinfo.numchannels = mNativeChannels;
