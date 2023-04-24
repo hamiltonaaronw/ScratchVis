@@ -1,17 +1,9 @@
-#version 410
+#version 450
 
-// based on https://glslsandbox.com/e#101857.0
+// derived from https://glslsandbox.com/e#102713.0
 
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
-#define hr		vec2(1.0, sqrt(3.0))
-
-#define circle(p, s)	(length(p) - s)
-#define hex(p, s)		(max(abs(p.x), dot(abs(p), normalize(hr))) - s)
-#define sm(t, v)		smoothstep(t, t * 1.2, v)
-#define hash21(x)		fract(sin(dot(x, vec2(164.5, 234.1))) * 594.5)
-#define hash11(x)		fract(sin(x) * 6497.5)
-#define dt(sp, off)		fract((uTime + off) * sp)
 
 out vec4 retColor;
 
@@ -21,9 +13,6 @@ uniform float uLastFreq;
 uniform float uDeltaTime;
 uniform float[256] uSpectrum;
 uniform vec2 uRes;
-
-
-
 
 mat2 rot(float a)
 {
@@ -43,65 +32,6 @@ float cosc(float x)
 	return cos(x) / x;
 }
 
-vec4 hgrid(vec2 uv)
-{
-	vec2 ga = mod(uv, hr) - hr * 0.5;
-	vec2 gb = mod(uv - hr * 0.5, hr) - hr * 0.5;
-	vec2 guv = (dot(ga, ga) < dot(gb, gb)) ? ga : gb;
-	vec2 gid = uv - guv;
-
-	return vec4(guv, gid);
-}
-
-float extrude(vec3 p, float d, float h)
-{
-	vec2 q = vec2(d, abs(p.z) - h);
-
-	return min(0.0, max(q.x, q.y)) + length(max(q, 0.0));
-}
-
-float truchet(vec2 uv, float w, float sdfid, bool back)
-{
-	vec4 hg = hgrid(uv);
-	vec2 uu = hg.xy;
-	vec2 id = hg.zw;
-	uu.x *= (hash21((id + 1.0 + sdfid) * 0.1) < 0.5) ? -1.0 : 1.0;
-
-	float s = (uu.x * sqrt(3.0) >- uu.y) ? 1.0 : -1.0;
-	float diag;
-	if (back)
-		diag = sm(0.01, abs(uu.y + uu.x * sqrt(3.0)));
-	else
-		diag = abs(uu.y + uu.x * sqrt(3.0));
-
-	uu -= vec2(1.0, 1.0 / sqrt(3.0)) * s * 0.5;
-	float contour;
-
-	if (back)
-		contour = sm(0.02, abs(circle(uu, 0.29)));
-	else
-		contour = abs(circle(uu, sqrt(3.0) / 6.0));
-
-
-	contour *= diag;
-
-	return contour - w;
-}
-
-float g1 = 0.0;
-float sid;
-float SDF(vec3 p)
-{
-	p.z += uTime;
-	float per = 2.0;
-	sid = floor(p.z / per);
-	p.z = mod(p.z, per) - per * 0.5;
-	float d = extrude(p.xyz, truchet(p.xy + 0.5, sin(length(p.xy * 3.0) - dt(0.5, sid * 0.2) * TAU) * 0.02 + 0.01, sid * 0.5, false), 0.1);
-	g1 += 0.01 / (0.01 + d * d);
-
-	return d;
-}
-
 vec3 col(vec2 p)
 {
 	vec3 ret;
@@ -109,44 +39,86 @@ vec3 col(vec2 p)
 
 	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	vec3 vf = vec3(
-		uSpectrum[31] / f,
-		uSpectrum[63] - f,
-		uSpectrum[127] * f
-	) + uSpectrum[254];
+	vec3 vf = vec3(0.0);
+	float sum = 0.0;
+	float a, b, d, g;
+	float lvf;
+	float t = uTime * 0.25;
 
-	float dither = hash21(p);
-	vec3 ro = vec3(0.001, 0.001, -5.0);
-	vec3 rd = normalize(vec3(p, 1.0));
-	vec3 q = ro;
-	c = clamp(1.0 - vec3(truchet(p * 3.0, 0.01, 1.0, true)), 0.0, 1.0);
-
-	bool hit = false;
-	float shad;
-
-	for (float i = 1.0; i < 50.0; i++)
+	for (int i = 0; i < 256; i++)
 	{
-		float d = SDF(q);
-		if (abs(d) < 0.001)
+		if (i == 84)
 		{
-			hit = true;
-			shad = i / 64.0;
-			break;
+			vf.x = sum / 85.0;
+			//sum = 0.0;
 		}
-		d *= 0.99 + dither * 0.05;
-		q += d * rd;
+		if (i == 169)
+		{
+			vf.y = sum / 85.0;
+			//sum = 0.0;
+		}
+		if (i == 255)
+			vf.z = sum / 86.0;
+		sum += uSpectrum[i];
 	}
 
-	if (hit)
-		c = vec3(1.0 - shad);
+//vf *= sin(uTime * (sum / 256) / TAU);
+	vf *= sin(t * (sum / 256) / TAU);
+	lvf = length(vf);
+	//vf = normalize(vf);
+	
+//float tf = clamp((uTime * 0.5), vf.x, step(uFreq, lvf)) + f;
+	float tf = clamp((t * 0.5), vf.x, step(uFreq, lvf)) + f;
+	float df = (abs(uLastFreq - uFreq) * 0.5);
 
-	c += g1 * vec3(0.9, 0.4, 0.0) * 0.03;
+	// camera bounce
+	p *= sin(uTime) + df;
+
+	vec2 q = 3.0 * p;
+	q *= rot(uTime * 0.5);
+
+	vec3 col1 = vec3(1.0, 2.0, 8.0);
+	vec3 col2 = vec3(8.0, 2.0, 1.0);
+
+	a = length(q);
+	b = 0.6 / (sin(tf) * (0.3 * uFreq) * TAU);
+	d = df / mod(lvf, tf + sin(t));
+	g = atan(lvf, df);
+
+	float m1 = uFreq > 0.00001 ? 
+				sin(a * b - d * g) : 
+				sin(length(q) * 0.3 - uTime * 0.3);
+
+	a = length(q * -inverse(rot(t)));
+
+	b = (1.3 + uFreq) + (exp2(df));
+	d = exp2(df) * dFdyCoarse(tf * lvf);
+	g = atan(inversesqrt(lvf + tf), df);
+
+	float m2 = uFreq > 0.00001 ? 
+				sin(0.3 * (a * b - d * g)) : 
+				sin(0.3 * (length(q) * 0.3 - uTime * 0.3));
+
+//float c1 = 0.012 / abs(length(mod(q, 2.0 * m1) - m1) - 0.3);
+	float c1 = 0.012 / abs(length(mod(q, 2.0 * m1) - m1) - 0.3);
+
+
+//float c2 = 0.012 / abs(length(mod(q, 2.0 * m2) - m2) - 0.3);
+	float c2 = 0.012 / abs(length(mod(q, 2.0 * m2) - m2) - 0.3);
+
+	float al = uFreq < 0.00001 ? 1.0 :
+				(df * g) + 0.3;
+
+	c = col1 * c1;
+	c += col2 * c2;
+	c *= al;
+	//c = mix(col1 * c1, col2 * c2, al);
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	ret = c;
 
 	return ret;
 }
