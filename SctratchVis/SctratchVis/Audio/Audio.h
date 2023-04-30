@@ -68,7 +68,9 @@ private:
 	int mCurSong;
 
 	float mFreq;
+	float mSpecSum;
 	float mSpectrum[256];
+	float mSpec3[3];
 
 	bool mIsPlaying;
 
@@ -96,7 +98,9 @@ public:
 	// getters/setters
 	virtual int getSpecSize() { return SPEC_SIZE; };
 	virtual float getFreq() { return mFreq; };
+	virtual float getSpecSum() { return mSpecSum; };
 	virtual float* getSpectrumData() { return mSpectrum; };
+	virtual float* getSpectrumData3() { return mSpec3; };
 
 	int getNumSongs() { return mSongCount; };
 

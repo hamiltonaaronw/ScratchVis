@@ -7,12 +7,17 @@
 
 out vec4 retColor;
 
-uniform float uFreq;
-uniform float uTime;
-uniform float uLastFreq;
-uniform float uDeltaTime;
-uniform float[256] uSpectrum;
 uniform vec2 uRes;
+uniform vec3 uSpec3;
+uniform float uDeltaFreq;
+uniform float uDeltaTime;
+uniform float uFreq;
+uniform float uLastFrame;
+uniform float uLastFreq;
+uniform float uSpecSum;
+uniform float uTime;
+uniform float uSpectrum[256];
+
 
 mat2 rot(float a)
 {
@@ -39,35 +44,15 @@ vec3 col(vec2 p)
 
 	float x = mod(uFreq * 4.0, 1.0);
 	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	vec3 vf = vec3(0.0);
-	float sum = 0.0;
+	vec3 vf = uSpec3;
 	float a, b, d, g;
 	float lvf;
 	float t = uTime * 0.25;
 
-	for (int i = 0; i < 256; i++)
-	{
-		if (i == 84)
-		{
-			vf.x = sum / 85.0;
-			//sum = 0.0;
-		}
-		if (i == 169)
-		{
-			vf.y = sum / 85.0;
-			//sum = 0.0;
-		}
-		if (i == 255)
-			vf.z = sum / 86.0;
-		sum += uSpectrum[i];
-	}
-
-//vf *= sin(uTime * (sum / 256) / TAU);
-	vf *= sin(t * (sum / 256) / TAU);
-	lvf = length(vf);
-	//vf = normalize(vf);
 	
-//float tf = clamp((uTime * 0.5), vf.x, step(uFreq, lvf)) + f;
+	vf *= sin(t * (uSpecSum / 256) / TAU);
+	lvf = length(vf);
+	
 	float tf = clamp((t * 0.5), vf.x, step(uFreq, lvf)) + f;
 	float df = (abs(uLastFreq - uFreq) * 0.5);
 

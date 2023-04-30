@@ -88,6 +88,7 @@ void Recording::init()
 	mBaseDrift		= 1.0f;
 	mBaseLatency	= 50.0f;
 	mRecFreq		= 0.0f;
+	mRecSpecSum		= 0.0f;
 
 	// create system object and init
 	res = FMOD::System_Create(&mpRecSystem);
@@ -201,10 +202,21 @@ void Recording::processAudio()
 
 	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT*)specData;
 
+	mRecSpecSum = 0.0f;
 	if (fft)
 	{
-		for (int i = 0; i < fft->length; i++)
+		for (int i = 0; i < fft->length; i++) {
 			mRecSpec[i] = (float&)fft->spectrum[i];
+
+			mRecSpecSum += mRecSpec[i];
+
+			if (i == 85)
+				mRecSpec3[0] = mRecSpecSum / 86;
+			else if(i == 170)
+				mRecSpec[1] = mRecSpecSum / 85;
+			else if(i == 255)
+				mRecSpec3[2] = mRecSpecSum / 85;
+		}
 	}
 
 	freq /= 10000;

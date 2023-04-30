@@ -457,15 +457,25 @@ void Graphics::sendUniforms(Uniforms *pUni)
 	pUni->mDFreq = pUni->mCurFreq - pUni->mLastFreq;
 	pUni->mDTime = pUni->mCurTime - pUni->mLastTime;
 
-	// resolution, current frequency and current time will always be sent to all shaders
+	pUni->mSpec		= mpAudio->getSpectrumData();
+	pUni->mSpec3	= mpAudio->getSpectrumData3();
+	pUni->mSpecSum	= mpAudio->getSpecSum();
+
+	// send uniform vectors to current shader program
 	mpShaderMan->getCurrentShader()->setVec2("uRes", glm::vec2((float)pUni->mResWidth / 2.0, (float)pUni->mResHeight / 2.0));
-	mpShaderMan->getCurrentShader()->setFloat("uFreq", pUni->mCurFreq);
-	mpShaderMan->getCurrentShader()->setFloat("uTime", pUni->mCurTime);
-	mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", mpAudio->getSpectrumData(), mpAudio->getSpecSize());
+	mpShaderMan->getCurrentShader()->setVec3("uSpec3", glm::vec3((float)pUni->mSpec3[0], (float)pUni->mSpec3[1], (float)pUni->mSpec3[2]));
+	
+	//send uniform floats to current shader program
 	mpShaderMan->getCurrentShader()->setFloat("uDeltaFreq", pUni->mDFreq);
-	mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
 	mpShaderMan->getCurrentShader()->setFloat("uDeltaTime", pUni->mDTime);
+	mpShaderMan->getCurrentShader()->setFloat("uFreq", pUni->mCurFreq);
 	mpShaderMan->getCurrentShader()->setFloat("uLastFrame", pUni->mLastTime);
+	mpShaderMan->getCurrentShader()->setFloat("uLastFreq", pUni->mLastFreq);
+	mpShaderMan->getCurrentShader()->setFloat("uSpecSum", pUni->mSpecSum);
+	mpShaderMan->getCurrentShader()->setFloat("uTime", pUni->mCurTime);
+
+	// send uniform float arrays to current shader program
+	mpShaderMan->getCurrentShader()->setFloatArray("uSpectrum", pUni->mSpec, 256);
 
 	pUni->mLastFreq = pUni->mCurFreq;
 	pUni->mLastTime = pUni->mCurTime;

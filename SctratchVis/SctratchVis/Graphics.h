@@ -49,14 +49,19 @@ struct Uniforms
 	float mCurTime;
 	float mDTime;
 	float mLastTime;
+	float mSpecSum;
 
 	int mResWidth;
 	int mResHeight;
 
+	float* mSpec;
+	float* mSpec3;
+
 	Uniforms()
 		:	mCurFreq(0.0),	mDFreq(0.0),	mLastFreq(0.0),
 			mCurTime(0.0),	mDTime(0.0),	mLastTime(0.0),
-			mResWidth(0),	mResHeight(0)
+			mResWidth(0),	mResHeight(0),	mSpec(),
+			mSpec3(),		mSpecSum(0.0)
 	{}
 };
 

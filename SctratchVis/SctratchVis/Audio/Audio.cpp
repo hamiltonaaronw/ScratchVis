@@ -87,6 +87,7 @@ void Audio::initAudio()
 	FMODErrorCheck(res, "add dsp to channel group in initAudio()");
 
 	mFreq = 0.0f;
+	mSpecSum = 0.0f;
 	mIsRandom = false;
 }
 
@@ -352,10 +353,21 @@ bool Audio::update()
 
 	FMOD_DSP_PARAMETER_FFT* fft = (FMOD_DSP_PARAMETER_FFT *)specData;
 
+	mSpecSum = 0.0f;
 	if (fft)
 	{
-		for (int i = 0; i < fft->length; i++)
-			mSpectrum[i] = (float &)fft->spectrum[i];
+		for (int i = 0; i < fft->length; i++) {
+			mSpectrum[i] = (float&)fft->spectrum[i];
+
+			mSpecSum += mSpectrum[i];
+
+			if (i == 85)
+				mSpec3[0] = mSpecSum / 86;
+			else if (i == 170)
+				mSpec3[1] = mSpecSum / 85;
+			else if (i == 255)
+				mSpec3[2] = mSpecSum / 85;
+		}
 	}
 
 	freq /= 10000;

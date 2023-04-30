@@ -6,12 +6,12 @@
 class Recording : public Audio
 {
 private:
-	
-	FMOD::Channel		*mpRecChannel;
-	FMOD::ChannelGroup	*mpRecCGroup;
-	FMOD::DSP			*mpRecDSP;
-	FMOD::Sound			*mpRecSound;
-	FMOD::System		*mpRecSystem;
+
+	FMOD::Channel* mpRecChannel;
+	FMOD::ChannelGroup* mpRecCGroup;
+	FMOD::DSP* mpRecDSP;
+	FMOD::Sound* mpRecSound;
+	FMOD::System* mpRecSystem;
 
 	void* mExtraDriverData;
 
@@ -31,16 +31,18 @@ private:
 	unsigned int mSamplesRecorded;
 	unsigned int mSoundLen;
 	unsigned int mVersion;
-	
+
 	bool mIsPlaying;
 	bool mIsRecording;
 
 	float mBaseDrift;
 	float mBaseLatency;
 	float mRecFreq;
+	float mRecSpecSum;
 	float mRecSpec[256];
+	float mRecSpec3[3];
 
-	FMOD_CREATESOUNDEXINFO exinfo { 0 };
+	FMOD_CREATESOUNDEXINFO exinfo{ 0 };
 
 	void init();
 	void processAudio();
@@ -56,7 +58,9 @@ public:
 
 	virtual int getSpecSize() { return SPEC_SIZE; };
 	virtual float getFreq() { return mRecFreq; };
+	virtual float getSpecSum() { return mRecSpecSum; };
 	virtual float* getSpectrumData() { return mRecSpec; };
+	virtual float* getSpectrumData3() { return mRecSpec3; };
 
 	// empty virtual functions
 	virtual std::string getCurrentSongName() { return "Recording"; }
