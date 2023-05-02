@@ -197,7 +197,7 @@ vec3 col(vec2 p)
 
 	float af = uFreq > 0.0001 ?
 				uFreq :
-				sin(uTime) * 0.05;
+				sin(uTime) * 0.5;
 
 	c = march(from, dir, af);
 

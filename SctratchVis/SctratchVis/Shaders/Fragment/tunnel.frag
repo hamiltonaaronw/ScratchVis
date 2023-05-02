@@ -108,19 +108,31 @@ float pCount(float x, float per)
 	return floor(x / per);
 }
 
-float dist(vec3 pos)
+float dist(vec3 pos, float f)
 {
 	float r = length(pos.xy);
 	float a = atan(pos.y, pos.x);
-	a += uTime * 0.3 * 
-		sin(pCount(r, 3.0) + 1.0) * 
-		sin(pCount(pos.z, 1.0) * 13.73);
 
-	return min(max(max(
-		periodic(r, 3.0, 0.2),
-		periodic(pos.z, 1.0, 0.7 + 0.3 * cos(uTime / 3.0))),
-		periodic(a * r, TAU / 6.0 * r, 0.7 + 0.3 * cos(uTime / 3.0))),
-		0.25);
+//float b = sin(pCount(r, 3.0) + 1.0);
+	float b = sin(pCount(r, 3.0) + 1.0);
+
+//float c = sin(pCount(pos.z, 1.0) * 13.73);
+	float c = sin(pCount(pos.z, 1.0) * 13.73);
+
+//a += uTime * 0.5 * b * c;
+	a += uTime * 0.5 * b * c;
+
+//float p1 = periodic(r, 3.0, 0.2);
+	float p1 = periodic(r, 3.0, 0.2);
+
+//float p2 = periodic(pos.z, 1.0, 0.7 + 0.3 * cos(uTime / 3.0));
+	float p2 = periodic(pos.z, 1.0, 0.7 + 0.3 * cos(uTime / 3.0));
+
+//float p3 = periodic(a * r, TAU / 6.0 * r, 0.7 + 0.3 * cos(uTime / 3.0));
+	float p3 = periodic(a * r, TAU / 6.0 * r, 0.7 + 0.3 * cos(uTime / 3.0));
+
+//return min(max(max(p1, p2), p3), 0.25);
+	return min(max(max(p1, p2), p3), f * 4.0);
 }
 
 vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
@@ -138,7 +150,7 @@ vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
 	float i = 192.0;
 	for (int j = 0; j < 192; j++)
 	{
-		float d = dist(rayPos);
+		float d = dist(rayPos, f);
 		rayPos += d * rayDir;
 		
 		if (abs(d) < 0.001)
@@ -148,7 +160,7 @@ vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
 		}
 	}
 
-	float c = i / 192.0;
+	float c = (i + f) / 192.0;
 	c *= 12.0;
 	vec3 c1 = palette(c) / 256.0;
 	vec3 c2 = palette(c + 1.0) / 256.0;
@@ -170,7 +182,7 @@ vec3 col(vec2 p)
 	vf *= sin(t * (uSpecSum / 256) / TAU);
 	lvf = length(vf);
 	
-	float tf = clamp((t * 0.5), vf.x, step(uFreq, lvf)) + f;
+	float tf = mod((t * 0.5) / vf.x, step(uFreq, lvf)) + f;
 	float df = (abs(uLastFreq - uFreq) * 0.5);
 
 	p *= rot(t);
@@ -179,13 +191,17 @@ vec3 col(vec2 p)
 	vec3 rayDir = normalize(vec3(q, 1.0 + 0.0 * sqrt(q.x * q.x + q.y * q.y)));
 	vec3 rayPos = vec3(0.0, -0.5, uTime);
 
-	c = vr(q, rayPos, rayDir, 1.0);
+	float af = uFreq > 0.0001 ?
+		abs(atan(uFreq, length(rayDir)) - mod(acosh(tf) / tf, uFreq))
+		: 1.0;
+
+	c = vr(q, rayPos, rayDir, af);
 
 	//c = vec3(1.0, 0.0, 0.0);
 	//c = vec3(0.0, 1.0, 0.0);
 	//c = vec3(0.0, 0.0, 1.0);
 
-	ret = uFreq > 0.0001 ? c : vec3(0.0);
+	ret = c;// uFreq > 0.0001 ? c : vec3(0.0);
 
 	return ret;
 }

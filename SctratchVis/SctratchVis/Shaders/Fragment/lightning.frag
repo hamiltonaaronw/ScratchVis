@@ -1,5 +1,7 @@
 #version 410
 
+// derived from https://glslsandbox.com/e#59566.0
+
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 

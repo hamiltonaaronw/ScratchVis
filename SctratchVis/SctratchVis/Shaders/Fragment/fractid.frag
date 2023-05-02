@@ -3,19 +3,21 @@
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
-uniform float uFreq;
-uniform float uLastFreq;
-uniform float uDeltaFreq;
-uniform float[256] uSpectrum;
 uniform vec2 uRes;
+uniform vec3 uSpec3;
+uniform float uDeltaFreq;
+uniform float uDeltaTime;
+uniform float uFreq;
+uniform float uLastFrame;
+uniform float uLastFreq;
+uniform float uSpecSum;
 uniform float uTime;
+uniform float uSpectrum[256];
+
+#define sinc(x) sin(x) / x
+#define cosc(x) cos(x) / x
 
 out vec4 retColor;
-
-float sinc(float x) { return sin(x) / x;	}
-float cosc(float x) { return cos(x) / x;	}
-
-float time;
 
 mat2 rot(float a)
 {
