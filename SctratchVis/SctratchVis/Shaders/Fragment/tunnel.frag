@@ -18,15 +18,9 @@ uniform float uSpecSum;
 uniform float uTime;
 uniform float uSpectrum[256];
 
-float sinc(float x)
-{
-	return sin(x) / x;
-}
-
-float cosc(float x)
-{
-	return cos(x) / x;
-}
+#define sinc(x) (sin(x) / x)
+#define cosc(x) (cos(x) / x)
+#define cot(x) (sin(x) / cos(x))
 
 mat2 rot(float x)
 {
@@ -132,7 +126,7 @@ float dist(vec3 pos, float f)
 	float p3 = periodic(a * r, TAU / 6.0 * r, 0.7 + 0.3 * cos(uTime / 3.0));
 
 //return min(max(max(p1, p2), p3), 0.25);
-	return min(max(max(p1, p2), p3), f * 4.0);
+	return min(max(max(p1, p2), p3), 0.25);
 }
 
 vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
@@ -160,7 +154,8 @@ vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
 		}
 	}
 
-	float c = (i + f) / 192.0;
+float c = i / 192.0;
+//	float c = (i + f) / 192.0;
 	c *= 12.0;
 	vec3 c1 = palette(c) / 256.0;
 	vec3 c2 = palette(c + 1.0) / 256.0;
@@ -173,27 +168,37 @@ vec3 col(vec2 p)
 	vec3 ret;
 	vec3 c = vec3(0.0);
 
-	float x = mod(uFreq * 4.0, 1.0);
-	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
+	float f = sinc(fract(uFreq * 10.0) - uFreq);
+	float ff = 1.0 - (f - abs(acos(f)) * 0.5);
+	ff = clamp(ff, 0.1, 0.9);
+	float lf = sinc(fract(uLastFreq * 10.0) - uLastFreq);
+	float lff = 1.0 - (lf - abs(acos(lf)) * 0.5);
+	lff = clamp(lff, 0.1, 0.9);
+	float df = sinc(fract(uDeltaFreq * 10.0) - uDeltaFreq);
+	float dff = 1.0 - (df - abs(acos(df)) * 0.5);
+	dff = clamp(dff, min(ff, lff), max(ff, lff));
+
 	vec3 vf = uSpec3;
 	float lvf;
+
 	float t = uTime * 0.25;
 
-	vf *= sin(t * (uSpecSum / 256) / TAU);
+//vf *= sinc(t * (uSpecSum / 256) / TAU);
+	vf *= sinc(t * (uSpecSum / 256) / cot(TAU * ff));
 	lvf = length(vf);
+	vf = normalize(vf);
 	
 	float tf = mod((t * 0.5) / vf.x, step(uFreq, lvf)) + f;
-	float df = (abs(uLastFreq - uFreq) * 0.5);
 
 	p *= rot(t);
 	vec2 q = p;
 
-	vec3 rayDir = normalize(vec3(q, 1.0 + 0.0 * sqrt(q.x * q.x + q.y * q.y)));
+	vec3 rayDir = normalize(vec3(q, 1.0 + 0.5 * sqrt(q.x * q.x + q.y * q.y)));
 	vec3 rayPos = vec3(0.0, -0.5, uTime);
 
 	float af = uFreq > 0.0001 ?
-		abs(atan(uFreq, length(rayDir)) - mod(acosh(tf) / tf, uFreq))
-		: 1.0;
+	lvf
+	: 1.0;
 
 	c = vr(q, rayPos, rayDir, af);
 

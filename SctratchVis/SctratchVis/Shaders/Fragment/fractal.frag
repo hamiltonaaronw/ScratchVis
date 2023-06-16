@@ -78,21 +78,7 @@ vec3 col(vec2 p)
 	ffd = max(ff, liff) / min(ff, liff);
 	ffd = mod(ffd, 1.0);
 
-	float t = uTime;// + lif;
-
-	/*
-	float x = mod(uFreq * 4.0, 1.0);
-	float f = cos((sin(cos(x)) - sin(x) - x) + x * x);
-	vec3 vf = uSpec3;
-	float lvf;
-	float t = uTime * 0.25;
-
-	vf *= sin(t * (uSpecSum / 256) / TAU);
-	lvf = length(vf);
-	
-	float tf = clamp((t * 0.5), vf.x, step(uFreq, lvf)) + f;
-	float df = (abs(uLastFreq - uFreq) * 0.5);
-	*/
+	float t = uTime;
 
 	vec3 q;
 	vec3 d = vec3(p, 0.5) * clamp(sin(t), 0.5, 1.0);

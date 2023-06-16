@@ -1,42 +1,42 @@
 #version 410
 
+// derived from https://glslsandbox.com/e#103855.0
+
 #define PI		3.1415926535897932384626433832795
 #define TAU		(2.0 * PI)
 
-uniform float uFreq;
-uniform float uLastFreq;
-uniform float uDeltaFreq;
-uniform float uTime;
-uniform vec2 uRes;
-uniform float[256] uSpectrum;
-
 out vec4 retColor;
+
+uniform vec2 uRes;
+uniform vec3 uSpec3;
+uniform float uDeltaFreq;
+uniform float uDeltaTime;
+uniform float uFreq;
+uniform float uLastFrame;
+uniform float uLastFreq;
+uniform float uSpecSum;
+uniform float uTime;
+uniform float uSpectrum[256];
+
+#define sinc(x) (sin(x) / x)
+#define cosc(x) (cos(x) / x)
+#define cot(x) (sin(x) / cos(x))
 
 #define LX 35.
 #define LY (50./3.)
 #define speed 3.
 
-float sinc(float x)
+mat2 rot(float x)
 {
-	return sin(x) / x;
-}
-
-float cosc(float x)
-{
-	return cos(x) / x;
+	return mat2(
+		cos(x), sin(x),
+		-sin(x), cos(x)
+	);
 }
 
 vec3 hsv(float h, float s, float v)
 {
 	return ((clamp(abs(fract(h + vec3(0.0, 2.0, 1.0) / 3.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0) - 1.0) * s + 1.0) * v;
-}
-
-mat2 rot(float a)
-{
-	return mat2(
-		cos(a), sin(a),
-		-sin(a), cos(a)
-	);
 }
 
 float rand(vec2 co)
