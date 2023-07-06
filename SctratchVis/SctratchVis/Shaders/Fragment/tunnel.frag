@@ -126,7 +126,7 @@ float dist(vec3 pos, float f)
 	float p3 = periodic(a * r, TAU / 6.0 * r, 0.7 + 0.3 * cos(uTime / 3.0));
 
 //return min(max(max(p1, p2), p3), 0.25);
-	return min(max(max(p1, p2), p3), 0.25);
+	return min(max(max(p1, p2), p3), 0.25 + mod(uTime, sinc(f)));
 }
 
 vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
@@ -135,6 +135,8 @@ vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
 	vec3 rayPos = q;
 
 	float a = 0.0;
+	float c = 0.0;
+	float af = sinh(f);
 	rayDir *= mat3(
 		cos(a),		0.0,	sin(a),
 		0.0,		1.0,	0.0,
@@ -149,18 +151,22 @@ vec3 vr(vec2 p, vec3 q, vec3 dir, float f)
 		
 		if (abs(d) < 0.001)
 		{
-			i = float(j);
+i = float(j);
+//			i = float(j) / f;
 			break;
 		}
 	}
 
-float c = i / 192.0;
-//	float c = (i + f) / 192.0;
+//c = i / 192.0;
+	c = (i + f) / 192.0;
 	c *= 12.0;
 	vec3 c1 = palette(c) / 256.0;
 	vec3 c2 = palette(c + 1.0) / 256.0;
 
-	return vec3(mix(c1, c2, c - floor(c)));
+	af += sinh(length(p));
+
+//return vec3(mix(c1, c2, c - floor(c)));
+	return vec3(mix(c1, c2, c - floor(c + af)));
 }
 
 vec3 col(vec2 p)
@@ -197,7 +203,8 @@ vec3 col(vec2 p)
 	vec3 rayPos = vec3(0.0, -0.5, uTime);
 
 	float af = uFreq > 0.0001 ?
-	lvf
+	atan(tf, ff) + floor(uFreq * 100.0) * mod(dff, 0.5)
+	//sin(uTime * 5.0) * 100.0
 	: 1.0;
 
 	c = vr(q, rayPos, rayDir, af);
